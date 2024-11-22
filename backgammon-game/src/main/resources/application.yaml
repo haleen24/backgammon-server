@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: backgammon-game
+
+server:
+  port: 82
+  servlet:
+    context-path: /game

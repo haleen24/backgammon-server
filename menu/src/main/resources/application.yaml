@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: menu
+  datasource:
+    url: jdbc:postgresql://localhost:5432/backgammon
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: admin
+
+server:
+  port: 81

@@ -1,0 +1,16 @@
+server:
+  port: 80
+spring:
+  application:
+    name: gateway
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/backgammon
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: admin
+jwt:
+  secret:
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  expire:
+    1000000000000
