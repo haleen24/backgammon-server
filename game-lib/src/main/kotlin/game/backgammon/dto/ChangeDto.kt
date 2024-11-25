@@ -1,5 +1,5 @@
 package game.backgammon.dto
 
 data class ChangeDto(
-    val changes: Map<Int?, Int?>
+    val changes: List<Pair<Int?, Int?>>
 )

@@ -33,13 +33,19 @@ class BackgammonGameService(
         val game = backgammonGameRuntimeDao.getGame(gameId)
         val res = game.move(playerId, moves)
 
-        emitterService.sendEventExceptUser(playerId, gameId, MoveEvent(res.changes))
+
+        val response = MoveResponse(
+            moves = res.changes.map { MoveResponse.MoveResponseDto(it.first, it.second) },
+            user = playerId
+        )
+
+        emitterService.sendEventExceptUser(playerId, gameId, MoveEvent(response.moves))
         if (game.checkEnd()) {
             val endState = game.getEndState()
             val event = EndEvent(lose = endState[false]!!, win = endState[true]!!)
             emitterService.sendForAll(gameId, event)
         }
-        return MoveResponse(res.changes, playerId)
+        return response
     }
 
     fun getConfiguration(userId: Int, gameId: Int): ConfigResponse {

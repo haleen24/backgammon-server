@@ -51,10 +51,6 @@ class ShortBackgammonGame(
             bar = bar,
             turn = turn,
             deck = deck.subList(1, 25),
-            store = mapOf(
-                -1 to deck[25],
-                1 to deck[0]
-            )
         )
     }
 
@@ -70,10 +66,10 @@ class ShortBackgammonGame(
         testZar = ArrayList(zarResults)
         testBar = HashMap(bar)
 
-        val res = HashMap<Int?, Int?>()
+        val res = mutableListOf<Pair<Int?, Int?>>()
 
-        moves.forEach {
-            res.putAll(makeMove(user, it))
+        moves.forEach { move ->
+            res.addAll(makeMove(user, move))
         }
         turn = -user
         validateEnd()

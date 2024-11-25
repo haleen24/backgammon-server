@@ -22,7 +22,7 @@ class BackgammonWrapper(
         return if (firstPlayer == -1 || firstPlayer == playerId) {
             firstPlayer = playerId
             true
-        } else if (secondPlayer == -1) {
+        } else if (secondPlayer == -1 || secondPlayer == playerId) {
             secondPlayer = playerId
             isBothConnected = true
             true
@@ -45,7 +45,6 @@ class BackgammonWrapper(
                 .filterNotNull()
                 .toSet(),
             zar = config.zar,
-            store = config.store.entries.associate { getColor(it.key) to it.value },
         )
     }
 

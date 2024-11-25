@@ -2,12 +2,13 @@ package hse.dto
 
 import game.backgammon.dto.MoveDto
 import game.backgammon.enums.Color
+import game.backgammon.response.MoveResponse
 import hse.enums.EventType
 
 abstract class GameEvent(type: EventType)
 
 data class MoveEvent(
-    val moves: Map<Int?, Int?>
+    val moves: List<MoveResponse.MoveResponseDto>
 ) : GameEvent(EventType.MOVE_EVENT)
 
 class PlayerConnectedEvent(
