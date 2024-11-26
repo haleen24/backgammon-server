@@ -1,6 +1,7 @@
 package hse.gateway.core.configuration
 
 import hse.gateway.core.configuration.filter.JwtAuthFilter
+import hse.gateway.core.configuration.filter.SseFilter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -25,16 +26,16 @@ class SecurityConfig {
     @Autowired
     private lateinit var jwtAuthFilter: JwtAuthFilter
 
-//    @Autowired
-//    private lateinit var gatewayHeaderFilter: GatewayHeaderFilter
-
+    @Lazy
+    @Autowired
+    private lateinit var sseFilter: SseFilter
 
     @Bean
     fun securityFilterChain(http: HttpSecurity, authenticationProvider: AuthenticationProvider): SecurityFilterChain {
         return http
             .csrf { it.disable() }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
-//            .addFilterAfter(gatewayHeaderFilter, jwtAuthFilter::class.java)
+            .addFilterAfter(sseFilter, UsernamePasswordAuthenticationFilter::class.java)
             .authenticationProvider(authenticationProvider)
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
