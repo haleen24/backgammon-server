@@ -6,6 +6,8 @@ import hse.enums.EventType
 
 abstract class GameEvent(val type: EventType)
 
+class GameStartedEvent : GameEvent(EventType.GAME_STARTED_EVENT)
+
 data class MoveEvent(
     val moves: List<MoveResponseDto>,
     val color: Color,

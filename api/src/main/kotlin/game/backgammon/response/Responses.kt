@@ -16,5 +16,6 @@ data class ConfigResponse(
     val turn: Color,
     val bar: Map<Color, Int>,
     val deck: Set<DeckItemDto>,
-    val zar: List<Int>
+    val zar: List<Int>,
+    val first: Boolean
 )

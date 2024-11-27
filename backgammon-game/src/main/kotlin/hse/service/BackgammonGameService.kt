@@ -28,6 +28,9 @@ class BackgammonGameService(
             throw RuntimeException("game already occupied")
         }
         emitterService.sendEventExceptUser(playerId, gameId, PlayerConnectedEvent(game.getPlayerColor(playerId)))
+        if (game.checkIsGameStarted()) {
+            emitterService.sendForAll(gameId, GameStartedEvent())
+        }
         return game.getPlayerColor(playerId)
     }
 
@@ -46,6 +49,8 @@ class BackgammonGameService(
             val event = EndEvent(lose = endState[false]!!, win = endState[true]!!)
             emitterService.sendForAll(gameId, event)
         }
+        val tossZarRes = game.tossZar()
+        emitterService.sendForAll(gameId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))
         return response
     }
 
@@ -54,15 +59,12 @@ class BackgammonGameService(
         return game.getConfiguration(userId)
     }
 
-    fun tossZar(userId: Int, gameId: Int): Collection<Int> {
-        val game = backgammonGameRuntimeDao.getGame(gameId)
-        val res = game.tossZar(userId).value
-        emitterService.sendForAll(gameId, TossZarEvent(res, game.getPlayerColor(userId)))
-        return res
-    }
-
     fun getColor(userId: Int, gameId: Int): Color {
         val game = backgammonGameRuntimeDao.getGame(userId)
         return game.getPlayerColor(userId)
+    }
+
+    fun isGameStarted(gameId: Int): Boolean {
+        return backgammonGameRuntimeDao.getGame(gameId).checkIsGameStarted()
     }
 }

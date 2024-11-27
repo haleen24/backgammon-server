@@ -7,11 +7,13 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 class BackgammonGameRuntimeDao(
-    private val games: ConcurrentHashMap<Int, BackgammonWrapper> = ConcurrentHashMap()
+    private val games: ConcurrentHashMap<Int, BackgammonWrapper> = ConcurrentHashMap(),
+    private val notConnectedUser: AtomicReference<Int?> = AtomicReference()
 ) {
     fun createGame(roomId: Int, gameType: BackgammonType): Int {
         if (games.containsKey(roomId)) {

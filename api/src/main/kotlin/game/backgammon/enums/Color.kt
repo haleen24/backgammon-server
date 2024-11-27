@@ -2,5 +2,12 @@ package game.backgammon.enums
 
 enum class Color {
     BLACK,
-    WHITE,
+    WHITE;
+
+    fun getOpponent(): Color {
+        return when (this) {
+            WHITE -> BLACK
+            BLACK -> WHITE
+        }
+    }
 }

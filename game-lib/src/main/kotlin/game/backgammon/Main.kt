@@ -47,9 +47,9 @@ fun main() {
 
     val scanner = Scanner(System.`in`)
     while (true) {
-        if (game.zarResults.isEmpty()) {
-            game.tossBothZar(turn)
-        }
+//        if (game.zarResults.isEmpty()) {
+//            game.tossBothZar(turn)
+//        }
         printDeck(game)
         val moves = listOf(MoveDto(scanner.nextInt(), scanner.nextInt()), MoveDto(scanner.nextInt(), scanner.nextInt()))
         val changes = try {

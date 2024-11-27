@@ -52,10 +52,10 @@ class BackgammonGameController(
         return backgammonGameService.moveInGame(roomId, userId, request.moves)
     }
 
-    @PostMapping("zar/{roomId}")
-    fun tossZar(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable("roomId") roomId: Int): Collection<Int> {
-        return backgammonGameService.tossZar(userId, roomId)
-    }
+//    @PostMapping("zar/{roomId}")
+//    fun tossZar(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable("roomId") roomId: Int): Collection<Int> {
+//        return backgammonGameService.tossZar(userId, roomId)
+//    }
 
     @GetMapping("colors/{roomId}")
     fun getColor(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): Color {
@@ -65,5 +65,10 @@ class BackgammonGameController(
     @PostMapping("view/{roomId}")
     fun connectView(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): SseEmitter {
         return emitterService.create(roomId, userId)
+    }
+
+    @GetMapping("is-game-started/{roomId}")
+    fun isGameStarted(@PathVariable roomId: Int): Boolean {
+        return backgammonGameService.isGameStarted(roomId)
     }
 }

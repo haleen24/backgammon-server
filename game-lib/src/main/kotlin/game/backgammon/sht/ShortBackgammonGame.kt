@@ -86,8 +86,7 @@ class ShortBackgammonGame(
         return EndDto(if (deck[0] == 15) 1 else -1)
     }
 
-    override fun tossBothZar(user: Int): TossZarDto {
-        validateGameState(user)
+    override fun tossBothZar(): TossZarDto {
 
         if (zarResults.isNotEmpty()) {
             throw RuntimeException("re toss zar")
