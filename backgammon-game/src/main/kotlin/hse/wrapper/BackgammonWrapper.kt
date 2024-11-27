@@ -7,7 +7,6 @@ import game.backgammon.dto.MoveDto
 import game.backgammon.dto.TossZarDto
 import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
-import game.backgammon.response.MoveResponse
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
@@ -37,7 +36,7 @@ class BackgammonWrapper(
         return ConfigResponse(
             color = getPlayerColor(playerId),
             turn = getColor(config.turn),
-            bar = config.bar.entries.associate { getColor(it.key) to it.value },
+            bar = config.bar.entries.associate { getColor(it.key) to it.value.absoluteValue },
             deck = config.deck
                 .mapIndexed { index, it ->
                     getDeckItemDto(index, it)

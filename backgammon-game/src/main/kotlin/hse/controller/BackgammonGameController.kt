@@ -31,8 +31,8 @@ class BackgammonGameController(
     }
 
     @PostMapping("connect/{roomId}")
-    fun connect(@RequestHeader(USER_ID_HEADER) user: Int, @PathVariable roomId: Int) {
-        backgammonGameService.connectToGameRoom(user, roomId)
+    fun connect(@RequestHeader(USER_ID_HEADER) user: Int, @PathVariable roomId: Int): Color {
+        return backgammonGameService.connectToGameRoom(user, roomId)
     }
 
     @GetMapping("сonfig/{roomId}")

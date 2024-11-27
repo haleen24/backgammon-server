@@ -1,18 +1,15 @@
 package game.backgammon.response
 
 import game.backgammon.dto.DeckItemDto
-import game.backgammon.dto.MoveDto
+import game.backgammon.dto.MoveResponseDto
 import game.backgammon.enums.Color
+
 
 data class MoveResponse(
     val moves: List<MoveResponseDto>,
-    val user: Int
-) {
-    data class MoveResponseDto(
-        private val from: Int?,
-        private val to: Int?
-    )
-}
+    val color: Color
+)
+
 
 data class ConfigResponse(
     val color: Color,

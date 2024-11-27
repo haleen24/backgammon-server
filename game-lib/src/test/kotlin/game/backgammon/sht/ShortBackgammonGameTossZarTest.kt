@@ -28,7 +28,7 @@ class ShortBackgammonGameTossZarTest {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(1)
         game.turn = -1
         game.zarResults = arrayListOf()
-        game.bar[-1] = 1
+        game.bar[-1] = -1
         game.deck[1] = 2
         game.deck[2] = -1
 
@@ -36,7 +36,7 @@ class ShortBackgammonGameTossZarTest {
 
         assertEquals(1, game.turn)
         assertEquals(2, game.deck[1])
-        assertEquals(1, game.bar[-1])
+        assertEquals(-1, game.bar[-1])
         assertEquals(0, game.zarResults.size)
     }
 
@@ -155,7 +155,7 @@ class ShortBackgammonGameTossZarTest {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(1, 2)
         game.turn = -1
         game.zarResults = arrayListOf()
-        game.bar[-1] = 1
+        game.bar[-1] = -1
         game.deck[1] = 2
         game.deck[3] = 2
 
@@ -193,5 +193,30 @@ class ShortBackgammonGameTossZarTest {
 
         assertEquals(1, game.turn)
         assertEquals(4, game.zarResults.size)
+    }
+
+    @Test
+    // Тест покрывает баг, когда нельзя сходить в стор из дома, из-за чего игнорировались ходы из других секций
+    fun moveSeveralTimes() {
+        Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(5, 6)
+        game.turn = -1
+        game.zarResults = arrayListOf()
+        game.bar[-1] = -1
+        game.deck[1] = 1
+        game.deck[4] = -1
+        game.deck[5] = -1
+        game.deck[6] = 4
+        game.deck[8] = 3
+        game.deck[12] = -5
+        game.deck[13] = 5
+        game.deck[18] = 1
+        game.deck[19] = -5
+        game.deck[21] = -2
+        game.deck[24] = 1
+
+        game.tossBothZar(-1)
+
+        assertEquals(-1, game.turn)
+        assertEquals(2, game.zarResults.size)
     }
 }

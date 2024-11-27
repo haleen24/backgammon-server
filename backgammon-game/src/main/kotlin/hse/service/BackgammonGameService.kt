@@ -1,6 +1,7 @@
 package hse.service
 
 import game.backgammon.dto.MoveDto
+import game.backgammon.dto.MoveResponseDto
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
@@ -20,26 +21,26 @@ class BackgammonGameService(
         return backgammonGameRuntimeDao.createGame(roomId, gameType)
     }
 
-    fun connectToGameRoom(playerId: Int, gameId: Int) {
+    fun connectToGameRoom(playerId: Int, gameId: Int): Color {
         val game = backgammonGameRuntimeDao.getGame(gameId)
         val res = game.connect(playerId)
         if (!res) {
             throw RuntimeException("game already occupied")
         }
         emitterService.sendEventExceptUser(playerId, gameId, PlayerConnectedEvent(game.getPlayerColor(playerId)))
+        return game.getPlayerColor(playerId)
     }
 
     fun moveInGame(gameId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
         val game = backgammonGameRuntimeDao.getGame(gameId)
         val res = game.move(playerId, moves)
-
+        val playerColor = game.getPlayerColor(playerId)
 
         val response = MoveResponse(
-            moves = res.changes.map { MoveResponse.MoveResponseDto(it.first, it.second) },
-            user = playerId
+            moves = res.changes.map { MoveResponseDto(it.first, it.second) },
+            color = playerColor,
         )
-
-        emitterService.sendEventExceptUser(playerId, gameId, MoveEvent(response.moves))
+        emitterService.sendEventExceptUser(playerId, gameId, MoveEvent(response.moves, playerColor))
         if (game.checkEnd()) {
             val endState = game.getEndState()
             val event = EndEvent(lose = endState[false]!!, win = endState[true]!!)
@@ -54,8 +55,9 @@ class BackgammonGameService(
     }
 
     fun tossZar(userId: Int, gameId: Int): Collection<Int> {
-        val res = backgammonGameRuntimeDao.getGame(gameId).tossZar(userId).value
-        emitterService.sendForAll(gameId, TossZarEvent(res))
+        val game = backgammonGameRuntimeDao.getGame(gameId)
+        val res = game.tossZar(userId).value
+        emitterService.sendForAll(gameId, TossZarEvent(res, game.getPlayerColor(userId)))
         return res
     }
 
