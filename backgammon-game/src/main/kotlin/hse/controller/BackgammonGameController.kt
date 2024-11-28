@@ -1,7 +1,7 @@
 package hse.controller
 
-import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import game.backgammon.request.CreateBackgammonGameRequest
 import game.backgammon.request.MoveRequest
 import game.backgammon.response.ConfigResponse
 import game.backgammon.response.MoveResponse
@@ -25,14 +25,9 @@ class BackgammonGameController(
     @PostMapping("create-room/{roomId}")
     fun createGameRoom(
         @PathVariable roomId: Int,
-        @RequestBody gameType: BackgammonType
+        @RequestBody request: CreateBackgammonGameRequest
     ): Int {
-        return backgammonGameService.createGameRoom(roomId, gameType)
-    }
-
-    @PostMapping("connect/{roomId}")
-    fun connect(@RequestHeader(USER_ID_HEADER) user: Int, @PathVariable roomId: Int): Color {
-        return backgammonGameService.connectToGameRoom(user, roomId)
+        return backgammonGameService.createAndConnect(roomId, request.firstUserId, request.secondUserId, request.type)
     }
 
     @GetMapping("config/{roomId}")
@@ -51,11 +46,6 @@ class BackgammonGameController(
     ): MoveResponse {
         return backgammonGameService.moveInGame(roomId, userId, request.moves)
     }
-
-//    @PostMapping("zar/{roomId}")
-//    fun tossZar(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable("roomId") roomId: Int): Collection<Int> {
-//        return backgammonGameService.tossZar(userId, roomId)
-//    }
 
     @GetMapping("colors/{roomId}")
     fun getColor(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): Color {

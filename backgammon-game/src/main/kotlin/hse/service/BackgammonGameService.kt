@@ -7,8 +7,13 @@ import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
 import game.backgammon.response.MoveResponse
 import hse.dao.BackgammonGameRuntimeDao
-import hse.dto.*
+import hse.dto.EndEvent
+import hse.dto.GameStartedEvent
+import hse.dto.MoveEvent
+import hse.dto.TossZarEvent
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 class BackgammonGameService(
@@ -17,21 +22,14 @@ class BackgammonGameService(
 ) {
 
 
-    fun createGameRoom(roomId: Int, gameType: BackgammonType): Int {
-        return backgammonGameRuntimeDao.createGame(roomId, gameType)
-    }
-
-    fun connectToGameRoom(playerId: Int, gameId: Int): Color {
-        val game = backgammonGameRuntimeDao.getGame(gameId)
-        val res = game.connect(playerId)
-        if (!res) {
-            throw RuntimeException("game already occupied")
+    fun createAndConnect(roomId: Int, firstPlayer: Int, secondPlayer: Int, gameType: BackgammonType): Int {
+        val resId = backgammonGameRuntimeDao.createGame(roomId, gameType)
+        val game = backgammonGameRuntimeDao.getGame(resId)
+        if (game.connect(firstPlayer) && game.connect(secondPlayer)) {
+            emitterService.sendForAll(roomId, GameStartedEvent())
+            return resId
         }
-        emitterService.sendEventExceptUser(playerId, gameId, PlayerConnectedEvent(game.getPlayerColor(playerId)))
-        if (game.checkIsGameStarted()) {
-            emitterService.sendForAll(gameId, GameStartedEvent())
-        }
-        return game.getPlayerColor(playerId)
+        throw ResponseStatusException(HttpStatus.CONFLICT, "Невозможно присоединить игроков к игре")
     }
 
     fun moveInGame(gameId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {

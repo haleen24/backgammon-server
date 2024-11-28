@@ -16,14 +16,14 @@ class MenuController(
         private const val AUTH_USER = "auth-user"
     }
 
-    @PostMapping("create-room")
-    fun createRoom(
-        @RequestBody requestBody: CreateGameRequest,
-    ): Int? {
-        val id = menuGameService.storeRoom(requestBody.type)
-
-        return gameAdapter.gameCreation(requestBody.type, id)
-    }
+//    @PostMapping("create-room")
+//    fun createRoom(
+//        @RequestBody requestBody: CreateGameRequest,
+//    ): Int? {
+//        val id = menuGameService.storeRoom(requestBody.type)
+//
+//        return gameAdapter.gameCreation(id,  requestBody.type)
+//    }
 
     @PostMapping("connect")
     fun connect(

@@ -5,7 +5,9 @@ import game.backgammon.sht.ShortBackgammonGame
 import hse.wrapper.BackgammonWrapper
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import org.springframework.web.server.ResponseStatusException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -19,9 +21,10 @@ class BackgammonGameRuntimeDao(
         if (games.containsKey(roomId)) {
             throw RuntimeException("game with id $roomId already exists")
         }
-        games[roomId] = when (gameType) {
+        val game = when (gameType) {
             BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(ShortBackgammonGame())
         }
+        games.putIfAbsent(roomId, game) ?: throw ResponseStatusException(HttpStatus.CONFLICT, "$roomId уже занят")
         return roomId
     }
 
