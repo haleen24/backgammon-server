@@ -21,7 +21,7 @@ class MenuGameService(
     private final val logger = LoggerFactory.getLogger(MenuGameService::class.java)
 
     init {
-        val job = configureJob().start()
+        val job = Thread { connectionJob() }
     }
 
     fun storeRoom(gameType: GameType): Int {
@@ -37,15 +37,6 @@ class MenuGameService(
             HttpStatus.CONFLICT,
             "Упал коннект - очередь поиска не отдала id игры"
         )
-    }
-
-    private fun configureJob(): Thread {
-        val job = Thread { connectionJob() }
-        job.setUncaughtExceptionHandler { thread, ex ->
-            logger.error("Uncaught exception $ex in thread $thread \n restarting...")
-            Thread { connectionJob() }.start()
-        }
-        return job
     }
 
     private fun connectionJob() {
@@ -66,12 +57,17 @@ class MenuGameService(
             // Пока только 1 тип игры
             val gameId = storeRoom(GameType.SHORT_BACKGAMMON)
             logger.info("Сохраняю комнату")
-            gameAdapter.gameCreation(
+            val realRoomId = gameAdapter.gameCreation(
                 gameId,
                 firstPlayerConnection.userId,
                 secondPlayerConnection.userId,
                 firstPlayerConnection.gameType,
             )
+            if (realRoomId != gameId) {
+                firstPlayerConnection.latch.countDown()
+                secondPlayerConnection.latch.countDown()
+                continue
+            }
             firstPlayerConnection.gameId = gameId
             secondPlayerConnection.gameId = gameId
             firstPlayerConnection.latch.countDown()

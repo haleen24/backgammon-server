@@ -3,10 +3,10 @@ package hse.menu.adapter
 import game.backgammon.enums.BackgammonType
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.common.enums.GameType
-import org.springframework.http.HttpStatus
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.server.ResponseStatusException
 import java.net.URI
 
 
@@ -15,13 +15,15 @@ class GameAdapter {
 
     private val restTemplate = RestTemplate()
 
+    private val logger: Logger = LoggerFactory.getLogger(GameAdapter::class.java)
+
     companion object {
         private const val GAME_ADDR = "game"
 
         private const val CREATE_ROOM_TEMPLATE = "http://localhost:82/$GAME_ADDR/%s/create-room/%d"
     }
 
-    fun gameCreation(gameId: Int, firstUserId: Int, secondUserId: Int, gameType: GameType): Int {
+    fun gameCreation(gameId: Int, firstUserId: Int, secondUserId: Int, gameType: GameType): Int? {
         val uri = URI(
             when (gameType.type) {
                 GameType.GeneralGameType.BACKGAMMON -> CREATE_ROOM_TEMPLATE.format("backgammon", gameId)
@@ -35,8 +37,13 @@ class GameAdapter {
             )
         }
 
-        return restTemplate.postForObject(uri, request, Int::class.java)
-            ?: throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Сервис с игрой не доступен")
+        return try {
+            restTemplate.postForObject(uri, request, Int::class.java)
+                ?: -1
+        } catch (e: Exception) {
+            logger.error(e.message)
+            -1
+        }
     }
 
 }
