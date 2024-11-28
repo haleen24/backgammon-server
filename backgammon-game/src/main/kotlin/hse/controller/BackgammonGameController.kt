@@ -1,7 +1,7 @@
 package hse.controller
 
-import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import game.backgammon.request.CreateBackgammonGameRequest
 import game.backgammon.request.MoveRequest
 import game.backgammon.response.ConfigResponse
 import game.backgammon.response.MoveResponse
@@ -25,17 +25,12 @@ class BackgammonGameController(
     @PostMapping("create-room/{roomId}")
     fun createGameRoom(
         @PathVariable roomId: Int,
-        @RequestBody gameType: BackgammonType
+        @RequestBody request: CreateBackgammonGameRequest
     ): Int {
-        return backgammonGameService.createGameRoom(roomId, gameType)
+        return backgammonGameService.createAndConnect(roomId, request.firstUserId, request.secondUserId, request.type)
     }
 
-    @PostMapping("connect/{roomId}")
-    fun connect(@RequestHeader(USER_ID_HEADER) user: Int, @PathVariable roomId: Int) {
-        backgammonGameService.connectToGameRoom(user, roomId)
-    }
-
-    @GetMapping("сonfig/{roomId}")
+    @GetMapping("config/{roomId}")
     fun getConfiguration(
         @RequestHeader(USER_ID_HEADER) user: Int,
         @PathVariable("roomId") roomId: Int
@@ -52,18 +47,18 @@ class BackgammonGameController(
         return backgammonGameService.moveInGame(roomId, userId, request.moves)
     }
 
-    @PostMapping("zar/{roomId}")
-    fun tossZar(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable("roomId") roomId: Int): Collection<Int> {
-        return backgammonGameService.tossZar(userId, roomId)
-    }
-
     @GetMapping("colors/{roomId}")
     fun getColor(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): Color {
         return backgammonGameService.getColor(userId, roomId)
     }
 
-    @PostMapping("view/{roomId}")
+    @GetMapping("view/{roomId}")
     fun connectView(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): SseEmitter {
         return emitterService.create(roomId, userId)
+    }
+
+    @GetMapping("is-game-started/{roomId}")
+    fun isGameStarted(@PathVariable roomId: Int): Boolean {
+        return backgammonGameService.isGameStarted(roomId)
     }
 }

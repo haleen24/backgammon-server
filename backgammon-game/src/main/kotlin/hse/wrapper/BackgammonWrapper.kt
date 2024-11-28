@@ -7,7 +7,6 @@ import game.backgammon.dto.MoveDto
 import game.backgammon.dto.TossZarDto
 import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
-import game.backgammon.response.MoveResponse
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
@@ -16,13 +15,17 @@ class BackgammonWrapper(
 ) {
     private var firstPlayer: Int = -1
     private var secondPlayer: Int = -1
+    @Volatile
     private var isBothConnected = false
+
+    @Volatile
+    private var numberOfMoves: Int = 0
 
     fun connect(playerId: Int): Boolean {
         return if (firstPlayer == -1 || firstPlayer == playerId) {
             firstPlayer = playerId
             true
-        } else if (secondPlayer == -1) {
+        } else if (secondPlayer == -1 || secondPlayer == playerId) {
             secondPlayer = playerId
             isBothConnected = true
             true
@@ -37,7 +40,7 @@ class BackgammonWrapper(
         return ConfigResponse(
             color = getPlayerColor(playerId),
             turn = getColor(config.turn),
-            bar = config.bar.entries.associate { getColor(it.key) to it.value },
+            bar = config.bar.entries.associate { getColor(it.key) to it.value.absoluteValue },
             deck = config.deck
                 .mapIndexed { index, it ->
                     getDeckItemDto(index, it)
@@ -45,18 +48,17 @@ class BackgammonWrapper(
                 .filterNotNull()
                 .toSet(),
             zar = config.zar,
-            store = config.store.entries.associate { getColor(it.key) to it.value },
+            first = numberOfMoves == 0
         )
     }
 
     fun move(playerId: Int, moves: List<MoveDto>): ChangeDto {
         checkBothConnected()
-        return game.move(getPlayerMask(playerId), moves)
+        return game.move(getPlayerMask(playerId), moves).also { ++numberOfMoves }
     }
 
-    fun tossZar(playerId: Int): TossZarDto {
-        checkBothConnected()
-        return game.tossBothZar(getPlayerMask(playerId))
+    fun tossZar(): TossZarDto {
+        return game.tossBothZar()
     }
 
     fun getPlayerColor(userId: Int): Color {
@@ -68,6 +70,10 @@ class BackgammonWrapper(
         checkBothConnected()
         val res = game.getEndState() ?: throw RuntimeException("game not ended")
         return listOf(firstPlayer, secondPlayer).associate { (getPlayerMask(it) == res.winner) to getPlayerColor(it) }
+    }
+
+    fun checkIsGameStarted(): Boolean {
+        return isBothConnected
     }
 
     fun checkEnd(): Boolean {

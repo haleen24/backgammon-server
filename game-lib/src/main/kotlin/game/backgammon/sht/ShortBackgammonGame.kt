@@ -50,11 +50,7 @@ class ShortBackgammonGame(
             zar = zarResults,
             bar = bar,
             turn = turn,
-            deck = deck.subList(1, 25),
-            store = mapOf(
-                -1 to deck[25],
-                1 to deck[0]
-            )
+            deck = deck,
         )
     }
 
@@ -70,10 +66,10 @@ class ShortBackgammonGame(
         testZar = ArrayList(zarResults)
         testBar = HashMap(bar)
 
-        val res = HashMap<Int?, Int?>()
+        val res = mutableListOf<Pair<Int, Int>>()
 
-        moves.forEach {
-            res.putAll(makeMove(user, it))
+        moves.forEach { move ->
+            res.addAll(makeMove(user, move))
         }
         turn = -user
         validateEnd()
@@ -90,8 +86,7 @@ class ShortBackgammonGame(
         return EndDto(if (deck[0] == 15) 1 else -1)
     }
 
-    override fun tossBothZar(user: Int): TossZarDto {
-        validateGameState(user)
+    override fun tossBothZar(): TossZarDto {
 
         if (zarResults.isNotEmpty()) {
             throw RuntimeException("re toss zar")
@@ -124,10 +119,11 @@ class ShortBackgammonGame(
             zarResults = ArrayList(result.subList(0, maxMoves))
         } else if (result.size == 2 && maxMoves == 1) {
             val zar = max(res1, res2)
-            val to = getBarFrom(turn) + zar
+            val dif = -zar * turn
+            val to = getBarFrom(turn) + dif
             zarResults = if (testBar[turn]!! > 0 && canMove(to)) {
                 arrayListOf(zar)
-            } else if ((1..24).any { checkTurn(it) && canMove(it + zar) }) {
+            } else if ((1..24).any { checkTurn(it) && canMove(it + dif) }) {
                 arrayListOf(zar)
             } else {
                 arrayListOf(min(res1, res2))
@@ -157,7 +153,9 @@ class ShortBackgammonGame(
                 return 0
             }
             testBar[turn] = testBar[turn]!! - turn
+            testDeck[barIdx + dif] += turn
             next = findMaxFromSequence(nextZar)
+            testDeck[barIdx + dif] -= turn
             testBar[turn] = testBar[turn]!! + turn
             return next + 1
         }
@@ -168,7 +166,7 @@ class ShortBackgammonGame(
             }
             val pos = i + dif
             if ((pos == 0 || pos == 25) && !canMoveHome) {
-                return 0
+                continue
             }
             if (pos in testDeck.indices) {
                 if (testDeck[pos].absoluteValue <= 1 || testDeck[pos].sign == turn) {
@@ -181,7 +179,6 @@ class ShortBackgammonGame(
                     testDeck[pos] = beforePos
                     testDeck[i] = beforeI
                 }
-
             }
         }
         if (!flag && canMoveHome) {
@@ -208,14 +205,15 @@ class ShortBackgammonGame(
         }
     }
 
-    private fun makeMove(user: Int, move: MoveDto): List<Pair<Int?, Int?>> {
+    private fun makeMove(user: Int, move: MoveDto): List<Pair<Int, Int>> {
         validateAll(user, move)
         val knocked = checkKnockOut(move.to, user)
         testZar.remove(abs(move.to - move.from))
         testDeck[move.to] += user
+
         val moveMap = if (move.from == 0 || move.from == 25) {
-            testBar[user] = testBar[user]!!.minus(1)
-            null to move.to
+            testBar[user] = testBar[user]!!.minus(user)
+            move.from to move.to
         } else {
             testDeck[move.from] -= user
             move.from to move.to
@@ -228,11 +226,11 @@ class ShortBackgammonGame(
 
     }
 
-    private fun checkKnockOut(to: Int, user: Int): Pair<Int, Int?>? {
+    private fun checkKnockOut(to: Int, user: Int): Pair<Int, Int>? {
         if (testDeck[to] == -user) {
-            testBar[-user] = testBar[-user]!!.plus(1)
+            testBar[-user] = testBar[-user]!!.plus(-user)
             testDeck[to] = 0
-            return to to null
+            return to to getBarTo(-user)
         }
         return null
     }
@@ -313,7 +311,7 @@ class ShortBackgammonGame(
 
     private fun validateExit(user: Int, move: MoveDto) {
         if (move.to == 0 || move.to == 25) {
-            if (checkAllInHome(user)) {
+            if (!checkAllInHome(user)) {
                 throw RuntimeException("cant exit")
             }
         }
@@ -322,8 +320,16 @@ class ShortBackgammonGame(
 
     private fun getBarFrom(user: Int): Int {
         return when (user) {
-            1 -> 25
             -1 -> 0
+            1 -> 25
+            else -> throw RuntimeException("user cant make this move")
+        }
+    }
+
+    private fun getBarTo(user: Int): Int {
+        return when (user) {
+            -1 -> -1
+            1 -> 26
             else -> throw RuntimeException("user cant make this move")
         }
     }
@@ -348,8 +354,8 @@ class ShortBackgammonGame(
             secondZar = tossZar()
         }
         turn = if (firstZar > secondZar) {
-            -1
-        } else 1
+            1
+        } else -1
         return arrayListOf(firstZar, secondZar)
     }
 

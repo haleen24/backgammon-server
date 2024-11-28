@@ -12,7 +12,7 @@ class GameRuntimeDao : GameDao {
 
     private var id: AtomicInteger = AtomicInteger(0)
 
-    override fun storeGame(gameType: GameType, buUser: Int): Int {
+    override fun storeGame(gameType: GameType): Int {
         val gameId = getId()
         games[gameId] = gameType
         return gameId

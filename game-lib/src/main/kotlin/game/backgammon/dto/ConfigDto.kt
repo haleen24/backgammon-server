@@ -5,5 +5,4 @@ data class ConfigDto(
     val turn: Int,
     val deck: List<Int>,
     val bar: Map<Int, Int>,
-    val store: Map<Int, Int>
 )
