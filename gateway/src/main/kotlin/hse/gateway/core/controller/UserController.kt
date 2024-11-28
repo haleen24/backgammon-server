@@ -5,9 +5,12 @@ import hse.gateway.core.dto.response.JwtResponse
 import hse.gateway.core.entity.User
 import hse.gateway.core.service.JwtService
 import hse.gateway.core.service.UserService
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpHeaders.SET_COOKIE
 import org.springframework.http.ResponseCookie
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -19,13 +22,14 @@ class UserController(
     private val jwtService: JwtService,
 ) {
 
-    @PostMapping("/create`/user")
+    @PostMapping("/create/user")
     fun createUser(@RequestBody user: User) {
         userService.createUser(user)
     }
 
 
     @PostMapping("/login2")
+//    @CrossOrigin(value = ["http://localhost:5173"], allowCredentials = "true")
     fun authenticateAndGetToken(
         @RequestBody request: AuthRequest,
         response: HttpServletResponse
@@ -35,7 +39,7 @@ class UserController(
         if (user != null) {
             val token = jwtService.generateToken(user)
             val cookies = ResponseCookie.from("token", token)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(false)
                 .build()
             response.addHeader(SET_COOKIE, cookies.toString())
@@ -44,4 +48,9 @@ class UserController(
         throw RuntimeException()
     }
 
+//    @GetMapping
+////    @CrossOrigin(value = ["http://localhost:5173"], allowCredentials = "true")
+//    fun foo(httpServletRequest: HttpServletRequest) {
+//        println(httpServletRequest.getHeader(HttpHeaders.ORIGIN))
+//    }
 }

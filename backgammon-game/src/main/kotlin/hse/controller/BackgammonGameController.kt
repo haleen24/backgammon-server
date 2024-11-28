@@ -35,7 +35,7 @@ class BackgammonGameController(
         return backgammonGameService.connectToGameRoom(user, roomId)
     }
 
-    @GetMapping("сonfig/{roomId}")
+    @GetMapping("config/{roomId}")
     fun getConfiguration(
         @RequestHeader(USER_ID_HEADER) user: Int,
         @PathVariable("roomId") roomId: Int
@@ -62,7 +62,7 @@ class BackgammonGameController(
         return backgammonGameService.getColor(userId, roomId)
     }
 
-    @PostMapping("view/{roomId}")
+    @GetMapping("view/{roomId}")
     fun connectView(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): SseEmitter {
         return emitterService.create(roomId, userId)
     }

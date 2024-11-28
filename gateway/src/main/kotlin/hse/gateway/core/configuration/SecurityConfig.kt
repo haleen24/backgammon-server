@@ -34,6 +34,7 @@ class SecurityConfig {
     fun securityFilterChain(http: HttpSecurity, authenticationProvider: AuthenticationProvider): SecurityFilterChain {
         return http
             .csrf { it.disable() }
+//            .cors { it.disable() }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterAfter(sseFilter, UsernamePasswordAuthenticationFilter::class.java)
             .authenticationProvider(authenticationProvider)

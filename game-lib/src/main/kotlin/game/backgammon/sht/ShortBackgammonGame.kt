@@ -354,8 +354,8 @@ class ShortBackgammonGame(
             secondZar = tossZar()
         }
         turn = if (firstZar > secondZar) {
-            -1
-        } else 1
+            1
+        } else -1
         return arrayListOf(firstZar, secondZar)
     }
 
