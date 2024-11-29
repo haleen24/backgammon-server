@@ -34,17 +34,16 @@ class SecurityConfig {
     fun securityFilterChain(http: HttpSecurity, authenticationProvider: AuthenticationProvider): SecurityFilterChain {
         return http
             .csrf { it.disable() }
-//            .cors { it.disable() }
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterAfter(sseFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
             .authenticationProvider(authenticationProvider)
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
-                it.requestMatchers("/app/**").authenticated()
+                it
                     .requestMatchers("/user/create", "/login2").permitAll()
-                    .anyRequest().permitAll()
+                    .anyRequest().authenticated()
             }
-            .formLogin { it.permitAll() }
+            .formLogin { it.disable() }
             .build()
     }
 

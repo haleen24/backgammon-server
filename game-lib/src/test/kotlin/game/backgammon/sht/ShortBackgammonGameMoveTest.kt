@@ -87,4 +87,19 @@ class ShortBackgammonGameMoveTest {
         assertEquals(3, game.deck[4])
         assertEquals(1, game.deck[7])
     }
+
+
+    @ParameterizedTest
+    @CsvSource("4, 5", "5, 4")
+    fun moveHomeFromFor2MovesBiggerZar(firstZar: Int, secondZar: Int) {
+        Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(firstZar, secondZar)
+        game.deck[8] = 1
+        game.turn = 1
+        game.zarResults = arrayListOf()
+        game.tossBothZar()
+
+        game.move(game.turn, listOf(MoveDto(8, 8 - firstZar), MoveDto(8 - firstZar, 0)))
+
+        assertEquals(1, game.deck[0])
+    }
 }

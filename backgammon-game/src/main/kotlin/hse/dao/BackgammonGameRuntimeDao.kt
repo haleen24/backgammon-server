@@ -24,8 +24,8 @@ class BackgammonGameRuntimeDao(
         val game = when (gameType) {
             BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(ShortBackgammonGame())
         }
-        games.putIfAbsent(roomId, game) ?: throw ResponseStatusException(HttpStatus.CONFLICT, "$roomId уже занят")
-        return roomId
+        games.putIfAbsent(roomId, game) ?: return roomId
+        throw ResponseStatusException(HttpStatus.CONFLICT, "$roomId уже занят")
     }
 
     fun getGame(roomId: Int): BackgammonWrapper {

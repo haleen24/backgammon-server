@@ -21,7 +21,7 @@ class MenuGameService(
     private final val logger = LoggerFactory.getLogger(MenuGameService::class.java)
 
     init {
-        val job = Thread { connectionJob() }
+        Thread { connectionJob() }.start()
     }
 
     fun storeRoom(gameType: GameType): Int {
@@ -50,8 +50,8 @@ class MenuGameService(
             logger.info("Зашел второй: ${secondPlayerConnection.userId}")
             if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
                 logger.info("Нельзя играть с самим собой")
-                connectionDao.connect(firstPlayerConnection)
-                secondPlayerConnection.latch.countDown()
+                connectionDao.connect(secondPlayerConnection)
+                firstPlayerConnection.latch.countDown()
                 continue
             }
             // Пока только 1 тип игры
@@ -64,6 +64,7 @@ class MenuGameService(
                 firstPlayerConnection.gameType,
             )
             if (realRoomId != gameId) {
+                logger.info("Реальный id комнаты ${realRoomId}, сгенерированный $gameId")
                 firstPlayerConnection.latch.countDown()
                 secondPlayerConnection.latch.countDown()
                 continue

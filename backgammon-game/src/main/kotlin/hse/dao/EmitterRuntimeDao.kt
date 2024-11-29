@@ -11,7 +11,7 @@ class EmitterRuntimeDao(
 ) {
     @Synchronized
     fun add(gameId: Int, userId: Int): SseEmitter {
-        if (!emitters.contains(gameId)) {
+        if (!emitters.containsKey(gameId)) {
             emitters[gameId] = HashSet()
         }
         val emitter = SseEmitter(100000000000000000)

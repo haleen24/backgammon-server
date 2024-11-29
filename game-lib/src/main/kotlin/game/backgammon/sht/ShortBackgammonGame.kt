@@ -4,8 +4,6 @@ import game.backgammon.Backgammon
 import game.backgammon.dto.*
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.math.*
 
 class ShortBackgammonGame(
@@ -118,19 +116,25 @@ class ShortBackgammonGame(
         } else if (result.size == 4 && maxMoves != 0) {
             zarResults = ArrayList(result.subList(0, maxMoves))
         } else if (result.size == 2 && maxMoves == 1) {
-            val zar = max(res1, res2)
-            val dif = -zar * turn
-            val to = getBarFrom(turn) + dif
-            zarResults = if (testBar[turn]!! > 0 && canMove(to)) {
-                arrayListOf(zar)
-            } else if ((1..24).any { checkTurn(it) && canMove(it + dif) }) {
-                arrayListOf(zar)
+            val maxZar = max(res1, res2)
+            val minZar = min(res1, res2)
+            val maxDif = -maxZar * turn
+            if (testBar[turn]!!.absoluteValue > 0) {
+                val maxTo = getBarFrom(turn) + maxDif
+                zarResults = if (canMove(maxTo)) {
+                    arrayListOf(maxZar)
+                } else {
+                    arrayListOf(minZar)
+                }
             } else {
-                arrayListOf(min(res1, res2))
+                zarResults = if ((1..24).any { checkTurn(it) && canMove(it + maxDif) }) {
+                    arrayListOf(maxZar)
+                } else {
+                    arrayListOf(minZar)
+                }
             }
         } else if (maxMoves == 0) {
             zarResults.clear()
-            turn = -turn
         }
 
         return TossZarDto(result)
@@ -221,7 +225,7 @@ class ShortBackgammonGame(
         return if (knocked == null) {
             listOf(moveMap)
         } else {
-            listOf(moveMap, knocked)
+            listOf(knocked, moveMap)
         }
 
     }
@@ -271,17 +275,18 @@ class ShortBackgammonGame(
         if (checkAllInHome(user)) {
             if (testZar.max() > dif) {
                 val farthest = if (move.to > move.from) {
-                    testDeck.filterIndexed { idx, _ -> idx > 18 && idx < move.from }
+                    testDeck.filterIndexed { idx, _ -> checkTurn(idx) && idx > 18 && idx < move.from }
                 } else {
-                    testDeck.filterIndexed { idx, _ -> idx < 7 && idx > move.from }
+                    testDeck.filterIndexed { idx, _ -> checkTurn(idx) && idx < 7 && idx > move.from }
                 }
                 if (farthest.isEmpty()) {
                     testZar.remove(testZar.max())
                 }
+                return
             }
         }
 
-        throw RuntimeException("zar result not found for some moves")
+        throw RuntimeException("zar result not found for ${move.from}:${move.to}")
 
     }
 
