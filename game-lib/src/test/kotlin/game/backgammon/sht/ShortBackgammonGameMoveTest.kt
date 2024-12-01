@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito
 import java.util.*
+import kotlin.math.absoluteValue
 
 class ShortBackgammonGameMoveTest {
 
@@ -101,5 +102,17 @@ class ShortBackgammonGameMoveTest {
         game.move(game.turn, listOf(MoveDto(8, 8 - firstZar), MoveDto(8 - firstZar, 0)))
 
         assertEquals(1, game.deck[0])
+    }
+
+
+    @Test
+    fun moveToStoreOnlyOneOnDeck() {
+        game.deck[23] = -1
+        game.turn = -1
+        game.zarResults = arrayListOf(3)
+
+        game.move(game.turn, listOf(MoveDto(23, 25)))
+
+        assertEquals(1, game.deck[25].absoluteValue)
     }
 }

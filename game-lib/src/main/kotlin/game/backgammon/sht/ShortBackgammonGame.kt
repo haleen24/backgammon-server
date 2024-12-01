@@ -21,7 +21,7 @@ class ShortBackgammonGame(
         1 to 0
     )
     private var testBar = HashMap<Int, Int>()
-
+    private var foolZar = ArrayList<Int>()
 
     init {
         for (i in 0..<26) {
@@ -38,6 +38,7 @@ class ShortBackgammonGame(
         deck[6] = 5
 
         zarResults = setStartConfiguration()
+        foolZar = ArrayList(zarResults)
         testDeck = ArrayList(deck)
         testZar = ArrayList(zarResults)
         testBar = HashMap(bar)
@@ -45,7 +46,7 @@ class ShortBackgammonGame(
 
     override fun getConfiguration(): ConfigDto {
         return ConfigDto(
-            zar = zarResults,
+            zar = foolZar,
             bar = bar,
             turn = turn,
             deck = deck,
@@ -97,6 +98,7 @@ class ShortBackgammonGame(
             result.add(res2)
         }
         zarResults = ArrayList(result)
+        foolZar = ArrayList(result)
 
         var maxMoves = 0
 
@@ -195,7 +197,7 @@ class ShortBackgammonGame(
                 idx
             }
             // todo: оптимизировать валидацию -> когда попали вот сюда, не надо выполнять следующий пересчет хода
-            if (dist < currZar) {
+            if (dist != 0 && dist < currZar) {
                 testDeck[idx] -= turn
                 next = findMaxFromSequence(nextZar)
                 testDeck[idx] += turn
@@ -365,11 +367,11 @@ class ShortBackgammonGame(
     }
 
     private fun canMove(to: Int): Boolean {
-        return testDeck[to] * turn >= -1
+        return to >= 0 && to < testDeck.size && testDeck[to] * turn >= -1
     }
 
     private fun checkTurn(position: Int): Boolean {
-        return position != 0 && testDeck[position].sign == turn
+        return position >= 0 && position < testDeck.size && testDeck[position] != 0 && testDeck[position].sign == turn
     }
 
     override fun toString(): String {

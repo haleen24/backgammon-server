@@ -1,6 +1,7 @@
 package game.backgammon.sht
 
 import jdk.jfr.Description
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -250,5 +251,18 @@ class ShortBackgammonGameTossZarTest {
         game.tossBothZar()
 
         assertEquals(2, game.zarResults.size)
+    }
+
+    @ParameterizedTest
+    @CsvSource("3, 5", "5, 3")
+    fun moveToStoreOnlyOneOnDeck(firstZar: Int, secondZar: Int) {
+        Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(firstZar, secondZar)
+        game.deck[0] = 14
+        game.deck[1] = 1
+        game.turn = 1
+        game.zarResults = arrayListOf()
+        game.tossBothZar()
+
+        Assertions.assertEquals(1, game.zarResults.size)
     }
 }

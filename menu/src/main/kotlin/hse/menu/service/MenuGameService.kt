@@ -50,8 +50,8 @@ class MenuGameService(
             logger.info("Зашел второй: ${secondPlayerConnection.userId}")
             if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
                 logger.info("Нельзя играть с самим собой")
-                connectionDao.connect(secondPlayerConnection)
                 firstPlayerConnection.latch.countDown()
+                secondPlayerConnection.latch.countDown()
                 continue
             }
             // Пока только 1 тип игры
