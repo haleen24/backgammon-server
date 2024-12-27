@@ -11,6 +11,7 @@ import hse.dto.EndEvent
 import hse.dto.GameStartedEvent
 import hse.dto.MoveEvent
 import hse.dto.TossZarEvent
+import hse.scheduler.GameScheduler
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -18,9 +19,9 @@ import org.springframework.web.server.ResponseStatusException
 @Service
 class BackgammonGameService(
     private val backgammonGameRuntimeDao: BackgammonGameRuntimeDao,
-    private val emitterService: EmitterService
+    private val emitterService: EmitterService,
+    private val gameScheduler: GameScheduler,
 ) {
-
 
     fun createAndConnect(roomId: Int, firstPlayer: Int, secondPlayer: Int, gameType: BackgammonType): Int {
         val resId = backgammonGameRuntimeDao.createGame(roomId, gameType)
@@ -46,6 +47,7 @@ class BackgammonGameService(
             val endState = game.getEndState()
             val event = EndEvent(lose = endState[false]!!, win = endState[true]!!)
             emitterService.sendForAll(gameId, event)
+            gameScheduler.closeGame(gameId)
         }
         val tossZarRes = game.tossZar()
         emitterService.sendForAll(gameId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))

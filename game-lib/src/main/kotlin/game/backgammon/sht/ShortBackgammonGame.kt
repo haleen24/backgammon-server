@@ -2,6 +2,7 @@ package game.backgammon.sht
 
 import game.backgammon.Backgammon
 import game.backgammon.dto.*
+import game.backgammon.exception.*
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
 import kotlin.math.*
@@ -56,7 +57,7 @@ class ShortBackgammonGame(
     override fun move(user: Int, moves: List<MoveDto>): ChangeDto {
 
         if (zarResults.size != moves.size) {
-            throw RuntimeException("incorrect number of moves")
+            throw IncorrectNumberOfMovesBackgammonException()
         }
 
         validateGameState(user)
@@ -71,10 +72,10 @@ class ShortBackgammonGame(
             res.addAll(makeMove(user, move))
         }
         turn = -user
-        validateEnd()
         deck = ArrayList(testDeck)
         zarResults = ArrayList(testZar)
         bar = HashMap(testBar)
+        validateEnd()
         return ChangeDto(res)
     }
 
@@ -88,7 +89,7 @@ class ShortBackgammonGame(
     override fun tossBothZar(): TossZarDto {
 
         if (zarResults.isNotEmpty()) {
-            throw RuntimeException("re toss zar")
+            throw ReTossZarBackgammonException()
         }
         val res1 = tossZar()
         val res2 = tossZar()
@@ -250,22 +251,22 @@ class ShortBackgammonGame(
 
     private fun validateGameState(user: Int) {
         if (endFlag) {
-            throw RuntimeException("game is over")
+            throw GameIsOverBackgammonException()
         }
         if (user != -1 && user != 1) {
-            throw RuntimeException("user should be -1 or 1")
+            throw IncorrectInputtedUserBackgammonException()
         }
         if (user != turn) {
-            throw RuntimeException("user != turn")
+            throw IncorrectTurnBackgammonException()
         }
     }
 
     private fun validateMoveFromBar(user: Int, move: MoveDto) {
         val moveFromBar = move.from == 0 || move.from == 25
         if (!moveFromBar && testBar[user]!! > 0) {
-            throw RuntimeException("firstly u have to clear bar")
+            throw NotEmptyBarBackgammonException()
         } else if (moveFromBar && testBar[user]!! == 0) {
-            throw RuntimeException("cant move from bar")
+            throw EmptyBarBackgammonException()
         }
     }
 
@@ -288,22 +289,21 @@ class ShortBackgammonGame(
             }
         }
 
-        throw RuntimeException("zar result not found for ${move.from}:${move.to}")
-
+        throw NoSuchZarBackgammonException(move.from, move.to)
     }
 
     private fun validateMove(user: Int, move: MoveDto) {
         if (user * (move.to - move.from) > 0) {
-            throw RuntimeException("incorrect direction for move ${move.to}")
+            throw IncorrectDirectionBackgammonException(move.from, move.to)
         }
         if (move.from < 0 || move.from >= deck.size || move.to < 0 || move.to >= deck.size) {
-            throw RuntimeException("move ${move.from} -> ${move.to} out of bounds")
+            throw OutOfBoundsBackgammonException(move.from, move.to)
         }
         if (move.from != 0 && move.from != 25 && testDeck[move.from] * user <= 0) {
-            throw RuntimeException("cant move from position ${move.from}")
+            throw IncorrectPositionForMoveBackgammonException(move.from)
         }
         if (!canMove(move.to)) {
-            throw RuntimeException("cant move to position ${move.to}")
+            throw IncorrectPositionForMoveBackgammonException(move.to)
         }
 
     }
@@ -319,7 +319,7 @@ class ShortBackgammonGame(
     private fun validateExit(user: Int, move: MoveDto) {
         if (move.to == 0 || move.to == 25) {
             if (!checkAllInHome(user)) {
-                throw RuntimeException("cant exit")
+                throw CantExitBackgammonException()
             }
         }
 
@@ -329,7 +329,7 @@ class ShortBackgammonGame(
         return when (user) {
             -1 -> 0
             1 -> 25
-            else -> throw RuntimeException("user cant make this move")
+            else -> throw IncorrectInputtedUserBackgammonException()
         }
     }
 
@@ -337,7 +337,7 @@ class ShortBackgammonGame(
         return when (user) {
             -1 -> -1
             1 -> 26
-            else -> throw RuntimeException("user cant make this move")
+            else -> throw IncorrectInputtedUserBackgammonException()
         }
     }
 
@@ -367,7 +367,17 @@ class ShortBackgammonGame(
     }
 
     private fun canMove(to: Int): Boolean {
-        return to >= 0 && to < testDeck.size && testDeck[to] * turn >= -1
+        val canTo = to >= 0 && to < testDeck.size && testDeck[to] * turn >= -1
+        if (!canTo) {
+            return false
+        }
+        return if (to > 0 && to < testDeck.size - 1) {
+            true
+        } else if (to == 0 || to == testDeck.size - 1) {
+            return checkAllInHome(turn)
+        } else {
+            false
+        }
     }
 
     private fun checkTurn(position: Int): Boolean {

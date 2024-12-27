@@ -3,6 +3,15 @@ spring:
     name: backgammon-game
 
 server:
+  error:
+    include-message: always
   port: 82
   servlet:
     context-path: /game
+
+config:
+  sse:
+    time-out: 100000000000000000
+
+  game:
+    after-close-delay: 120

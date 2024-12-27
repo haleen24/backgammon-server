@@ -7,20 +7,34 @@ import game.backgammon.dto.MoveDto
 import game.backgammon.dto.TossZarDto
 import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
 class BackgammonWrapper(
     private val game: Backgammon,
 ) {
+
+    companion object {
+        const val BLACK_COLOR = -1
+        const val WHITE_COLOR = 1
+    }
+
+
+    @Volatile
     private var firstPlayer: Int = -1
+
+    @Volatile
     private var secondPlayer: Int = -1
+
     @Volatile
     private var isBothConnected = false
 
     @Volatile
     private var numberOfMoves: Int = 0
 
+    @Synchronized
     fun connect(playerId: Int): Boolean {
         return if (firstPlayer == -1 || firstPlayer == playerId) {
             firstPlayer = playerId
@@ -53,7 +67,7 @@ class BackgammonWrapper(
     }
 
     fun move(playerId: Int, moves: List<MoveDto>): ChangeDto {
-        checkBothConnected()
+        checkBothConnectedAndThrow()
         return game.move(getPlayerMask(playerId), moves).also { ++numberOfMoves }
     }
 
@@ -67,8 +81,8 @@ class BackgammonWrapper(
     }
 
     fun getEndState(): Map<Boolean, Color> {
-        checkBothConnected()
-        val res = game.getEndState() ?: throw RuntimeException("game not ended")
+        checkBothConnectedAndThrow()
+        val res = game.getEndState() ?: throw ResponseStatusException(HttpStatus.TOO_EARLY, "Game not ended")
         return listOf(firstPlayer, secondPlayer).associate { (getPlayerMask(it) == res.winner) to getPlayerColor(it) }
     }
 
@@ -94,25 +108,28 @@ class BackgammonWrapper(
 
     private fun getColor(mask: Int): Color {
         return when (mask) {
-            -1 -> Color.BLACK
-            1 -> Color.WHITE
+            BLACK_COLOR -> Color.BLACK
+            WHITE_COLOR -> Color.WHITE
             else -> throw RuntimeException("mask should be -1 or 1, not $mask")
         }
     }
 
     private fun getPlayerMask(playerId: Int): Int {
         return if (firstPlayer == playerId) {
-            -1
+            BLACK_COLOR
         } else if (secondPlayer == playerId) {
-            1
+            WHITE_COLOR
         } else {
-            throw RuntimeException("game not configured")
+            throw ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                "Player not connected"
+            )
         }
     }
 
-    private fun checkBothConnected() {
+    private fun checkBothConnectedAndThrow() {
         if (!isBothConnected) {
-            throw RuntimeException("players are not connected")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Players are not connected")
         }
     }
 }

@@ -1,5 +1,6 @@
 package game.backgammon.sht
 
+import game.backgammon.Backgammon
 import jdk.jfr.Description
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -14,6 +15,9 @@ class ShortBackgammonGameTossZarTest {
 
     private var game: ShortBackgammonGame = ShortBackgammonGame()
 
+    private var firstUser  = -1
+    private var secondUser  = 1
+
     @BeforeEach
     fun setUp() {
         val random = Mockito.mock(Random::class.java)
@@ -27,24 +31,24 @@ class ShortBackgammonGameTossZarTest {
     @Test
     fun cantMoveFromBar() {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(1)
-        game.turn = -1
+        game.turn = firstUser
         game.zarResults = arrayListOf()
-        game.bar[-1] = -1
+        game.bar[firstUser] = -1
         game.deck[1] = 2
         game.deck[2] = -1
 
         game.tossBothZar()
 
-        assertEquals(-1, game.turn)
+        assertEquals(firstUser, game.turn)
         assertEquals(2, game.deck[1])
-        assertEquals(-1, game.bar[-1])
+        assertEquals(-1, game.bar[firstUser])
         assertEquals(0, game.zarResults.size)
     }
 
     @Test
     fun cantDoRegularMove() {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(1, 2)
-        game.turn = -1
+        game.turn = firstUser
         game.zarResults = arrayListOf()
         game.deck[1] = -1
         game.deck[2] = 2
@@ -52,7 +56,7 @@ class ShortBackgammonGameTossZarTest {
 
         game.tossBothZar()
 
-        assertEquals(-1, game.turn)
+        assertEquals(firstUser, game.turn)
         assertEquals(-1, game.deck[1])
         assertEquals(2, game.deck[2])
         assertEquals(2, game.deck[3])
@@ -62,7 +66,7 @@ class ShortBackgammonGameTossZarTest {
     @Test
     fun canDoMoveTroughKnockOut() {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(2, 1)
-        game.turn = -1
+        game.turn = firstUser
         game.zarResults = arrayListOf()
         game.deck[1] = -1
         game.deck[2] = 1
@@ -70,7 +74,7 @@ class ShortBackgammonGameTossZarTest {
 
         game.tossBothZar()
 
-        assertEquals(-1, game.turn)
+        assertEquals(firstUser, game.turn)
         assertEquals(-1, game.deck[1])
         assertEquals(1, game.deck[2])
         assertEquals(1, game.deck[3])
@@ -80,7 +84,7 @@ class ShortBackgammonGameTossZarTest {
     @Test
     fun canMove3from4ForLuckyZar() {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(1)
-        game.turn = 1
+        game.turn = secondUser
         game.zarResults = arrayListOf()
         game.deck[24] = 1
         game.deck[20] = -2
@@ -88,7 +92,7 @@ class ShortBackgammonGameTossZarTest {
 
         game.tossBothZar()
 
-        assertEquals(1, game.turn)
+        assertEquals(secondUser, game.turn)
         assertEquals(1, game.deck[24])
         assertEquals(-2, game.deck[20])
         assertEquals(-2, game.deck[19])
@@ -98,7 +102,7 @@ class ShortBackgammonGameTossZarTest {
     @Test
     fun canMoveHome() {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(2)
-        game.turn = 1
+        game.turn = secondUser
         game.zarResults = arrayListOf()
         game.deck[0] = 0
         game.deck[1] = 1
@@ -106,7 +110,7 @@ class ShortBackgammonGameTossZarTest {
 
         game.tossBothZar()
 
-        assertEquals(1, game.turn)
+        assertEquals(secondUser, game.turn)
         assertEquals(0, game.deck[0])
         assertEquals(1, game.deck[1])
         assertEquals(3, game.deck[2])
@@ -117,7 +121,7 @@ class ShortBackgammonGameTossZarTest {
     @Description("Можно два хода: 18 -> 19 и сброс 23")
     fun advancedMoveHome() {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(1, 2)
-        game.turn = -1
+        game.turn = firstUser
         game.zarResults = arrayListOf()
         game.deck[24] = 2
         game.deck[23] = -1
@@ -126,7 +130,7 @@ class ShortBackgammonGameTossZarTest {
 
         game.tossBothZar()
 
-        assertEquals(-1, game.turn)
+        assertEquals(firstUser, game.turn)
         assertEquals(2, game.deck[24])
         assertEquals(2, game.deck[21])
         assertEquals(-1, game.deck[23])
@@ -138,25 +142,26 @@ class ShortBackgammonGameTossZarTest {
     @Description("Проверка 10 -> 4/5 -> 0")
     fun advancedMoveHomeRuleOfBiggestZar() {
         Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(5, 6)
-        game.turn = 1
+        game.turn = secondUser
         game.zarResults = arrayListOf()
         game.deck[10] = 1
         game.deck[1] = 1
 
         game.tossBothZar()
 
-        assertEquals(1, game.turn)
+        assertEquals(secondUser, game.turn)
         assertEquals(1, game.deck[10])
         assertEquals(1, game.deck[1])
         assertEquals(2, game.zarResults.size)
     }
 
-    @Test
-    fun canMoveFromBarOnlyOnes() {
-        Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(1, 2)
-        game.turn = -1
+    @ParameterizedTest
+    @CsvSource("1, 2", "2, 1")
+    fun canMoveFromBarOnlyOnes(firstZar: Int, secondZar: Int) {
+        Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(firstZar, secondZar)
+        game.turn = firstUser
         game.zarResults = arrayListOf()
-        game.bar[-1] = -1
+        game.bar[firstUser] = -1
         game.deck[1] = 2
         game.deck[3] = 2
 
@@ -264,5 +269,25 @@ class ShortBackgammonGameTossZarTest {
         game.tossBothZar()
 
         Assertions.assertEquals(1, game.zarResults.size)
+    }
+
+    @ParameterizedTest
+    @CsvSource("4, 6", "6, 4")
+    fun cantMoveBiggestZar(firstZar: Int, secondZar: Int) {
+        Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(firstZar, secondZar)
+        game.deck[10] = -1
+        game.deck[16] = 2
+        game.deck[19] = -5
+        game.deck[20] = 2
+        game.deck[21] = 1
+        game.deck[22] = -4
+        game.deck[23] = -2
+        game.deck[24] = -3
+        game.turn = -1
+        game.zarResults = arrayListOf()
+        game.tossBothZar()
+
+        Assertions.assertEquals(1, game.zarResults.size)
+        Assertions.assertEquals(4, game.zarResults.first())
     }
 }

@@ -15,3 +15,23 @@ jwt:
     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
   expire:
     1000000000000
+
+route:
+  token:
+    name: 'token'
+  header:
+    auth-user:
+      name: 'auth-user'
+
+  config:
+    menu:
+      id: 'menu'
+      path: 'menu/**'
+      host: 'http://localhost:81'
+
+    backgammon-game:
+      id: 'backgammon-game'
+      path: 'game/backgammon/**'
+      host: 'http://localhost:82'
+
+
