@@ -13,13 +13,20 @@ java {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'hse.menu.MenuApplication'
+        )
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+//    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

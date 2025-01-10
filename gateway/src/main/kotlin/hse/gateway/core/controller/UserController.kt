@@ -22,7 +22,7 @@ class UserController(
     private val jwtService: JwtService,
 ) {
 
-    @PostMapping("/create/user")
+    @PostMapping("/user/create")
     fun createUser(@RequestBody user: User) {
         userService.createUser(user)
     }

@@ -11,7 +11,7 @@ server:
 
 config:
   sse:
-    time-out: 100000000000000000
+    time-out: ${GAME_SSE_TIMEOUT:#{3600}}
 
   game:
     after-close-delay: 120

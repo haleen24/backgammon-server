@@ -3,7 +3,7 @@ package hse.gateway.core.entity
 import jakarta.persistence.*
 
 @Entity
-@Table(schema = "security")
+@Table(schema = "sch1")
 data class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long,

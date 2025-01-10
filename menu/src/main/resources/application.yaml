@@ -1,11 +1,17 @@
 spring:
   application:
     name: menu
-  datasource:
-    url: jdbc:postgresql://localhost:5432/backgammon
-    driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: admin
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/backgammon
+#    driver-class-name: org.postgresql.Driver
+#    username: postgres
+#    password: admin
 
 server:
   port: 81
+
+route:
+  config:
+    backgammon-game:
+      #      host: ${GAME_HOST:http://localhost:82}
+      host: 'http://game-service:82'

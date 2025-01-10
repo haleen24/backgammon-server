@@ -14,6 +14,14 @@ java {
     }
 }
 
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'hse.BackgammonGameApplication'
+        )
+    }
+}
+
 repositories {
     mavenCentral()
 }

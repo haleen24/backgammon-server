@@ -1,20 +1,34 @@
 server:
   port: 80
   address: 0.0.0.0
+
 spring:
   application:
     name: gateway
 
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    show-sql: true
+
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/backgammon
+
+    url: jdbc:postgresql://postgres-service:5432/backgammon
+#    url: jdbc:postgresql://${PLAYER_DB:localhost:5432/backgammon}
     driver-class-name: org.postgresql.Driver
+#    username: ${PLAYER_DB_USER:postgres}
     username: postgres
+#    password: ${PLAYER_DB_PASS:admin}
     password: admin
+
+  data:
+    jdbc:
+      dialect: postgresql
 jwt:
-  secret:
-    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  expire:
-    1000000000000
+  secret: ${JWT_SECRET:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+  expire: ${PLAYER_TOKEN_EXPIRATION_TIME:100000}
 
 route:
   token:
@@ -27,11 +41,12 @@ route:
     menu:
       id: 'menu'
       path: 'menu/**'
-      host: 'http://localhost:81'
+#      host: ${MENU_HOST:http://localhost:81}
+      host: 'http://menu-service:81'
 
     backgammon-game:
       id: 'backgammon-game'
       path: 'game/backgammon/**'
-      host: 'http://localhost:82'
-
+#      host: ${GAME_HOST:http://localhost:82}
+      host: 'http://game-service:82'
 
