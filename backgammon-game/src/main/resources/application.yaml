@@ -1,6 +1,11 @@
 spring:
   application:
     name: backgammon-game
+  data:
+    mongodb:
+      host: mongo-service
+      port: 27017
+      database: gammon-move
 
 server:
   error:
@@ -11,7 +16,11 @@ server:
 
 config:
   sse:
-    time-out: ${GAME_SSE_TIMEOUT:#{3600}}
+    time-out: ${GAME_SSE_TIMEOUT:#{100000000}}
 
   game:
     after-close-delay: 120
+
+  jedis:
+    host: redis-service
+    port: 6379

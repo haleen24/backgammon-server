@@ -10,6 +10,10 @@ data class MoveResponse(
     val color: Color
 )
 
+data class HistoryResponse(
+    val moves: List<MoveResponseDto>,
+)
+
 
 data class ConfigResponse(
     val color: Color,

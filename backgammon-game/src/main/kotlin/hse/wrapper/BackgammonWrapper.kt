@@ -1,51 +1,53 @@
 package hse.wrapper
 
 import game.backgammon.Backgammon
+import game.backgammon.GammonRestorer
 import game.backgammon.dto.ChangeDto
 import game.backgammon.dto.DeckItemDto
 import game.backgammon.dto.MoveDto
 import game.backgammon.dto.TossZarDto
+import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
+import hse.dto.GammonRestoreContextDto
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
+
 class BackgammonWrapper(
     private val game: Backgammon,
+    private val type: BackgammonType,
 ) {
 
     companion object {
         const val BLACK_COLOR = -1
         const val WHITE_COLOR = 1
+
+        fun buildFromContext(restoreContextDto: GammonRestoreContextDto): BackgammonWrapper {
+            val gameWrapper = when (restoreContextDto.type) {
+                BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(
+                    GammonRestorer.restoreBackgammon(restoreContextDto.game),
+                    BackgammonType.SHORT_BACKGAMMON
+                )
+            }
+            gameWrapper.firstPlayer = restoreContextDto.firstUserId
+            gameWrapper.secondPlayer = restoreContextDto.secondUserId
+            gameWrapper.numberOfMoves = restoreContextDto.numberOfMoves
+            return gameWrapper
+        }
     }
 
-
-    @Volatile
     private var firstPlayer: Int = -1
 
-    @Volatile
     private var secondPlayer: Int = -1
 
-    @Volatile
-    private var isBothConnected = false
+    var numberOfMoves: Int = 0
 
-    @Volatile
-    private var numberOfMoves: Int = 0
-
-    @Synchronized
-    fun connect(playerId: Int): Boolean {
-        return if (firstPlayer == -1 || firstPlayer == playerId) {
-            firstPlayer = playerId
-            true
-        } else if (secondPlayer == -1 || secondPlayer == playerId) {
-            secondPlayer = playerId
-            isBothConnected = true
-            true
-        } else {
-            false
-        }
+    fun connect(first: Int, second: Int) {
+        firstPlayer = first
+        secondPlayer = second
     }
 
     fun getConfiguration(playerId: Int): ConfigResponse {
@@ -66,8 +68,8 @@ class BackgammonWrapper(
         )
     }
 
+
     fun move(playerId: Int, moves: List<MoveDto>): ChangeDto {
-        checkBothConnectedAndThrow()
         return game.move(getPlayerMask(playerId), moves).also { ++numberOfMoves }
     }
 
@@ -80,18 +82,31 @@ class BackgammonWrapper(
         return getColor(mask)
     }
 
-    fun getEndState(): Map<Boolean, Color> {
-        checkBothConnectedAndThrow()
+    fun gameEndStatus(): Map<Boolean, Color> {
         val res = game.getEndState() ?: throw ResponseStatusException(HttpStatus.TOO_EARLY, "Game not ended")
         return listOf(firstPlayer, secondPlayer).associate { (getPlayerMask(it) == res.winner) to getPlayerColor(it) }
     }
 
-    fun checkIsGameStarted(): Boolean {
-        return isBothConnected
-    }
-
     fun checkEnd(): Boolean {
         return game.checkEnd()
+    }
+
+
+    fun getRestoreContext(): GammonRestoreContextDto {
+        val config = game.getConfiguration()
+        return GammonRestoreContextDto(
+            game = GammonRestorer.GammonRestoreContext(
+                deck = config.deck.mapIndexed { index, it -> index to it }.filter { it.second != 0 }.toMap(),
+                turn = config.turn,
+                zarResult = config.zar,
+                bar = config.bar,
+                endFlag = game.checkEnd(),
+            ),
+            firstUserId = firstPlayer,
+            secondUserId = secondPlayer,
+            type = type,
+            numberOfMoves = numberOfMoves
+        )
     }
 
     private fun getDeckItemDto(index: Int, value: Int): DeckItemDto? {
@@ -124,12 +139,6 @@ class BackgammonWrapper(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 "Player not connected"
             )
-        }
-    }
-
-    private fun checkBothConnectedAndThrow() {
-        if (!isBothConnected) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Players are not connected")
         }
     }
 }

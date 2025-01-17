@@ -5,36 +5,43 @@ import game.backgammon.dto.MoveResponseDto
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
+import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
-import hse.dao.BackgammonGameRuntimeDao
+import game.backgammon.sht.ShortBackgammonGame
+import hse.adapter.RedisAdapter
 import hse.dto.EndEvent
 import hse.dto.GameStartedEvent
 import hse.dto.MoveEvent
 import hse.dto.TossZarEvent
-import hse.scheduler.GameScheduler
+import hse.wrapper.BackgammonWrapper
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 
 @Service
 class BackgammonGameService(
-    private val backgammonGameRuntimeDao: BackgammonGameRuntimeDao,
     private val emitterService: EmitterService,
-    private val gameScheduler: GameScheduler,
+//    private val gameScheduler: GameScheduler,
+    private val redisAdapter: RedisAdapter,
+    private val gammonStoreService: GammonStoreService
 ) {
 
+    private val logger = LoggerFactory.getLogger(BackgammonGameService::class.java)
+
     fun createAndConnect(roomId: Int, firstPlayer: Int, secondPlayer: Int, gameType: BackgammonType): Int {
-        val resId = backgammonGameRuntimeDao.createGame(roomId, gameType)
-        val game = backgammonGameRuntimeDao.getGame(resId)
-        if (game.connect(firstPlayer) && game.connect(secondPlayer)) {
-            emitterService.sendForAll(roomId, GameStartedEvent())
-            return resId
+        val commonGameType = when (gameType) {
+            BackgammonType.SHORT_BACKGAMMON -> BackgammonType.SHORT_BACKGAMMON
         }
-        throw ResponseStatusException(HttpStatus.CONFLICT, "Невозможно присоединить игроков к игре")
+        val game = createGame(roomId, commonGameType)
+        game.connect(firstPlayer, secondPlayer)
+        emitterService.sendForAll(roomId, GameStartedEvent())
+        gammonStoreService.saveGameOnCreation(roomId, game)
+        return roomId
     }
 
     fun moveInGame(gameId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
-        val game = backgammonGameRuntimeDao.getGame(gameId)
+        val game = gammonStoreService.getGameById(gameId)
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
 
@@ -44,27 +51,46 @@ class BackgammonGameService(
         )
         emitterService.sendEventExceptUser(playerId, gameId, MoveEvent(response.moves, playerColor))
         if (game.checkEnd()) {
-            val endState = game.getEndState()
+            val endState = game.gameEndStatus()
             val event = EndEvent(lose = endState[false]!!, win = endState[true]!!)
             emitterService.sendForAll(gameId, event)
-            gameScheduler.closeGame(gameId)
+//            gameScheduler.closeGame(gameId)
         }
         val tossZarRes = game.tossZar()
+        gammonStoreService.saveAfterMove(gameId, game, res)
         emitterService.sendForAll(gameId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))
         return response
     }
 
     fun getConfiguration(userId: Int, gameId: Int): ConfigResponse {
-        val game = backgammonGameRuntimeDao.getGame(gameId)
+        val game = gammonStoreService.getGameById(gameId)
         return game.getConfiguration(userId)
     }
 
     fun getColor(userId: Int, gameId: Int): Color {
-        val game = backgammonGameRuntimeDao.getGame(userId)
+        val game = gammonStoreService.getGameById(userId)
         return game.getPlayerColor(userId)
     }
 
-    fun isGameStarted(gameId: Int): Boolean {
-        return backgammonGameRuntimeDao.getGame(gameId).checkIsGameStarted()
+    fun getHistory(roomId: Int): List<HistoryResponse> {
+        return gammonStoreService.getAllMovesInGame(roomId)
+            .sortedBy { it.moveId }
+            .map { HistoryResponse(it.moves.changes.map { pair -> MoveResponseDto(pair.first, pair.second) }) }
+    }
+
+    fun closeGame(roomId: Int): Boolean {
+        logger.info("Evicting game $roomId")
+        return redisAdapter.del(roomId.toString()) != 0L
+    }
+
+
+    private fun createGame(roomId: Int, gameType: BackgammonType): BackgammonWrapper {
+        if (gammonStoreService.checkGameExists(roomId)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Game $roomId already exists")
+        }
+        val game = when (gameType) {
+            BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(ShortBackgammonGame(), gameType)
+        }
+        return game
     }
 }

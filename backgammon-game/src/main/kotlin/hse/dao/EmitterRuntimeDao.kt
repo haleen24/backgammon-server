@@ -1,6 +1,7 @@
 package hse.dao
 
 import hse.dto.EmitterDto
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -11,6 +12,8 @@ class EmitterRuntimeDao(
     private val emitters: ConcurrentHashMap<Int, HashSet<EmitterDto>> = ConcurrentHashMap(),
     @Value("\${config.sse.time-out}") private val sseTimeOut: Long
 ) {
+
+    val logger = LoggerFactory.getLogger(this.javaClass)
     @Synchronized
     fun add(gameId: Int, userId: Int): SseEmitter {
         if (!emitters.containsKey(gameId)) {
@@ -21,6 +24,7 @@ class EmitterRuntimeDao(
         emitter.onError { remove(gameId, userId) }
         emitter.onTimeout { remove(gameId, userId) }
         emitters[gameId]!!.add(EmitterDto(userId, emitter))
+        logger.info("Добавили с таймаутом $sseTimeOut")
         return emitter
     }
 

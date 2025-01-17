@@ -1,6 +1,7 @@
 package game.backgammon.sht
 
 import game.backgammon.Backgammon
+import game.backgammon.GammonRestorer
 import game.backgammon.dto.*
 import game.backgammon.exception.*
 import org.apache.commons.collections4.CollectionUtils
@@ -11,18 +12,20 @@ class ShortBackgammonGame(
     val zar: Random = Random()
 ) : Backgammon() {
     private var endFlag = false
+    private var testDeck: ArrayList<Int>
+    private var testZar: ArrayList<Int>
+    private var testBar = HashMap<Int, Int>()
+    private var foolZar = ArrayList<Int>()
 
     var deck = ArrayList<Int>(26)
-    private var testDeck: ArrayList<Int>
     var turn = 0
     var zarResults: ArrayList<Int>
-    private var testZar: ArrayList<Int>
+
     var bar = hashMapOf(
         -1 to 0,
         1 to 0
     )
-    private var testBar = HashMap<Int, Int>()
-    private var foolZar = ArrayList<Int>()
+
 
     init {
         for (i in 0..<26) {
@@ -43,6 +46,27 @@ class ShortBackgammonGame(
         testDeck = ArrayList(deck)
         testZar = ArrayList(zarResults)
         testBar = HashMap(bar)
+    }
+
+
+    constructor(restoreContext: GammonRestorer.GammonRestoreContext) : this() {
+        deck = ArrayList<Int>(26)
+        for (i in 0..<26) {
+            deck.add(0)
+        }
+        for (i in restoreContext.deck.entries) {
+            deck[i.key] = i.value
+        }
+
+        bar = HashMap(restoreContext.bar)
+        turn = restoreContext.turn
+        endFlag = restoreContext.endFlag
+
+        testDeck = ArrayList(deck)
+        testZar = ArrayList(zarResults)
+        testBar = HashMap(bar)
+
+        validateTossedZar(restoreContext.zarResult[0], restoreContext.zarResult[1])
     }
 
     override fun getConfiguration(): ConfigDto {
@@ -93,54 +117,7 @@ class ShortBackgammonGame(
         }
         val res1 = tossZar()
         val res2 = tossZar()
-        val result = mutableListOf<Int>()
-        for (i in 0..<if (res1 == res2) 2 else 1) {
-            result.add(res1)
-            result.add(res2)
-        }
-        zarResults = ArrayList(result)
-        foolZar = ArrayList(result)
-
-        var maxMoves = 0
-
-        for (zarPermutation in CollectionUtils.permutations(zarResults)) {
-            testDeck = ArrayList(deck)
-            testZar = ArrayList(zarResults)
-            testBar = HashMap(bar)
-            maxMoves = max(maxMoves, findMaxFromSequence(zarPermutation))
-            if (maxMoves == result.size) {
-                break
-            } else if (result.size == 4) {
-                break
-            }
-        }
-        if (maxMoves == result.size) {
-            zarResults = ArrayList(result)
-        } else if (result.size == 4 && maxMoves != 0) {
-            zarResults = ArrayList(result.subList(0, maxMoves))
-        } else if (result.size == 2 && maxMoves == 1) {
-            val maxZar = max(res1, res2)
-            val minZar = min(res1, res2)
-            val maxDif = -maxZar * turn
-            if (testBar[turn]!!.absoluteValue > 0) {
-                val maxTo = getBarFrom(turn) + maxDif
-                zarResults = if (canMove(maxTo)) {
-                    arrayListOf(maxZar)
-                } else {
-                    arrayListOf(minZar)
-                }
-            } else {
-                zarResults = if ((1..24).any { checkTurn(it) && canMove(it + maxDif) }) {
-                    arrayListOf(maxZar)
-                } else {
-                    arrayListOf(minZar)
-                }
-            }
-        } else if (maxMoves == 0) {
-            zarResults.clear()
-        }
-
-        return TossZarDto(result)
+        return validateTossedZar(res1, res2)
     }
 
     override fun checkEnd(): Boolean {
@@ -382,6 +359,59 @@ class ShortBackgammonGame(
 
     private fun checkTurn(position: Int): Boolean {
         return position >= 0 && position < testDeck.size && testDeck[position] != 0 && testDeck[position].sign == turn
+    }
+
+
+    private fun validateTossedZar(res1: Int, res2: Int): TossZarDto {
+        val result = mutableListOf<Int>()
+        for (i in 0..<if (res1 == res2) 2 else 1) {
+            result.add(res1)
+            result.add(res2)
+        }
+
+        zarResults = ArrayList(result)
+        foolZar = ArrayList(result)
+
+        var maxMoves = 0
+
+        for (zarPermutation in CollectionUtils.permutations(zarResults)) {
+            testDeck = ArrayList(deck)
+            testZar = ArrayList(zarResults)
+            testBar = HashMap(bar)
+            maxMoves = max(maxMoves, findMaxFromSequence(zarPermutation))
+            if (maxMoves == result.size) {
+                break
+            } else if (result.size == 4) {
+                break
+            }
+        }
+        if (maxMoves == result.size) {
+            zarResults = ArrayList(result)
+        } else if (result.size == 4 && maxMoves != 0) {
+            zarResults = ArrayList(result.subList(0, maxMoves))
+        } else if (result.size == 2 && maxMoves == 1) {
+            val maxZar = max(res1, res2)
+            val minZar = min(res1, res2)
+            val maxDif = -maxZar * turn
+            if (testBar[turn]!!.absoluteValue > 0) {
+                val maxTo = getBarFrom(turn) + maxDif
+                zarResults = if (canMove(maxTo)) {
+                    arrayListOf(maxZar)
+                } else {
+                    arrayListOf(minZar)
+                }
+            } else {
+                zarResults = if ((1..24).any { checkTurn(it) && canMove(it + maxDif) }) {
+                    arrayListOf(maxZar)
+                } else {
+                    arrayListOf(minZar)
+                }
+            }
+        } else if (maxMoves == 0) {
+            zarResults.clear()
+        }
+
+        return TossZarDto(result)
     }
 
     override fun toString(): String {

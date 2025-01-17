@@ -17,5 +17,5 @@ data:
   PLAYER_TOKEN_EXPIRATION_TIME: "10000"
 
   # gateway-config
-  MENU_HOST: 'http://localhost:81'
-  GAME_HOST: 'http://localhost:82'
+  MENU_HOST: 'http://menu-service:81'
+  GAME_HOST: 'http://game-service:82'

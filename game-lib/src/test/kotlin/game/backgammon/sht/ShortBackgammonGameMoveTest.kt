@@ -51,7 +51,9 @@ class ShortBackgammonGameMoveTest {
         game.deck[2] = 1
         game.turn = -1
 
-        game.move(-1, listOf(MoveDto(0, first), MoveDto(0, second)))
+        val actualRes = game.move(-1, listOf(MoveDto(0, first), MoveDto(0, second)))
+
+        println(actualRes)
 
         assertEquals(0, game.bar[-1])
         assertEquals(-1, game.deck[1])

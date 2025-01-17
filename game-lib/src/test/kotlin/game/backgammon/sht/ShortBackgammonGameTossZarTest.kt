@@ -1,6 +1,5 @@
 package game.backgammon.sht
 
-import game.backgammon.Backgammon
 import jdk.jfr.Description
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -15,8 +14,8 @@ class ShortBackgammonGameTossZarTest {
 
     private var game: ShortBackgammonGame = ShortBackgammonGame()
 
-    private var firstUser  = -1
-    private var secondUser  = 1
+    private var firstUser = -1
+    private var secondUser = 1
 
     @BeforeEach
     fun setUp() {
@@ -289,5 +288,31 @@ class ShortBackgammonGameTossZarTest {
 
         Assertions.assertEquals(1, game.zarResults.size)
         Assertions.assertEquals(4, game.zarResults.first())
+    }
+
+    @Test
+    fun tossEvent228() {
+        /*
+        "{\"game\":{\"deck\":{\"3\":4,\"6\":4,\"11\":2,\"12\":-3,\"16\":-2,\"18\":1,\"19\":-6,\"20\":-3,\"21\":3,\"24\":-1},\"turn\":1,\"zarResult\":[5,5,5,5],\"bar\":{\"-1\":0,\"1\":1},\"endFlag\":false},\"firstUserId\":2,\"secondUserId\":1,\"type\":\"SHORT_BACKGAMMON\",\"numberOfMoves\":34}"
+         */
+
+        Mockito.`when`(game.zar.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(5, 5)
+        game.deck[3] = 4
+        game.deck[6] = 4
+        game.deck[11] = 2
+        game.deck[12] = -3
+        game.deck[16] = -2
+        game.deck[18] = 1
+        game.deck[19] = -6
+        game.deck[20] = -3
+        game.deck[21] = 3
+        game.deck[24] = -1
+        game.bar[1] = 1
+
+        game.turn = 1
+        game.zarResults = arrayListOf()
+        game.tossBothZar()
+
+        Assertions.assertEquals(0, game.zarResults.size)
     }
 }

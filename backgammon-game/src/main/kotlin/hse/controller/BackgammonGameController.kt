@@ -4,11 +4,12 @@ import game.backgammon.enums.Color
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.backgammon.request.MoveRequest
 import game.backgammon.response.ConfigResponse
+import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
-import hse.dto.GameStartedEvent
 import hse.service.BackgammonGameService
 import hse.service.EmitterService
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
@@ -19,6 +20,8 @@ class BackgammonGameController(
     private val backgammonGameService: BackgammonGameService,
     private val emitterService: EmitterService,
 ) {
+
+    val logger = LoggerFactory.getLogger(BackgammonGameController::class.java)
 
     companion object {
         private const val USER_ID_HEADER = "auth-user"
@@ -63,21 +66,14 @@ class BackgammonGameController(
         httpServletResponse.addHeader("Content-Type", "text/event-stream")
         httpServletResponse.addHeader("Cache-Control", "no-cache")
         httpServletResponse.addHeader("X-Accel-Buffering", "no")
-        return  emitterService.create(roomId, userId)
+        logger.info("Зашли")
+        val res = emitterService.create(roomId, userId)
+        logger.info("Вышли")
+        return res
     }
 
-    @GetMapping("is-game-started/{roomId}")
-    fun isGameStarted(@PathVariable roomId: Int): Boolean {
-        return backgammonGameService.isGameStarted(roomId)
-    }
-
-    @GetMapping("/1/{roomId}")
-    fun foo(@PathVariable roomId: Int): SseEmitter {
-        return emitterService.create(roomId, -1)
-    }
-
-    @PostMapping("/1/{roomId}")
-    fun bar(@PathVariable roomId: Int) {
-        emitterService.sendForAll(roomId, GameStartedEvent())
+    @GetMapping("history/{roomId}")
+    fun getHistory(@PathVariable roomId: Int): List<HistoryResponse> {
+        return backgammonGameService.getHistory(roomId)
     }
 }

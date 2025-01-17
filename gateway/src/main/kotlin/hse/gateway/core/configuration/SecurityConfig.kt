@@ -41,6 +41,7 @@ class SecurityConfig {
             .authorizeHttpRequests {
                 it
                     .requestMatchers("/user/create", "/login2").permitAll()
+                    .requestMatchers("/game/backgammon/history/*").permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { it.disable() }
