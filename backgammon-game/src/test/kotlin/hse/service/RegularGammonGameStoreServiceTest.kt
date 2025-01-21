@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-class GammonStoreServiceTest(
+class RegularGammonGameStoreServiceTest(
     private val gammonStoreService: GammonStoreService,
     @SpyBean private val gammonMoveDao: GammonMoveDao,
 ) {

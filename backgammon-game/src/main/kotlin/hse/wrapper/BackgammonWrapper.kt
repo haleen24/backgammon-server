@@ -1,6 +1,6 @@
 package hse.wrapper
 
-import game.backgammon.Backgammon
+import game.backgammon.Gammon
 import game.backgammon.GammonRestorer
 import game.backgammon.dto.ChangeDto
 import game.backgammon.dto.DeckItemDto
@@ -17,7 +17,7 @@ import kotlin.math.sign
 
 
 class BackgammonWrapper(
-    private val game: Backgammon,
+    private val game: Gammon,
     private val type: BackgammonType,
 ) {
 

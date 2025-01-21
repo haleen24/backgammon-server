@@ -1,29 +1,24 @@
 package game.backgammon.sht
 
-import game.backgammon.Backgammon
-import game.backgammon.GammonRestorer
+import game.backgammon.*
 import game.backgammon.dto.*
 import game.backgammon.exception.*
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
 import kotlin.math.*
 
-class ShortBackgammonGame(
-    val zar: Random = Random()
-) : Backgammon() {
-    private var endFlag = false
+class ShortGammonGame(
+    zar: Random = Random()
+) : Gammon(zar) {
     private var testDeck: ArrayList<Int>
     private var testZar: ArrayList<Int>
     private var testBar = HashMap<Int, Int>()
-    private var foolZar = ArrayList<Int>()
 
     var deck = ArrayList<Int>(26)
-    var turn = 0
-    var zarResults: ArrayList<Int>
 
     var bar = hashMapOf(
-        -1 to 0,
-        1 to 0
+        BLACK to 0,
+        WHITE to 0
     )
 
 
@@ -41,7 +36,7 @@ class ShortBackgammonGame(
         deck[8] = 3
         deck[6] = 5
 
-        zarResults = setStartConfiguration()
+        zarResults = setZarStartConfiguration()
         foolZar = ArrayList(zarResults)
         testDeck = ArrayList(deck)
         testZar = ArrayList(zarResults)
@@ -50,7 +45,7 @@ class ShortBackgammonGame(
 
 
     constructor(restoreContext: GammonRestorer.GammonRestoreContext) : this() {
-        deck = ArrayList<Int>(26)
+        deck = ArrayList(26)
         for (i in 0..<26) {
             deck.add(0)
         }
@@ -107,7 +102,7 @@ class ShortBackgammonGame(
         if (!endFlag) {
             return null
         }
-        return EndDto(if (deck[0] == 15) 1 else -1)
+        return EndDto(if (deck[0] == 15) BLACK else WHITE)
     }
 
     override fun tossBothZar(): TossZarDto {
@@ -167,7 +162,7 @@ class ShortBackgammonGame(
         }
         if (!flag && canMoveHome) {
             var idx = 0
-            val dist = if (turn == -1) {
+            val dist = if (turn == BLACK) {
                 idx = testDeck.indexOfFirst { it.sign == -1 }
                 25 - idx
             } else {
@@ -230,7 +225,7 @@ class ShortBackgammonGame(
         if (endFlag) {
             throw GameIsOverBackgammonException()
         }
-        if (user != -1 && user != 1) {
+        if (user != BLACK && user != WHITE) {
             throw IncorrectInputtedUserBackgammonException()
         }
         if (user != turn) {
@@ -286,7 +281,7 @@ class ShortBackgammonGame(
     }
 
     private fun checkAllInHome(user: Int): Boolean {
-        return if (user == -1) {
+        return if (user == BLACK) {
             testDeck.indexOfFirst { it.sign == user } > 18
         } else {
             testDeck.indexOfLast { it != 0 && it.sign == user } < 7
@@ -304,16 +299,16 @@ class ShortBackgammonGame(
 
     private fun getBarFrom(user: Int): Int {
         return when (user) {
-            -1 -> 0
-            1 -> 25
+            BLACK -> 0
+            WHITE -> 25
             else -> throw IncorrectInputtedUserBackgammonException()
         }
     }
 
     private fun getBarTo(user: Int): Int {
         return when (user) {
-            -1 -> -1
-            1 -> 26
+            BLACK -> -1
+            WHITE -> 26
             else -> throw IncorrectInputtedUserBackgammonException()
         }
     }
@@ -324,23 +319,6 @@ class ShortBackgammonGame(
             return true
         }
         return false
-    }
-
-    private fun tossZar(): Int {
-        return zar.nextInt(1, 7)
-    }
-
-    private fun setStartConfiguration(): ArrayList<Int> {
-        var firstZar = tossZar()
-        var secondZar = tossZar()
-        while (firstZar == secondZar) {
-            firstZar = tossZar()
-            secondZar = tossZar()
-        }
-        turn = if (firstZar > secondZar) {
-            1
-        } else -1
-        return arrayListOf(firstZar, secondZar)
     }
 
     private fun canMove(to: Int): Boolean {
@@ -363,14 +341,9 @@ class ShortBackgammonGame(
 
 
     private fun validateTossedZar(res1: Int, res2: Int): TossZarDto {
-        val result = mutableListOf<Int>()
-        for (i in 0..<if (res1 == res2) 2 else 1) {
-            result.add(res1)
-            result.add(res2)
-        }
+        fillZar(res1, res2)
 
-        zarResults = ArrayList(result)
-        foolZar = ArrayList(result)
+        val tmp = ArrayList(zarResults)
 
         var maxMoves = 0
 
@@ -379,17 +352,17 @@ class ShortBackgammonGame(
             testZar = ArrayList(zarResults)
             testBar = HashMap(bar)
             maxMoves = max(maxMoves, findMaxFromSequence(zarPermutation))
-            if (maxMoves == result.size) {
+            if (maxMoves == tmp.size) {
                 break
-            } else if (result.size == 4) {
+            } else if (tmp.size == 4) {
                 break
             }
         }
-        if (maxMoves == result.size) {
-            zarResults = ArrayList(result)
-        } else if (result.size == 4 && maxMoves != 0) {
-            zarResults = ArrayList(result.subList(0, maxMoves))
-        } else if (result.size == 2 && maxMoves == 1) {
+        if (maxMoves == tmp.size) {
+            zarResults = ArrayList(tmp)
+        } else if (tmp.size == 4 && maxMoves != 0) {
+            zarResults = ArrayList(tmp.subList(0, maxMoves))
+        } else if (tmp.size == 2 && maxMoves == 1) {
             val maxZar = max(res1, res2)
             val minZar = min(res1, res2)
             val maxDif = -maxZar * turn
@@ -411,7 +384,7 @@ class ShortBackgammonGame(
             zarResults.clear()
         }
 
-        return TossZarDto(result)
+        return TossZarDto(tmp)
     }
 
     override fun toString(): String {

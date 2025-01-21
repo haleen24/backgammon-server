@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 
 class ShortBackgammonGameTossZarTest {
 
-    private var game: ShortBackgammonGame = ShortBackgammonGame()
+    private var game: ShortGammonGame = ShortGammonGame()
 
     private var firstUser = -1
     private var secondUser = 1
@@ -21,7 +21,7 @@ class ShortBackgammonGameTossZarTest {
     fun setUp() {
         val random = Mockito.mock(Random::class.java)
         Mockito.`when`(random.nextInt(Mockito.anyInt(), Mockito.anyInt())).thenReturn(2, 1)
-        game = ShortBackgammonGame(random)
+        game = ShortGammonGame(random)
         for (i in game.deck.indices) {
             game.deck[i] = 0
         }

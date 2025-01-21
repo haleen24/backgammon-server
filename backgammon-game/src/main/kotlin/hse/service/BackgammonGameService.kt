@@ -7,7 +7,7 @@ import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
-import game.backgammon.sht.ShortBackgammonGame
+import game.backgammon.sht.ShortGammonGame
 import hse.adapter.RedisAdapter
 import hse.dto.EndEvent
 import hse.dto.GameStartedEvent
@@ -89,7 +89,7 @@ class BackgammonGameService(
             throw ResponseStatusException(HttpStatus.CONFLICT, "Game $roomId already exists")
         }
         val game = when (gameType) {
-            BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(ShortBackgammonGame(), gameType)
+            BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(ShortGammonGame(), gameType)
         }
         return game
     }

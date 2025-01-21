@@ -1,6 +1,6 @@
 package game.backgammon
 
-import game.backgammon.sht.ShortBackgammonGame
+import game.backgammon.sht.ShortGammonGame
 
 class GammonRestorer {
 
@@ -15,8 +15,8 @@ class GammonRestorer {
     companion object {
         fun restoreBackgammon(
             context: GammonRestoreContext
-        ): ShortBackgammonGame {
-            return ShortBackgammonGame(context)
+        ): ShortGammonGame {
+            return ShortGammonGame(context)
         }
     }
 }
