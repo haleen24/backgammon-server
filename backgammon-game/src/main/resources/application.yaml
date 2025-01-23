@@ -24,3 +24,5 @@ config:
   jedis:
     host: redis-service
     port: 6379
+
+debug: true

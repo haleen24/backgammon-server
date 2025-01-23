@@ -1,11 +1,8 @@
 package game.backgammon.lng
 
-import game.backgammon.Gammon
+import game.backgammon.*
 import game.backgammon.dto.*
 import game.backgammon.exception.*
-import game.backgammon.fillZar
-import game.backgammon.setZarStartConfiguration
-import game.backgammon.tossZar
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
 import kotlin.math.max
@@ -39,6 +36,20 @@ class RegularGammonGame(
         testZar = ArrayList(zarResults)
     }
 
+    constructor(restoreContext: GammonRestorer.GammonRestoreContext) : this() {
+        deck[BLACK_HEAD] = 0
+        deck[WHITE_HEAD] = 0
+
+        for (i in restoreContext.deck) {
+            deck[i.key] = i.value
+        }
+        turn = restoreContext.turn
+        zarResults = ArrayList(restoreContext.zarResult)
+
+        testDeck = ArrayList(deck)
+        testZar = ArrayList(zarResults)
+    }
+
     override fun getConfiguration(): ConfigDto {
         return ConfigDto(
             zar = zarResults,
@@ -62,8 +73,6 @@ class RegularGammonGame(
         turn = -turn
         deck = ArrayList(testDeck)
         zarResults = ArrayList(testZar)
-
-        tossBothZar()
 
         return ChangeDto(
             changes = moves.map { Pair(it.from, it.to) }

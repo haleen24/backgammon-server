@@ -3,7 +3,8 @@ package hse.service
 import game.backgammon.GammonRestorer
 import game.backgammon.dto.ChangeDto
 import game.backgammon.enums.BackgammonType
-import hse.dao.GammonMoveDao
+import game.backgammon.enums.Color
+import hse.dao.GammonMoveDaoImpl
 import hse.dto.GammonRestoreContextDto
 import hse.entity.MoveSet
 import org.junit.jupiter.api.Test
@@ -17,7 +18,7 @@ import kotlin.test.assertEquals
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class RegularGammonGameStoreServiceTest(
     private val gammonStoreService: GammonStoreService,
-    @SpyBean private val gammonMoveDao: GammonMoveDao,
+    @SpyBean private val gammonMoveDao: GammonMoveDaoImpl,
 ) {
 
     @Test
@@ -44,7 +45,8 @@ class RegularGammonGameStoreServiceTest(
                 ),
                 gameId = 1,
                 moveId = 1,
-                nextZar = listOf(1, 2)
+                nextZar = listOf(1, 2),
+                color = Color.BLACK
             )
         )
 
@@ -80,7 +82,8 @@ class RegularGammonGameStoreServiceTest(
                 ),
                 gameId = 1,
                 moveId = 1,
-                nextZar = listOf(1, 2)
+                nextZar = listOf(1, 2),
+                color = Color.WHITE
             )
         )
 

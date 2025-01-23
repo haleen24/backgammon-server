@@ -73,7 +73,7 @@ class BackgammonGameController(
     }
 
     @GetMapping("history/{roomId}")
-    fun getHistory(@PathVariable roomId: Int): List<HistoryResponse> {
+    fun getHistory(@PathVariable roomId: Int): HistoryResponse {
         return backgammonGameService.getHistory(roomId)
     }
 }

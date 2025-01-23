@@ -2,8 +2,10 @@ package hse.service
 
 import game.backgammon.dto.MoveDto
 import game.backgammon.dto.MoveResponseDto
+import game.backgammon.dto.StartStateDto
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import game.backgammon.lng.RegularGammonGame
 import game.backgammon.response.ConfigResponse
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
@@ -30,10 +32,7 @@ class BackgammonGameService(
     private val logger = LoggerFactory.getLogger(BackgammonGameService::class.java)
 
     fun createAndConnect(roomId: Int, firstPlayer: Int, secondPlayer: Int, gameType: BackgammonType): Int {
-        val commonGameType = when (gameType) {
-            BackgammonType.SHORT_BACKGAMMON -> BackgammonType.SHORT_BACKGAMMON
-        }
-        val game = createGame(roomId, commonGameType)
+        val game = createGame(roomId, gameType)
         game.connect(firstPlayer, secondPlayer)
         emitterService.sendForAll(roomId, GameStartedEvent())
         gammonStoreService.saveGameOnCreation(roomId, game)
@@ -57,7 +56,7 @@ class BackgammonGameService(
 //            gameScheduler.closeGame(gameId)
         }
         val tossZarRes = game.tossZar()
-        gammonStoreService.saveAfterMove(gameId, game, res)
+        gammonStoreService.saveAfterMove(gameId, playerId, game, res)
         emitterService.sendForAll(gameId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))
         return response
     }
@@ -72,10 +71,26 @@ class BackgammonGameService(
         return game.getPlayerColor(userId)
     }
 
-    fun getHistory(roomId: Int): List<HistoryResponse> {
-        return gammonStoreService.getAllMovesInGame(roomId)
+    fun getHistory(roomId: Int): HistoryResponse {
+        val moves = gammonStoreService.getAllMovesInGame(roomId)
             .sortedBy { it.moveId }
-            .map { HistoryResponse(it.moves.changes.map { pair -> MoveResponseDto(pair.first, pair.second) }) }
+            .map { MoveResponse(it.moves.changes.map { pair -> MoveResponseDto(pair.first, pair.second) }, it.color) }
+
+        val startState =
+            gammonStoreService.getStartGameContext(roomId) ?: throw ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Game $roomId not found"
+            )
+        return HistoryResponse(
+            allMoves = moves,
+            startState = StartStateDto(
+                userMap = getColorMap(startState.firstUserId, startState.secondUserId, roomId),
+                type = startState.type,
+                deck = startState.game.deck,
+                turn = startState.game.turn,
+                zarResult = startState.game.zarResult,
+            )
+        )
     }
 
     fun closeGame(roomId: Int): Boolean {
@@ -89,8 +104,14 @@ class BackgammonGameService(
             throw ResponseStatusException(HttpStatus.CONFLICT, "Game $roomId already exists")
         }
         val game = when (gameType) {
-            BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(ShortGammonGame(), gameType)
+            BackgammonType.SHORT_BACKGAMMON -> ShortGammonGame()
+            BackgammonType.REGULAR_GAMMON -> RegularGammonGame()
         }
-        return game
+        return BackgammonWrapper(game, gameType)
+    }
+
+    private fun getColorMap(firstPlayer: Int, secondPlayer: Int, roomId: Int): Map<Color, Int> {
+        val firstColor = getColor(firstPlayer, roomId)
+        return mapOf(firstColor to firstPlayer, firstColor.getOpponent() to secondPlayer)
     }
 }

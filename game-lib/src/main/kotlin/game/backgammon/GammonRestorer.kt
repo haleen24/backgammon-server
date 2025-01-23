@@ -1,5 +1,6 @@
 package game.backgammon
 
+import game.backgammon.lng.RegularGammonGame
 import game.backgammon.sht.ShortGammonGame
 
 class GammonRestorer {
@@ -17,6 +18,10 @@ class GammonRestorer {
             context: GammonRestoreContext
         ): ShortGammonGame {
             return ShortGammonGame(context)
+        }
+
+        fun restoreGammon(context: GammonRestoreContext): RegularGammonGame {
+            return RegularGammonGame(context)
         }
     }
 }

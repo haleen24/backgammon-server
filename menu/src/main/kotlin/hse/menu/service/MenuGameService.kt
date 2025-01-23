@@ -21,7 +21,9 @@ class MenuGameService(
     private final val logger = LoggerFactory.getLogger(MenuGameService::class.java)
 
     init {
-        Thread { connectionJob() }.start()
+        GameType.entries.forEach {
+            Thread { connectionJob(it) }.start()
+        }
     }
 
     fun storeRoom(gameType: GameType): Int {
@@ -31,7 +33,7 @@ class MenuGameService(
 
     fun connect(userId: Int, gameType: GameType): Int {
         val connectionDto = ConnectionDto(userId, CountDownLatch(1), gameType)
-        connectionDao.connect(connectionDto)
+        connectionDao.connect(connectionDto, gameType)
         connectionDto.latch.await()
         return connectionDto.gameId ?: throw ResponseStatusException(
             HttpStatus.CONFLICT,
@@ -39,14 +41,14 @@ class MenuGameService(
         )
     }
 
-    private fun connectionJob() {
+    private fun connectionJob(gameType: GameType) {
         var firstPlayerConnection: ConnectionDto
         var secondPlayerConnection: ConnectionDto
         while (true) {
             logger.info("Начал ждать юзеров")
-            firstPlayerConnection = connectionDao.removeFromConnectionQueue()
+            firstPlayerConnection = connectionDao.removeFromConnectionQueue(gameType)
             logger.info("Зашел первый: ${firstPlayerConnection.userId}")
-            secondPlayerConnection = connectionDao.removeFromConnectionQueue()
+            secondPlayerConnection = connectionDao.removeFromConnectionQueue(gameType)
             logger.info("Зашел второй: ${secondPlayerConnection.userId}")
             if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
                 logger.info("Нельзя играть с самим собой")
@@ -55,7 +57,7 @@ class MenuGameService(
                 continue
             }
             // Пока только 1 тип игры
-            val gameId = storeRoom(GameType.SHORT_BACKGAMMON)
+            val gameId = storeRoom(gameType)
             logger.info("Сохраняю комнату")
             val realRoomId = gameAdapter.gameCreation(
                 gameId,

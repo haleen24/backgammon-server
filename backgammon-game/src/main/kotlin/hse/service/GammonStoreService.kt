@@ -40,20 +40,25 @@ class GammonStoreService(
         gammonMoveDao.saveStartGameContext(gameId, restoreContext)
     }
 
-    fun saveAfterMove(gameId: Int, game: BackgammonWrapper, moves: ChangeDto) {
+    fun saveAfterMove(gameId: Int, playerId: Int, game: BackgammonWrapper, moves: ChangeDto) {
         val restoreContext = game.getRestoreContext()
         putGameToCache(gameId, restoreContext)
         val moveSet = MoveSet(
             moves = moves,
             gameId = gameId,
             moveId = restoreContext.numberOfMoves,
-            nextZar = restoreContext.game.zarResult
+            nextZar = restoreContext.game.zarResult,
+            color = game.getPlayerColor(playerId)
         )
         gammonMoveDao.saveMoves(gameId, moveSet)
     }
 
     fun getAllMovesInGame(gameId: Int): List<MoveSet> {
         return gammonMoveDao.getMoves(gameId)
+    }
+
+    fun getStartGameContext(gameId: Int): GammonRestoreContextDto? {
+        return gammonMoveDao.getStartGameContext(gameId)
     }
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
@@ -71,6 +76,7 @@ class GammonStoreService(
 
         return when (startState.type) {
             BackgammonType.SHORT_BACKGAMMON -> restoreBackgammon(startState, movesPerChange)
+            BackgammonType.REGULAR_GAMMON -> restoreGammon(startState, movesPerChange)
         }
     }
 
@@ -101,7 +107,7 @@ class GammonStoreService(
                 val shiftedSecond = move.second + 1
                 val realSignOfMove = deck[shiftedFirst].sign
                 if (realSignOfMove == 0) {
-                    logger.error("move $move, sign = 0")
+                    logger.error("move $move, sign = 0!")
                 }
                 deck[shiftedFirst] -= realSignOfMove.sign
                 deck[shiftedSecond] += realSignOfMove.sign
@@ -121,6 +127,51 @@ class GammonStoreService(
                     turn = turn,
                     bar = mapOf(-1 to deck.first, 1 to deck.last),
                     deck = deck.subList(1, deck.size - 1).mapIndexed { index, i -> index to i }.toMap()
+                        .filterValues { it != 0 },
+                    zarResult = nextZar
+                ),
+                numberOfMoves = movesPerChange.size
+            )
+        )
+    }
+
+    fun restoreGammon(
+        startState: GammonRestoreContextDto,
+        movesPerChange: List<MoveSet>
+    ): BackgammonWrapper {
+        var turn = startState.game.turn
+        val deck = ArrayList<Int>(26)
+        for (i in 0..<26) {
+            deck.add(0)
+        }
+
+        for (i in startState.game.deck) {
+            deck[i.key] = i.value
+        }
+
+        for (moves in movesPerChange) {
+            for (move in moves.moves.changes) {
+                val realSignOfMove = deck[move.first].sign
+                if (realSignOfMove == 0) {
+                    logger.error("move $move, sign = 0")
+                }
+                deck[move.first] -= realSignOfMove.sign
+                deck[move.second] += realSignOfMove.sign
+            }
+            turn = -turn
+        }
+
+        val nextZar = if (movesPerChange.isEmpty()) {
+            startState.game.zarResult
+        } else {
+            movesPerChange.last().nextZar
+        }
+
+        return BackgammonWrapper.buildFromContext(
+            startState.copy(
+                game = startState.game.copy(
+                    turn = turn,
+                    deck = deck.mapIndexed { index, i -> index to i }.toMap()
                         .filterValues { it != 0 },
                     zarResult = nextZar
                 ),

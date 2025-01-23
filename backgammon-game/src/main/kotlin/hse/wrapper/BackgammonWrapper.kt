@@ -31,6 +31,11 @@ class BackgammonWrapper(
                     GammonRestorer.restoreBackgammon(restoreContextDto.game),
                     BackgammonType.SHORT_BACKGAMMON
                 )
+
+                BackgammonType.REGULAR_GAMMON -> BackgammonWrapper(
+                    GammonRestorer.restoreGammon(restoreContextDto.game),
+                    BackgammonType.REGULAR_GAMMON
+                )
             }
             gameWrapper.firstPlayer = restoreContextDto.firstUserId
             gameWrapper.secondPlayer = restoreContextDto.secondUserId
@@ -64,7 +69,8 @@ class BackgammonWrapper(
                 .filterNotNull()
                 .toSet(),
             zar = config.zar,
-            first = numberOfMoves == 0
+            first = numberOfMoves == 0,
+            type = type
         )
     }
 
