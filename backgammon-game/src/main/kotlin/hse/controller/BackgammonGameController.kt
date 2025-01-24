@@ -66,10 +66,7 @@ class BackgammonGameController(
         httpServletResponse.addHeader("Content-Type", "text/event-stream")
         httpServletResponse.addHeader("Cache-Control", "no-cache")
         httpServletResponse.addHeader("X-Accel-Buffering", "no")
-        logger.info("Зашли")
-        val res = emitterService.create(roomId, userId)
-        logger.info("Вышли")
-        return res
+        return emitterService.create(roomId, userId)
     }
 
     @GetMapping("history/{roomId}")

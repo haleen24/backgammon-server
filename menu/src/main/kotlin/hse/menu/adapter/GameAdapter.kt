@@ -13,7 +13,7 @@ import java.net.URI
 
 @Component
 class GameAdapter(
-    @Value("\${route.config.backgammon-game.host}") private val gameHost: String
+    @Value("\${route.config.backgammon-game.uri}") private val gameUri: String
 ) {
 
     private val restTemplate = RestTemplate()
@@ -22,7 +22,7 @@ class GameAdapter(
 
     private  val gameAddr = "game"
 
-    private val createRoomTemplate = "$gameHost/$gameAddr/%s/create-room/%d"
+    private val createRoomTemplate = "$gameUri/$gameAddr/%s/create-room/%d"
     fun gameCreation(gameId: Int, firstUserId: Int, secondUserId: Int, gameType: GameType): Int? {
         val uri = URI(
             when (gameType.type) {

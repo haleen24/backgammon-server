@@ -67,7 +67,7 @@ class BackgammonGameService(
     }
 
     fun getColor(userId: Int, gameId: Int): Color {
-        val game = gammonStoreService.getGameById(userId)
+        val game = gammonStoreService.getGameById(gameId)
         return game.getPlayerColor(userId)
     }
 

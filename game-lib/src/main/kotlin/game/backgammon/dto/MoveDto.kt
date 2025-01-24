@@ -1,6 +1,6 @@
 package game.backgammon.dto
 
-class MoveDto(
+data class MoveDto(
     val from: Int,
     val to: Int,
 )

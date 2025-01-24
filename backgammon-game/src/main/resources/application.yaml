@@ -25,4 +25,4 @@ config:
     host: redis-service
     port: 6379
 
-debug: true
+debug: false

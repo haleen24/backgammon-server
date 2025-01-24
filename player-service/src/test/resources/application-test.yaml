@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: "jdbc:h2:~/testdb;DB_CLOSE_ON_EXIT=TRUE;"
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: never
+      data-locations: data.sql

@@ -20,6 +20,7 @@ jar {
                 'Main-Class': 'hse.BackgammonGameApplication'
         )
     }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 repositories {
@@ -41,8 +42,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation(project(":game-lib"))
-    implementation(project(":api"))
+    api(project(":game-lib"))
+    api(project(":api"))
 
 }
 

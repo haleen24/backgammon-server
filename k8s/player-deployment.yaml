@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: narde-player
+  labels:
+    app: narde-player
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: narde-player
+  template:
+    metadata:
+      labels:
+        app: narde-player
+    spec:
+      containers:
+        - name: player-service
+          image: narde-player:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 84
+          envFrom:
+            - configMapRef:
+                name: narde-config
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: player-service
+spec:
+  ports:
+    - port: 84
+      targetPort: 84
+  selector:
+    app: narde-player
+  type: ClusterIP
