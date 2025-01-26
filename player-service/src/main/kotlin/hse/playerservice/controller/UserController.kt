@@ -1,10 +1,10 @@
 package hse.playerservice.controller
 
-import hse.playerservice.entity.User
 import hse.playerservice.service.UserService
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import player.request.AuthRequest
+import player.request.*
 import player.response.JwtResponse
 
 
@@ -13,9 +13,13 @@ class UserController(
     private val userService: UserService,
 ) {
 
+    companion object {
+        const val AUTH_HEADER = "auth-user"
+    }
+
     @PostMapping("/create")
-    fun createUser(@RequestBody user: User): JwtResponse {
-        return userService.createUser(user)
+    fun createUser(@RequestBody request: CreateUserRequest): JwtResponse {
+        return userService.createUser(request)
     }
 
 
@@ -24,7 +28,7 @@ class UserController(
         @RequestBody request: AuthRequest,
         response: HttpServletResponse
     ): JwtResponse {
-        return userService.authenticate(request.username, request.password)
+        return userService.authenticate(request.login, request.password)
     }
 
     @GetMapping("/auth")
@@ -32,4 +36,27 @@ class UserController(
         return userService.authenticate(token)
     }
 
+    @PostMapping("/password")
+    fun changePassword(
+        @RequestHeader(AUTH_HEADER) userId: Long,
+        @RequestBody changePasswordRequest: ChangePasswordRequest
+    ): JwtResponse {
+        return userService.changePassword(userId, changePasswordRequest)
+    }
+
+    @DeleteMapping("/delete")
+    fun deleteUser(
+        @RequestHeader(AUTH_HEADER) userId: Long,
+        @RequestBody request: DeleteUserRequest
+    ): ResponseEntity<Void> {
+        return userService.deleteUser(userId, request)
+    }
+
+    @PutMapping("/username")
+    fun updateName(
+        @RequestHeader(AUTH_HEADER) userId: Long,
+        @RequestBody updateUsernameRequest: UpdateUsernameRequest
+    ): ResponseEntity<Void> {
+        return userService.updateName(userId, updateUsernameRequest)
+    }
 }

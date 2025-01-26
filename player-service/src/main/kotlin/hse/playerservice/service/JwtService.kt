@@ -21,16 +21,7 @@ class JwtService(
 
 
     fun generateToken(user: User): String {
-        return createToken(user.id, user.username)
-    }
-
-    fun validateToken(token: String?, userDetails: UserDetails): Boolean {
-        token ?: return false
-        val claims = extractAllClaims(token)
-        val username: String = claims.subject
-        val expiresAt = claims.expiration
-
-        return (username == userDetails.username && !isExpired(expiresAt))
+        return createToken(user.id, user.login)
     }
 
     fun validateToken(token: String): Boolean {
@@ -38,7 +29,7 @@ class JwtService(
         return !isExpired(claims.expiration)
     }
 
-    fun extractUserName(token: String): String {
+    fun extractLogin(token: String): String {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload.subject
     }
 
@@ -64,12 +55,12 @@ class JwtService(
             .payload
     }
 
-    private fun createToken(id: Long, username: String): String {
+    private fun createToken(id: Long, login: String): String {
         val now = Instant.now()
         val expiresAt = now.plusSeconds(expireTime)
 
         return Jwts.builder()
-            .subject(username)
+            .subject(login)
             .id(id.toString())
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiresAt))

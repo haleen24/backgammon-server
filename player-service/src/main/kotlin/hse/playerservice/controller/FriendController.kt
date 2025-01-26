@@ -1,0 +1,28 @@
+package hse.playerservice.controller
+
+import hse.playerservice.service.FriendService
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import player.request.AddFriendRequest
+import player.request.RemoveFriendRequest
+
+@RestController
+@RequestMapping("/friends")
+class FriendController(
+    private val friendService: FriendService
+) {
+
+    companion object {
+        const val AUTH_HEADER = "auth-user"
+    }
+
+    @PostMapping("/add")
+    fun addFriend(@RequestHeader(AUTH_HEADER) userId: Long, @RequestBody request: AddFriendRequest): ResponseEntity<Void> {
+        return friendService.addFriend(userId, request)
+    }
+
+    @DeleteMapping("/remove")
+    fun removeFriend(@RequestHeader(AUTH_HEADER) userId: Long, @RequestBody request: RemoveFriendRequest): ResponseEntity<Void> {
+        return friendService.removeFriend(userId, request)
+    }
+}

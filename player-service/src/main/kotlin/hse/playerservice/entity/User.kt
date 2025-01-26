@@ -3,11 +3,16 @@ package hse.playerservice.entity
 import jakarta.persistence.*
 
 @Entity
-@Table(schema = "sch1", name = "\"user\"", uniqueConstraints = [UniqueConstraint(columnNames = ["username"])])
+@Table(
+    schema = "sch1", name = "\"user\"",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["login"]),
+    ],
+)
 data class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long,
+    val login: String,
     val username: String,
     val password: String,
-    val roles: String,
 )
