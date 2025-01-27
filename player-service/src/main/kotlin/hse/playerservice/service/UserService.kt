@@ -7,10 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import player.request.ChangePasswordRequest
-import player.request.CreateUserRequest
-import player.request.DeleteUserRequest
-import player.request.UpdateUsernameRequest
+import player.request.*
 import player.response.JwtResponse
 import javax.security.sasl.AuthenticationException
 
@@ -51,6 +48,10 @@ class UserService(
 
     fun findUser(id: Long): User? {
         return userRepository.findById(id).orElse(null)
+    }
+
+    fun findAllUsers(ids: List<Long>): List<User> {
+        return userRepository.findAllById(ids)
     }
 
     fun findUserNotNull(login: String): User {
@@ -109,6 +110,11 @@ class UserService(
     fun updateName(userId: Long, request: UpdateUsernameRequest): ResponseEntity<Void> {
         val user = findUserNotNull(userId).copy(username = request.newUsername)
         userRepository.save(user)
+        return ResponseEntity(HttpStatus.OK)
+    }
+
+    fun changeInvitePolicy(request: ChangeInvitePolicyRequest): ResponseEntity<Void> {
+        userRepository.changePolicy(request.userId, request.newPolicy.name)
         return ResponseEntity(HttpStatus.OK)
     }
 }

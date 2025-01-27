@@ -1,7 +1,9 @@
 package hse.playerservice.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import hse.playerservice.annotations.PlayerIntegrationTest
+import hse.playerservice.entity.FriendRequest
 import hse.playerservice.repository.FriendRecordRepository
 import hse.playerservice.repository.FriendRequestRepository
 import jakarta.persistence.EntityManager
@@ -9,18 +11,20 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.objectweb.asm.TypeReference
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.transaction.annotation.Transactional
 import player.request.AddFriendRequest
 import player.request.RemoveFriendRequest
+import player.response.GetFriendResponse
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.reflect.typeOf
 
 @PlayerIntegrationTest
 class FriendControllerTest {
@@ -41,9 +45,6 @@ class FriendControllerTest {
     @Autowired
     lateinit var friendRecordRepository: FriendRecordRepository
 
-
-    @Autowired
-    lateinit var entityManager: EntityManager
 
     @ParameterizedTest
     @CsvSource("301,302", "310,309")
@@ -139,5 +140,20 @@ class FriendControllerTest {
         )
 // проверка выключена: jpa не может сделать удаление без транзакции, а транзакции в текстах не работают
 //        assertFalse(friendRecordRepository.existsFriendRecordByFirstUserAndSecondUser(311, currentUserId))
+    }
+
+    @Test
+    fun `get friends test`() {
+        val currentUserId = 313L
+
+        mockMvc.perform(
+            get("http://localhost:$port/friends").header(FriendController.AUTH_HEADER, currentUserId)
+                .param("offset", "1").param("limit", "1")
+        )
+            .andExpect {
+                val response: List<GetFriendResponse> = objectMapper.readValue(it.response.contentAsString)
+                println(response)
+                assertEquals(1, response.size)
+            }
     }
 }

@@ -2,6 +2,7 @@ package player.request
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import player.InvitePolicy
 
 data class AuthRequest(
     val login: String,
@@ -73,3 +74,8 @@ open class RemoveFriendRequest(
     data class RemoveFriendById(val friendId: Long) : RemoveFriendRequest(RemoveType.BY_ID)
     data class RemoveFriendByLogin(val friendLogin: String) : RemoveFriendRequest(RemoveType.BY_LOGIN)
 }
+
+data class ChangeInvitePolicyRequest(
+    val userId: Long,
+    val newPolicy: InvitePolicy
+)

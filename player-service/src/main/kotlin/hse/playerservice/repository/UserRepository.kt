@@ -10,4 +10,8 @@ interface UserRepository : JpaRepository<User, Long> {
     fun findByLogin(login: String): User?
 
     fun existsByLogin(login: String): Boolean
+
+    @Query("update sch1.\"user\" u set invite_policy = :newPolicy where u.id = :userId", nativeQuery = true)
+    @Modifying
+    fun changePolicy(userId: Long, newPolicy: String)
 }

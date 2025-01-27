@@ -59,4 +59,9 @@ class UserController(
     ): ResponseEntity<Void> {
         return userService.updateName(userId, updateUsernameRequest)
     }
+
+    @PostMapping("/policy")
+    fun changeInvitePolicy(request: ChangeInvitePolicyRequest): ResponseEntity<Void> {
+        return userService.changeInvitePolicy(request)
+    }
 }

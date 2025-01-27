@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import player.request.AddFriendRequest
 import player.request.RemoveFriendRequest
+import player.response.GetFriendResponse
 
 @RestController
 @RequestMapping("/friends")
@@ -24,5 +25,10 @@ class FriendController(
     @DeleteMapping("/remove")
     fun removeFriend(@RequestHeader(AUTH_HEADER) userId: Long, @RequestBody request: RemoveFriendRequest): ResponseEntity<Void> {
         return friendService.removeFriend(userId, request)
+    }
+
+    @GetMapping
+    fun getFriends(@RequestHeader(AUTH_HEADER) userId: Long, @RequestParam offset: Int, @RequestParam limit: Int): List<GetFriendResponse> {
+        return friendService.getFriends(userId, offset, limit)
     }
 }

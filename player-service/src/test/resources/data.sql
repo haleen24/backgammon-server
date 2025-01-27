@@ -4,7 +4,8 @@ create table if not exists sch1."user"(
     id bigserial primary key,
     login text unique,
     username text not null,
-    password text not null
+    password text not null,
+    invite_policy_code int not null default 0
 );
 
 create table if not exists sch1.friend_record(
@@ -73,3 +74,11 @@ insert into sch1."user"(id, login, username, password) values (311, 'remove frie
 insert into sch1."user"(id, login, username, password) values (312, 'remove friend request 2', 'roma', '123');
 insert into sch1.friend_record(id, first_user, second_user, created_at) values (311, 311, 312, '2025-01-26 14:30:00');
 -- end remove friend request
+
+-- start get friends test
+insert into sch1."user"(id, login, username, password) values (313, 'get friends test 1', 'john', '123');
+insert into sch1."user"(id, login, username, password) values (314, 'get friends test 2', 'bob', '123');
+insert into sch1."user"(id, login, username, password) values (315, 'get friends test 3', 'dave', '123');
+insert into sch1.friend_record(id, first_user, second_user, created_at) values (313, 313, 314, '2025-01-26 14:30:00');
+insert into sch1.friend_record(id, first_user, second_user, created_at) values (314, 313, 315, '2025-01-26 14:30:00');
+-- end get friends test

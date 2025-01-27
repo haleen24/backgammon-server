@@ -4,6 +4,7 @@ import hse.playerservice.entity.FriendRecord
 import hse.playerservice.entity.FriendRequest
 import hse.playerservice.repository.FriendRecordRepository
 import hse.playerservice.repository.FriendRequestRepository
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import player.request.AddFriendRequest
 import player.request.RemoveFriendRequest
+import player.response.GetFriendResponse
 import java.time.Clock
 import kotlin.math.max
 import kotlin.math.min
@@ -55,6 +57,20 @@ class FriendService(
             )
         }
         return ResponseEntity(HttpStatus.OK)
+    }
+
+    fun getFriends(userId: Long, offset: Int, limit: Int): List<GetFriendResponse> {
+        val pageable = PageRequest.of(offset, limit)
+        val friendRelations = friendRecordRepository.findAllFriends(userId, pageable)
+        val friendIds = userService.findAllUsers(friendRelations.map {
+            if (it.firstUser == userId) {
+                it.secondUser
+            } else {
+                it.firstUser
+            }
+        })
+
+        return friendIds.map { GetFriendResponse(it.username, it.id) }
     }
 
 
