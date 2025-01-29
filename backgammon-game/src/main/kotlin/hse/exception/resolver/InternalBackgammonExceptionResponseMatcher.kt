@@ -5,9 +5,11 @@ import game.backgammon.exception.IncorrectInputtedUserBackgammonException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
 import org.springframework.web.servlet.ModelAndView
 
+@Component
 class InternalBackgammonExceptionResponseMatcher : BackgammonExceptionResponseMatcher {
     companion object {
         private val internalExceptions = setOf(IncorrectInputtedUserBackgammonException::class)

@@ -5,12 +5,14 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
+import org.springframework.transaction.annotation.Transactional
 
 interface FriendRecordRepository : CrudRepository<FriendRecord, Int> {
 
     fun existsFriendRecordByFirstUserAndSecondUser(firstUser: Long, secondUser: Long): Boolean
 
     @Modifying
+    @Transactional
     fun deleteFriendRecordByFirstUserAndSecondUser(firstUser: Long, secondUser: Long)
 
     @Query(

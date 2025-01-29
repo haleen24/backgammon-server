@@ -75,6 +75,9 @@ class FriendService(
 
 
     private fun addFriendById(userId: Long, friendRequestId: Long) {
+        if (userId == friendRequestId) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant be friend for yourself")
+        }
         val first = min(userId, friendRequestId)
         val second = max(userId, friendRequestId)
         checkFriendsAlready(first, second)

@@ -1,24 +1,33 @@
 package hse.playerservice.service
 
 import hse.playerservice.entity.User
+import hse.playerservice.repository.UserImageStorage
 import hse.playerservice.repository.UserRepository
+import org.apache.tomcat.util.http.fileupload.FileUtils
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import player.request.*
 import player.response.JwtResponse
 import javax.security.sasl.AuthenticationException
+import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.math.pow
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
     private val jwtService: JwtService,
+    private val userImageStorage: UserImageStorage,
     val passwordEncoder: PasswordEncoder,
 ) {
     companion object {
         const val NO_ID = 0L
+        val allowedImageTypes = setOf("jpg", "png", "jpeg")
+        val maxImageSize = (50 * 10.0.pow(6.0)).toLong()
     }
 
     fun createUser(request: CreateUserRequest): JwtResponse {
@@ -113,8 +122,21 @@ class UserService(
         return ResponseEntity(HttpStatus.OK)
     }
 
-    fun changeInvitePolicy(request: ChangeInvitePolicyRequest): ResponseEntity<Void> {
-        userRepository.changePolicy(request.userId, request.newPolicy.name)
+    fun changeInvitePolicy(userId: Long, request: ChangeInvitePolicyRequest): ResponseEntity<Void> {
+        userRepository.changePolicy(userId, request.newPolicy.name)
         return ResponseEntity(HttpStatus.OK)
+    }
+
+    fun saveUserImage(userId: Long, image: MultipartFile): ResponseEntity<Void> {
+        val extension = StringUtils.getFilenameExtension(image.originalFilename) ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "file without extension")
+        if (extension !in allowedImageTypes || image.size > maxImageSize) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Image must be less then 50 megabytes")
+        }
+        userImageStorage.storeImage(userId, image, extension)
+        return ResponseEntity(HttpStatus.OK)
+    }
+
+    fun getImage(userId: Long): UserImageStorage.ImageWithExtension {
+        return userImageStorage.getImage(userId)
     }
 }

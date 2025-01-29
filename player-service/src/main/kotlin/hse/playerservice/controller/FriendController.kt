@@ -18,17 +18,27 @@ class FriendController(
     }
 
     @PostMapping("/add")
-    fun addFriend(@RequestHeader(AUTH_HEADER) userId: Long, @RequestBody request: AddFriendRequest): ResponseEntity<Void> {
+    fun addFriend(
+        @RequestHeader(AUTH_HEADER) userId: Long,
+        @RequestBody request: AddFriendRequest
+    ): ResponseEntity<Void> {
         return friendService.addFriend(userId, request)
     }
 
     @DeleteMapping("/remove")
-    fun removeFriend(@RequestHeader(AUTH_HEADER) userId: Long, @RequestBody request: RemoveFriendRequest): ResponseEntity<Void> {
+    fun removeFriend(
+        @RequestHeader(AUTH_HEADER) userId: Long,
+        @RequestBody request: RemoveFriendRequest
+    ): ResponseEntity<Void> {
         return friendService.removeFriend(userId, request)
     }
 
     @GetMapping
-    fun getFriends(@RequestHeader(AUTH_HEADER) userId: Long, @RequestParam offset: Int, @RequestParam limit: Int): List<GetFriendResponse> {
+    fun getFriends(
+        @RequestParam userId: Long,
+        @RequestParam offset: Int,
+        @RequestParam limit: Int
+    ): List<GetFriendResponse> {
         return friendService.getFriends(userId, offset, limit)
     }
 }

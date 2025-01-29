@@ -7,10 +7,9 @@ spring:
     name: player-service
 
   datasource:
-
     url: jdbc:postgresql://postgres-service:5432/backgammon
-    #    url: jdbc:postgresql://${PLAYER_DB:localhost:5432/backgammon}
-    #    driver-class-name: org.postgresql.Driver
+#    url: jdbc:postgresql://${PLAYER_DB:localhost:5432/backgammon}
+    driver-class-name: org.postgresql.Driver
     #        username: ${PLAYER_DB_USER:postgres}
     username: postgres
     #        password: ${PLAYER_DB_PASS:admin}
@@ -19,7 +18,7 @@ spring:
   jpa:
     generate-ddl: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 
   sql:
     init:
@@ -28,5 +27,9 @@ spring:
 jwt:
   secret: ${JWT_SECRET:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
   expire: ${PLAYER_TOKEN_EXPIRATION_TIME:100000}
+
+storage:
+  image:
+    path: /var/image-data
 
 debug: false

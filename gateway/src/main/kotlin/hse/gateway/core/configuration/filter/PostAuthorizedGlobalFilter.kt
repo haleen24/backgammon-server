@@ -11,6 +11,7 @@ import org.springframework.cloud.gateway.filter.NettyWriteResponseFilter
 import org.springframework.core.Ordered
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DefaultDataBufferFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.server.reactive.ServerHttpResponse
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator
@@ -51,6 +52,9 @@ class PostAuthorizedGlobalFilter(
         return object : ServerHttpResponseDecorator(response) {
             override fun writeWith(body: Publisher<out DataBuffer>): Mono<Void> {
                 if (body is Flux<out DataBuffer>) {
+                    if (statusCode != HttpStatus.OK) {
+                        return super.writeWith(body)
+                    }
                     return super.writeWith(body.buffer().map { dataBuffers ->
                         val joinedBuffers = DefaultDataBufferFactory().join(dataBuffers)
                         val content = ByteArray(joinedBuffers.readableByteCount())
@@ -58,7 +62,9 @@ class PostAuthorizedGlobalFilter(
                         val responseBody = String(content)
                         logger.info("получил $responseBody")
                         val jwtResponse = objectMapper.readValue(responseBody, JwtResponse::class.java)
-                        response.addCookie(ResponseCookie.from(tokenName, jwtResponse.token).secure(false).path("/").build())
+                        response.addCookie(
+                            ResponseCookie.from(tokenName, jwtResponse.token).secure(false).path("/").build()
+                        )
                         response.bufferFactory().wrap(content)
                     })
                 }

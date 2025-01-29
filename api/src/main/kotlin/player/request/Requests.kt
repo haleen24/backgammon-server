@@ -34,12 +34,12 @@ data class CreateUserRequest(
     val username: String = login,
 )
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
 @JsonSubTypes(
     value =
     [
-        JsonSubTypes.Type(value = AddFriendRequest.AddFriendByLogin::class, name = "byLogin"),
-        JsonSubTypes.Type(value = AddFriendRequest.AddFriendById::class, name = "byId")
+        JsonSubTypes.Type(value = AddFriendRequest.AddFriendByLogin::class, name = "BY_LOGIN"),
+        JsonSubTypes.Type(value = AddFriendRequest.AddFriendById::class, name = "BY_ID")
     ]
 )
 open class AddFriendRequest(
@@ -55,12 +55,12 @@ open class AddFriendRequest(
 }
 
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
 @JsonSubTypes(
     value =
     [
-        JsonSubTypes.Type(value = RemoveFriendRequest.RemoveFriendByLogin::class, name = "byLogin"),
-        JsonSubTypes.Type(value = RemoveFriendRequest.RemoveFriendById::class, name = "byId")
+        JsonSubTypes.Type(value = RemoveFriendRequest.RemoveFriendByLogin::class, name = "BY_LOGIN"),
+        JsonSubTypes.Type(value = RemoveFriendRequest.RemoveFriendById::class, name = "BY_ID")
     ]
 )
 open class RemoveFriendRequest(
@@ -76,6 +76,5 @@ open class RemoveFriendRequest(
 }
 
 data class ChangeInvitePolicyRequest(
-    val userId: Long,
     val newPolicy: InvitePolicy
 )

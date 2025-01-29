@@ -4,6 +4,7 @@ import hse.playerservice.service.UserService
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import player.request.*
 import player.response.JwtResponse
 
@@ -61,7 +62,21 @@ class UserController(
     }
 
     @PostMapping("/policy")
-    fun changeInvitePolicy(request: ChangeInvitePolicyRequest): ResponseEntity<Void> {
-        return userService.changeInvitePolicy(request)
+    fun changeInvitePolicy(
+        @RequestHeader(AUTH_HEADER) userId: Long,
+        @RequestBody request: ChangeInvitePolicyRequest
+    ): ResponseEntity<Void> {
+        return userService.changeInvitePolicy(userId, request)
+    }
+
+    @PostMapping("image")
+    fun uploadImage(@RequestHeader(AUTH_HEADER) userId: Long, @RequestBody file: MultipartFile): ResponseEntity<Void> {
+        return userService.saveUserImage(userId, file)
+    }
+
+    @GetMapping("image")
+    fun getImage(@RequestParam userId: Long): ResponseEntity<ByteArray> {
+        val res = userService.getImage(userId)
+        return ResponseEntity.ok().header("Content-Type", res.extension).body(res.image)
     }
 }
