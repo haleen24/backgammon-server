@@ -3,17 +3,21 @@ package hse.dao
 import hse.dto.EmitterDto
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 class EmitterRuntimeDao(
     private val emitters: ConcurrentHashMap<Int, HashSet<EmitterDto>> = ConcurrentHashMap(),
     @Value("\${config.sse.time-out}") private val sseTimeOut: Long
 ) {
 
     val logger = LoggerFactory.getLogger(this.javaClass)
+
     @Synchronized
     fun add(gameId: Int, userId: Int): SseEmitter {
         if (!emitters.containsKey(gameId)) {
@@ -23,8 +27,11 @@ class EmitterRuntimeDao(
         emitter.onCompletion { remove(gameId, userId) }
         emitter.onError { remove(gameId, userId) }
         emitter.onTimeout { remove(gameId, userId) }
-        emitters[gameId]!!.add(EmitterDto(userId, emitter))
-        logger.info("Добавили с таймаутом $sseTimeOut")
+        val emitterCollection = emitters[gameId]!!
+        val dtoToSave = EmitterDto(userId, emitter)
+        emitterCollection.remove(dtoToSave)
+        emitterCollection.add(dtoToSave)
+        logger.info("добавлен emitter game: $gameId, user: $userId, timeout $sseTimeOut")
         return emitter
     }
 
