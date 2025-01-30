@@ -34,6 +34,7 @@ class GameAdapter(
                 type = BackgammonType.valueOf(gameType.toString()),
                 firstUserId = firstUserId,
                 secondUserId = secondUserId,
+                points = 2 // todo: replace holder for e2e testing for actual game search
             )
         }
 

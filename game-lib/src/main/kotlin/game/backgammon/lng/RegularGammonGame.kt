@@ -50,6 +50,10 @@ class RegularGammonGame(
         testZar = ArrayList(zarResults)
     }
 
+    override fun reload(): Gammon {
+        return RegularGammonGame(zar = zar)
+    }
+
     override fun getConfiguration(): ConfigDto {
         return ConfigDto(
             zar = zarResults,

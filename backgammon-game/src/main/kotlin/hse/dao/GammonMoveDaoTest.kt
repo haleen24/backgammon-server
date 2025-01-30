@@ -9,27 +9,41 @@ import org.springframework.stereotype.Repository
 @Repository
 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
 class GammonMoveDaoTest(
-    private val contextMap: MutableMap<Int, GammonRestoreContextDto> = mutableMapOf(),
-    private val moveSetMap: MutableMap<Int, MutableList<MoveSet>> = mutableMapOf(),
+    private val contextMap: MutableMap<Int, MutableList<GammonRestoreContextDto>> = mutableMapOf(),
+    private val moveSetMap: MutableMap<Int, MutableList<MutableList<MoveSet>>> = mutableMapOf(),
 ) : GammonMoveDao {
-    override fun saveMoves(gameId: Int, moveSet: MoveSet) {
-        moveSetMap.computeIfAbsent(gameId) { arrayListOf() }.add(moveSet)
+    override fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet) {
+        moveSetMap.computeIfAbsent(matchId) { arrayListOf() }
+        val moveSets = moveSetMap[matchId]!!
+        if (gameId >= moveSets.size) {
+            moveSets.add(gameId, arrayListOf())
+        }
+        moveSets[gameId].add(moveSet)
     }
 
-    override fun getMoves(gameId: Int): List<MoveSet> {
-        return moveSetMap.getOrDefault(gameId, arrayListOf())
+    override fun getMoves(matchId: Int, gameId: Int): List<MoveSet> {
+        return moveSetMap.getOrDefault(matchId, arrayListOf(arrayListOf()))[gameId]
     }
 
-    override fun checkGameExists(gameId: Int): Boolean {
-        return gameId in contextMap.keys
+    override fun checkMatchExists(matchId: Int): Boolean {
+        return matchId in contextMap.keys
     }
 
-    override fun saveStartGameContext(gameId: Int, context: GammonRestoreContextDto) {
-        contextMap.putIfAbsent(gameId, context)
+    override fun saveStartGameContext(matchId: Int, gameId: Int, context: GammonRestoreContextDto) {
+        contextMap.putIfAbsent(matchId, arrayListOf())
+        val contexts = contextMap[matchId]!!
+        if (gameId >= contexts.size) {
+            contexts.add(gameId, context)
+        }
+        contexts[gameId] = context
     }
 
-    override fun getStartGameContext(gameId: Int): GammonRestoreContextDto? {
-        return contextMap[gameId]
+    override fun getStartGameContext(matchId: Int, gameId: Int): GammonRestoreContextDto? {
+        return contextMap[matchId]!![gameId]
+    }
+
+    override fun getCurrentGameInMathId(matchId: Int): Int? {
+        return contextMap[matchId]?.size
     }
 
 }

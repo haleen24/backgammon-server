@@ -10,6 +10,9 @@ spring:
 server:
   port: 81
 
+cfg:
+  start-game-id: 1
+
 route:
   config:
     backgammon-game:

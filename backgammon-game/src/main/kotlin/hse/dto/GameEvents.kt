@@ -13,16 +13,22 @@ data class MoveEvent(
     val color: Color,
 ) : GameEvent(EventType.MOVE_EVENT)
 
-class PlayerConnectedEvent(
+data class PlayerConnectedEvent(
     val color: Color,
 ) : GameEvent(EventType.PLAYER_CONNECTED_EVENT)
 
-class EndEvent(
+data class EndGameEvent(
     val win: Color,
     val lose: Color
-) : GameEvent(EventType.END_EVENT)
+) : GameEvent(EventType.END_GAME_EVENT)
 
-class TossZarEvent(
+data class EndMatchEvent(
+    val win: Color,
+    val lose: Color
+) : GameEvent(EventType.END_MATCH_EVENT)
+
+
+data class TossZarEvent(
     val value: Collection<Int>,
     val tossedBy: Color
 ) : GameEvent(EventType.TOSS_ZAR_EVENT)

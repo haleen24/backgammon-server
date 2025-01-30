@@ -17,8 +17,12 @@ import kotlin.math.sign
 
 
 class BackgammonWrapper(
-    private val game: Gammon,
+    private var game: Gammon,
     private val type: BackgammonType,
+    var gameId: Int,
+    var blackPoints: Int,
+    var whitePoints: Int,
+    val thresholdPoints: Int,
 ) {
 
     companion object {
@@ -26,17 +30,20 @@ class BackgammonWrapper(
         const val WHITE_COLOR = 1
 
         fun buildFromContext(restoreContextDto: GammonRestoreContextDto): BackgammonWrapper {
-            val gameWrapper = when (restoreContextDto.type) {
-                BackgammonType.SHORT_BACKGAMMON -> BackgammonWrapper(
-                    GammonRestorer.restoreBackgammon(restoreContextDto.game),
-                    BackgammonType.SHORT_BACKGAMMON
-                )
-
-                BackgammonType.REGULAR_GAMMON -> BackgammonWrapper(
-                    GammonRestorer.restoreGammon(restoreContextDto.game),
-                    BackgammonType.REGULAR_GAMMON
-                )
+            val game = when (restoreContextDto.type) {
+                BackgammonType.SHORT_BACKGAMMON -> GammonRestorer.restoreBackgammon(restoreContextDto.game)
+                BackgammonType.REGULAR_GAMMON -> GammonRestorer.restoreGammon(restoreContextDto.game)
             }
+
+            val gameWrapper = BackgammonWrapper(
+                game = game,
+                type = restoreContextDto.type,
+                blackPoints = restoreContextDto.blackPoints,
+                whitePoints = restoreContextDto.whitePoints,
+                thresholdPoints = restoreContextDto.thresholdPoints,
+                gameId = restoreContextDto.gameNumber,
+            )
+
             gameWrapper.firstPlayer = restoreContextDto.firstUserId
             gameWrapper.secondPlayer = restoreContextDto.secondUserId
             gameWrapper.numberOfMoves = restoreContextDto.numberOfMoves
@@ -93,6 +100,11 @@ class BackgammonWrapper(
         return listOf(firstPlayer, secondPlayer).associate { (getPlayerMask(it) == res.winner) to getPlayerColor(it) }
     }
 
+    fun getPointsForGame(): Int {
+        // TODO: change points in different cases
+        return 1
+    }
+
     fun checkEnd(): Boolean {
         return game.checkEnd()
     }
@@ -111,8 +123,28 @@ class BackgammonWrapper(
             firstUserId = firstPlayer,
             secondUserId = secondPlayer,
             type = type,
-            numberOfMoves = numberOfMoves
+            numberOfMoves = numberOfMoves,
+            blackPoints = blackPoints,
+            whitePoints = whitePoints,
+            thresholdPoints = thresholdPoints,
+            gameNumber = gameId,
         )
+    }
+
+    fun restore() {
+        game = game.reload()
+        gameId += 1
+    }
+
+    fun addPointsTo(color: Color): Int {
+        val points = getPointsForGame()
+        return if (color == Color.BLACK) {
+            blackPoints += points
+            blackPoints
+        } else {
+            whitePoints += points
+            whitePoints
+        }
     }
 
     private fun getDeckItemDto(index: Int, value: Int): DeckItemDto? {

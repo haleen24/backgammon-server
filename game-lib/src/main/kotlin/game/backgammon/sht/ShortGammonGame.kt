@@ -64,6 +64,10 @@ class ShortGammonGame(
         validateTossedZar(restoreContext.zarResult[0], restoreContext.zarResult[1])
     }
 
+    override fun reload(): Gammon {
+        return ShortGammonGame(zar = zar)
+    }
+
     override fun getConfiguration(): ConfigDto {
         return ConfigDto(
             zar = foolZar,

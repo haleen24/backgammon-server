@@ -16,4 +16,5 @@ data class CreateBackgammonGameRequest(
     val type: BackgammonType,
     val firstUserId: Int,
     val secondUserId: Int,
+    val points: Int = 1,
 )

@@ -23,42 +23,42 @@ class GammonStoreService(
 ) {
     private val logger = LoggerFactory.getLogger(GammonStoreService::class.java)
 
-    fun getGameById(gameId: Int): BackgammonWrapper {
-        return getGameFromCache(gameId) ?: getGameFromDataBase(gameId) ?: throw ResponseStatusException(
+    fun getMatchById(matchId: Int): BackgammonWrapper {
+        return getGameFromCache(matchId) ?: getGameFromDataBase(matchId) ?: throw ResponseStatusException(
             HttpStatus.NOT_FOUND,
-            "Game $gameId not found"
+            "Game $matchId not found"
         )
     }
 
-    fun checkGameExists(gameId: Int): Boolean {
-        return redisAdapter.exists(gameId.toString()) || gammonMoveDao.checkGameExists(gameId)
+    fun checkMatchExists(matchId: Int): Boolean {
+        return redisAdapter.exists(matchId.toString()) || gammonMoveDao.checkMatchExists(matchId)
     }
 
-    fun saveGameOnCreation(gameId: Int, game: BackgammonWrapper) {
+    fun saveGameOnCreation(matchId: Int, gameId: Int, game: BackgammonWrapper) {
         val restoreContext = game.getRestoreContext()
-        putGameToCache(gameId, restoreContext)
-        gammonMoveDao.saveStartGameContext(gameId, restoreContext)
+        putGameToCache(matchId, restoreContext)
+        gammonMoveDao.saveStartGameContext(matchId, gameId, restoreContext)
     }
 
-    fun saveAfterMove(gameId: Int, playerId: Int, game: BackgammonWrapper, moves: ChangeDto) {
+    fun saveAfterMove(matchId: Int, gameId: Int, playerId: Int, game: BackgammonWrapper, moves: ChangeDto) {
         val restoreContext = game.getRestoreContext()
-        putGameToCache(gameId, restoreContext)
+        putGameToCache(matchId, restoreContext)
         val moveSet = MoveSet(
             moves = moves,
-            gameId = gameId,
+            gameId = matchId,
             moveId = restoreContext.numberOfMoves,
             nextZar = restoreContext.game.zarResult,
             color = game.getPlayerColor(playerId)
         )
-        gammonMoveDao.saveMoves(gameId, moveSet)
+        gammonMoveDao.saveMoves(matchId, gameId, moveSet)
     }
 
-    fun getAllMovesInGame(gameId: Int): List<MoveSet> {
-        return gammonMoveDao.getMoves(gameId)
+    fun getAllMovesInGame(matchId: Int, gameId: Int): List<MoveSet> {
+        return gammonMoveDao.getMoves(matchId, gameId)
     }
 
-    fun getStartGameContext(gameId: Int): GammonRestoreContextDto? {
-        return gammonMoveDao.getStartGameContext(gameId)
+    fun getStartGameContext(matchId: Int, gameId: Int): GammonRestoreContextDto? {
+        return gammonMoveDao.getStartGameContext(matchId, gameId)
     }
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
@@ -70,9 +70,10 @@ class GammonStoreService(
     }
 
 
-    private fun getGameFromDataBase(gameId: Int): BackgammonWrapper? {
-        val movesPerChange = gammonMoveDao.getMoves(gameId)
-        val startState = gammonMoveDao.getStartGameContext(gameId) ?: return null
+    private fun getGameFromDataBase(matchId: Int): BackgammonWrapper? {
+        val gameId = gammonMoveDao.getCurrentGameInMathId(matchId) ?: return null
+        val movesPerChange = gammonMoveDao.getMoves(matchId, gameId)
+        val startState = gammonMoveDao.getStartGameContext(matchId, gameId) ?: return null
 
         return when (startState.type) {
             BackgammonType.SHORT_BACKGAMMON -> restoreBackgammon(startState, movesPerChange)

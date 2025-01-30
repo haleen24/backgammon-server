@@ -9,4 +9,8 @@ data class GammonRestoreContextDto(
     val secondUserId: Int,
     val type: BackgammonType,
     val numberOfMoves: Int,
+    val blackPoints: Int,
+    val whitePoints: Int,
+    val thresholdPoints: Int,
+    val gameNumber: Int,
 )

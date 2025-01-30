@@ -17,7 +17,7 @@ abstract class Gammon(
         const val WHITE = 1
     }
 
-
+    abstract fun reload(): Gammon
     abstract fun getConfiguration(): ConfigDto
     abstract fun move(user: Int, moves: List<MoveDto>): ChangeDto
     abstract fun getEndState(): EndDto?

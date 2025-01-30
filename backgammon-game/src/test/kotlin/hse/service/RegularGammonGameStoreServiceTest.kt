@@ -33,7 +33,11 @@ class RegularGammonGameStoreServiceTest(
             firstUserId = 1,
             secondUserId = 2,
             type = BackgammonType.SHORT_BACKGAMMON,
-            numberOfMoves = 1
+            numberOfMoves = 1,
+            blackPoints = 0,
+            whitePoints = 0,
+            thresholdPoints = 10,
+            gameNumber = 1
         )
         val moves = listOf(
             MoveSet(
@@ -70,7 +74,11 @@ class RegularGammonGameStoreServiceTest(
             firstUserId = 1,
             secondUserId = 2,
             type = BackgammonType.SHORT_BACKGAMMON,
-            numberOfMoves = 1
+            numberOfMoves = 1,
+            blackPoints = 0,
+            whitePoints = 0,
+            thresholdPoints = 10,
+            gameNumber = 1
         )
         val moves = listOf(
             MoveSet(
