@@ -4,12 +4,10 @@ import game.backgammon.GammonRestorer
 import game.backgammon.dto.ChangeDto
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
-import hse.dao.GammonMoveDaoImpl
 import hse.dto.GammonRestoreContextDto
 import hse.entity.MoveSet
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.TestConstructor
 import kotlin.test.assertEquals
 
@@ -18,7 +16,6 @@ import kotlin.test.assertEquals
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class RegularGammonGameStoreServiceTest(
     private val gammonStoreService: GammonStoreService,
-    @SpyBean private val gammonMoveDao: GammonMoveDaoImpl,
 ) {
 
     @Test
