@@ -1,6 +1,7 @@
 package hse.dao
 
 import hse.dto.GammonRestoreContextDto
+import hse.entity.GameWinner
 import hse.entity.MoveSet
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository
 class GammonMoveDaoTest(
     private val contextMap: MutableMap<Int, MutableList<GammonRestoreContextDto>> = mutableMapOf(),
     private val moveSetMap: MutableMap<Int, MutableList<MutableList<MoveSet>>> = mutableMapOf(),
+    private val winnerMap: MutableMap<Int, MutableList<Int>> = mutableMapOf(),
 ) : GammonMoveDao {
     override fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet) {
         moveSetMap.computeIfAbsent(matchId) { arrayListOf() }
@@ -44,6 +46,11 @@ class GammonMoveDaoTest(
 
     override fun getCurrentGameInMathId(matchId: Int): Int? {
         return contextMap[matchId]?.size
+    }
+
+    override fun storeWinner(winner: GameWinner) {
+        winnerMap.putIfAbsent(winner.matchId, arrayListOf())
+        winnerMap[winner.matchId]!!.add(winner.gameId, winner.gameId)
     }
 
 }

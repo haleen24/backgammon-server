@@ -111,8 +111,10 @@ class BackgammonGameService(
     // public for testing
     fun handleGameEnd(roomId: Int, wrapper: BackgammonWrapper) {
         val endState = wrapper.gameEndStatus()
-        val winnerPoints = wrapper.addPointsTo(endState[true]!!)
+        val winner = endState[true]!!
+        val winnerPoints = wrapper.addPointsTo(winner)
         val endMatch = winnerPoints >= wrapper.thresholdPoints
+        gammonStoreService.storeWinner(roomId, wrapper.gameId, winner)
 
         if (!endMatch) {
             wrapper.restore()
@@ -120,7 +122,7 @@ class BackgammonGameService(
         }
         emitterService.sendForAll(
             roomId, EndGameEvent(
-                win = endState[true]!!,
+                win = winner,
                 blackPoints = wrapper.blackPoints,
                 whitePoints = wrapper.whitePoints,
                 isMatchEnd = endMatch,

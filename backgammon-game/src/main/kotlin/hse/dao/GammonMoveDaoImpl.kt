@@ -1,6 +1,7 @@
 package hse.dao
 
 import hse.dto.GammonRestoreContextDto
+import hse.entity.GameWinner
 import hse.entity.GameWithId
 import hse.entity.MoveSet
 import hse.entity.MoveWithId
@@ -64,5 +65,9 @@ class GammonMoveDaoImpl(
             GameWithId::class.java,
             START_STATE_COLLECTION
         ).firstOrNull()?.gameId
+    }
+
+    override fun storeWinner(winner: GameWinner) {
+        mongoTemplate.save(winner)
     }
 }

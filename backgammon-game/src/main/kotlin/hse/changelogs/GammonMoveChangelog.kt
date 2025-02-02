@@ -13,6 +13,7 @@ class GammonMoveChangelog {
     companion object {
         const val MOVE_COLLECTION = "moveWithId"
         const val MATCH_COLLECTION = "matchWithId"
+        const val GAME_WINNER_COLLECTION= "gameWinner"
         const val MATCH_ID_FIELD = "matchId"
     }
 
@@ -36,6 +37,12 @@ class GammonMoveChangelog {
     fun createGameIndex(template: MongoTemplate) {
         template.indexOps(MATCH_COLLECTION).ensureIndex(Index(MATCH_ID_FIELD, Sort.Direction.DESC))
     }
+
+    @ChangeSet(order = "005", author = "haleen24", id = "gameWinner")
+    fun gameWinner(template: MongoTemplate) {
+        template.indexOps(GAME_WINNER_COLLECTION).ensureIndex(Index(MATCH_ID_FIELD, Sort.Direction.DESC))
+    }
+
 
 
 }

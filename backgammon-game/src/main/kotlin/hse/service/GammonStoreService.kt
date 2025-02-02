@@ -3,11 +3,13 @@ package hse.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import game.backgammon.dto.ChangeDto
 import game.backgammon.enums.BackgammonType
+import game.backgammon.enums.Color
 import game.backgammon.lng.RegularGammonGame
 import game.backgammon.sht.ShortGammonGame
 import hse.adapter.RedisAdapter
 import hse.dao.GammonMoveDao
 import hse.dto.GammonRestoreContextDto
+import hse.entity.GameWinner
 import hse.entity.MoveSet
 import hse.wrapper.BackgammonWrapper
 import org.slf4j.LoggerFactory
@@ -62,6 +64,10 @@ class GammonStoreService(
 
     fun getStartGameContext(matchId: Int, gameId: Int): GammonRestoreContextDto? {
         return gammonMoveDao.getStartGameContext(matchId, gameId)
+    }
+
+    fun storeWinner(matchId: Int, gameId: Int, winner: Color) {
+        gammonMoveDao.storeWinner(GameWinner.of(matchId, gameId, winner))
     }
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
