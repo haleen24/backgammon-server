@@ -3,7 +3,7 @@ package hse.service
 import game.backgammon.Gammon
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
-import hse.dto.EndMatchEvent
+import hse.dto.EndGameEvent
 import hse.wrapper.BackgammonWrapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -40,6 +40,7 @@ class BackgammonGameServiceTest {
 
         Mockito.verify(wrapper, Mockito.times(1)).restore()
         Mockito.verify(gammonStoreService, Mockito.times(1)).saveGameOnCreation(1, 2, wrapper)
+        Mockito.verify(emitterService, Mockito.times(1)).sendForAll(1, EndGameEvent(Color.BLACK, 1, 0, false))
         assertEquals(1, wrapper.blackPoints)
     }
 
@@ -62,7 +63,7 @@ class BackgammonGameServiceTest {
 
         Mockito.verify(wrapper, Mockito.times(0)).restore()
         Mockito.verify(gammonStoreService, Mockito.times(0)).saveGameOnCreation(1, 2, wrapper)
-        Mockito.verify(emitterService, Mockito.times(1)).sendForAll(1, EndMatchEvent(Color.BLACK, Color.WHITE))
+        Mockito.verify(emitterService, Mockito.times(1)).sendForAll(1, EndGameEvent(Color.BLACK, 2, 0, true))
         assertEquals(2, wrapper.blackPoints)
     }
 }

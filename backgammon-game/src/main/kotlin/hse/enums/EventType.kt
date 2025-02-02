@@ -6,5 +6,4 @@ enum class EventType {
     PLAYER_CONNECTED_EVENT,
     END_GAME_EVENT,
     TOSS_ZAR_EVENT,
-    END_MATCH_EVENT
 }

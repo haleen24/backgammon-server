@@ -19,13 +19,10 @@ data class PlayerConnectedEvent(
 
 data class EndGameEvent(
     val win: Color,
-    val lose: Color
+    val blackPoints: Int,
+    val whitePoints: Int,
+    val isMatchEnd: Boolean,
 ) : GameEvent(EventType.END_GAME_EVENT)
-
-data class EndMatchEvent(
-    val win: Color,
-    val lose: Color
-) : GameEvent(EventType.END_MATCH_EVENT)
 
 
 data class TossZarEvent(

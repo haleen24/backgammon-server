@@ -11,7 +11,10 @@ import game.backgammon.response.ConfigResponse
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
 import game.backgammon.sht.ShortGammonGame
-import hse.dto.*
+import hse.dto.EndGameEvent
+import hse.dto.GameStartedEvent
+import hse.dto.MoveEvent
+import hse.dto.TossZarEvent
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -114,20 +117,14 @@ class BackgammonGameService(
         if (!endMatch) {
             wrapper.restore()
             gammonStoreService.saveGameOnCreation(roomId, wrapper.gameId, wrapper)
-            val event = EndGameEvent(lose = endState[false]!!, win = endState[true]!!)
-            emitterService.sendForAll(roomId, event)
-        } else {
-            val winner = if (wrapper.whitePoints >= wrapper.thresholdPoints) {
-                Color.WHITE
-            } else {
-                Color.BLACK
-            }
-            emitterService.sendForAll(
-                roomId, EndMatchEvent(
-                    win = winner,
-                    lose = winner.getOpponent()
-                )
-            )
         }
+        emitterService.sendForAll(
+            roomId, EndGameEvent(
+                win = endState[true]!!,
+                blackPoints = wrapper.blackPoints,
+                whitePoints = wrapper.whitePoints,
+                isMatchEnd = endMatch,
+            )
+        )
     }
 }

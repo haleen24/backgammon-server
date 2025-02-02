@@ -43,6 +43,11 @@ class ShortGammonGame(
         testBar = HashMap(bar)
     }
 
+    companion object {
+        const val WHITE_STORE = 0
+        const val BLACK_STORE = 25
+    }
+
 
     constructor(restoreContext: GammonRestorer.GammonRestoreContext) : this() {
         deck = ArrayList(26)
@@ -106,7 +111,7 @@ class ShortGammonGame(
         if (!endFlag) {
             return null
         }
-        return EndDto(if (deck[0] == 15) BLACK else WHITE)
+        return EndDto(if (deck[WHITE_STORE] == 15) WHITE else BLACK)
     }
 
     override fun tossBothZar(): TossZarDto {
@@ -148,7 +153,7 @@ class ShortGammonGame(
                 continue
             }
             val pos = i + dif
-            if ((pos == 0 || pos == 25) && !canMoveHome) {
+            if ((pos == WHITE_STORE || pos == BLACK_STORE) && !canMoveHome) {
                 continue
             }
             if (pos in testDeck.indices) {
@@ -168,7 +173,7 @@ class ShortGammonGame(
             var idx = 0
             val dist = if (turn == BLACK) {
                 idx = testDeck.indexOfFirst { it.sign == -1 }
-                25 - idx
+                BLACK_STORE - idx
             } else {
                 idx = testDeck.indexOfLast { it != 0 && it.sign == 1 }
                 idx
@@ -194,7 +199,7 @@ class ShortGammonGame(
         testZar.remove(abs(move.to - move.from))
         testDeck[move.to] += user
 
-        val moveMap = if (move.from == 0 || move.from == 25) {
+        val moveMap = if (move.from == WHITE_STORE || move.from == BLACK_STORE) {
             testBar[user] = testBar[user]!!.minus(user)
             move.from to move.to
         } else {
@@ -238,7 +243,7 @@ class ShortGammonGame(
     }
 
     private fun validateMoveFromBar(user: Int, move: MoveDto) {
-        val moveFromBar = move.from == 0 || move.from == 25
+        val moveFromBar = move.from == WHITE_STORE || move.from == BLACK_STORE
         if (!moveFromBar && testBar[user]!! > 0) {
             throw NotEmptyBarBackgammonException()
         } else if (moveFromBar && testBar[user]!! == 0) {
@@ -269,13 +274,13 @@ class ShortGammonGame(
     }
 
     private fun validateMove(user: Int, move: MoveDto) {
-        if (user * (move.to - move.from) > 0) {
+        if (user * (move.to - move.from) > WHITE_STORE) {
             throw IncorrectDirectionBackgammonException(move.from, move.to)
         }
-        if (move.from < 0 || move.from >= deck.size || move.to < 0 || move.to >= deck.size) {
+        if (move.from < WHITE_STORE || move.from >= deck.size || move.to < WHITE_STORE || move.to >= deck.size) {
             throw OutOfBoundsBackgammonException(move.from, move.to)
         }
-        if (move.from != 0 && move.from != 25 && testDeck[move.from] * user <= 0) {
+        if (move.from != WHITE_STORE && move.from != BLACK_STORE && testDeck[move.from] * user <= WHITE_STORE) {
             throw IncorrectPositionForMoveBackgammonException(move.from)
         }
         if (!canMove(move.to)) {
@@ -288,12 +293,12 @@ class ShortGammonGame(
         return if (user == BLACK) {
             testDeck.indexOfFirst { it.sign == user } > 18
         } else {
-            testDeck.indexOfLast { it != 0 && it.sign == user } < 7
+            testDeck.indexOfLast { it != WHITE_STORE && it.sign == user } < 7
         }
     }
 
     private fun validateExit(user: Int, move: MoveDto) {
-        if (move.to == 0 || move.to == 25) {
+        if (move.to == WHITE_STORE || move.to == BLACK) {
             if (!checkAllInHome(user)) {
                 throw CantExitBackgammonException()
             }
@@ -303,8 +308,8 @@ class ShortGammonGame(
 
     private fun getBarFrom(user: Int): Int {
         return when (user) {
-            BLACK -> 0
-            WHITE -> 25
+            BLACK -> WHITE_STORE
+            WHITE -> BLACK_STORE
             else -> throw IncorrectInputtedUserBackgammonException()
         }
     }
@@ -318,7 +323,7 @@ class ShortGammonGame(
     }
 
     private fun validateEnd(): Boolean {
-        if (abs(deck[0]) == 15 || abs(deck[25]) == 15) {
+        if (abs(deck[WHITE_STORE]) == 15 || abs(deck[BLACK_STORE]) == 15) {
             endFlag = true
             return true
         }
@@ -326,13 +331,13 @@ class ShortGammonGame(
     }
 
     private fun canMove(to: Int): Boolean {
-        val canTo = to >= 0 && to < testDeck.size && testDeck[to] * turn >= -1
+        val canTo = to >= WHITE_STORE && to < testDeck.size && testDeck[to] * turn >= -1
         if (!canTo) {
             return false
         }
-        return if (to > 0 && to < testDeck.size - 1) {
+        return if (to > WHITE_STORE && to < testDeck.size - 1) {
             true
-        } else if (to == 0 || to == testDeck.size - 1) {
+        } else if (to == WHITE_STORE || to == testDeck.size - 1) {
             return checkAllInHome(turn)
         } else {
             false
@@ -340,7 +345,7 @@ class ShortGammonGame(
     }
 
     private fun checkTurn(position: Int): Boolean {
-        return position >= 0 && position < testDeck.size && testDeck[position] != 0 && testDeck[position].sign == turn
+        return position >= WHITE_STORE && position < testDeck.size && testDeck[position] != WHITE_STORE && testDeck[position].sign == turn
     }
 
 

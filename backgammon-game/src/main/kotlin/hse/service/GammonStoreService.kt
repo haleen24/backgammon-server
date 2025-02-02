@@ -3,6 +3,8 @@ package hse.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import game.backgammon.dto.ChangeDto
 import game.backgammon.enums.BackgammonType
+import game.backgammon.lng.RegularGammonGame
+import game.backgammon.sht.ShortGammonGame
 import hse.adapter.RedisAdapter
 import hse.dao.GammonMoveDao
 import hse.dto.GammonRestoreContextDto
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
+import kotlin.math.absoluteValue
 import kotlin.math.sign
 
 
@@ -129,9 +132,10 @@ class GammonStoreService(
                     bar = mapOf(-1 to deck.first, 1 to deck.last),
                     deck = deck.subList(1, deck.size - 1).mapIndexed { index, i -> index to i }.toMap()
                         .filterValues { it != 0 },
-                    zarResult = nextZar
+                    zarResult = nextZar,
+                    endFlag = deck[ShortGammonGame.WHITE_STORE + 1].absoluteValue == 15 || deck[ShortGammonGame.BLACK_STORE + 1].absoluteValue == 15
                 ),
-                numberOfMoves = movesPerChange.size
+                numberOfMoves = movesPerChange.size,
             )
         )
     }
@@ -174,7 +178,8 @@ class GammonStoreService(
                     turn = turn,
                     deck = deck.mapIndexed { index, i -> index to i }.toMap()
                         .filterValues { it != 0 },
-                    zarResult = nextZar
+                    zarResult = nextZar,
+                    endFlag = deck[RegularGammonGame.WHITE_STORAGE].absoluteValue == 15 || deck[RegularGammonGame.BLACK_STORAGE].absoluteValue == 15
                 ),
                 numberOfMoves = movesPerChange.size
             )
