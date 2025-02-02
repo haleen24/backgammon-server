@@ -2,10 +2,7 @@ package hse.wrapper
 
 import game.backgammon.Gammon
 import game.backgammon.GammonRestorer
-import game.backgammon.dto.ChangeDto
-import game.backgammon.dto.DeckItemDto
-import game.backgammon.dto.MoveDto
-import game.backgammon.dto.TossZarDto
+import game.backgammon.dto.*
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import game.backgammon.response.ConfigResponse
@@ -62,10 +59,10 @@ class BackgammonWrapper(
         secondPlayer = second
     }
 
-    fun getConfiguration(playerId: Int): ConfigResponse {
+    fun getConfiguration(playerId: Int): ConfigResponseDto {
         val config = game.getConfiguration()
 
-        return ConfigResponse(
+        return ConfigResponseDto(
             color = getPlayerColor(playerId),
             turn = getColor(config.turn),
             bar = config.bar.entries.associate { getColor(it.key) to it.value.absoluteValue },

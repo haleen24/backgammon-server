@@ -1,11 +1,10 @@
 package game.backgammon.response
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import game.backgammon.dto.DeckItemDto
+import game.backgammon.dto.ConfigResponseDto
 import game.backgammon.dto.MoveResponseDto
 import game.backgammon.dto.StartStateDto
-import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import jdk.jfr.Threshold
 
 
 data class MoveResponse(
@@ -19,12 +18,8 @@ data class HistoryResponse(
 )
 
 data class ConfigResponse(
-    val color: Color,
-    val turn: Color,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    val bar: Map<Color, Int>,
-    val deck: Set<DeckItemDto>,
-    val zar: List<Int>,
-    val first: Boolean,
-    val type: BackgammonType
+    val gameData: ConfigResponseDto,
+    val blackPoints: Int,
+    val whitePoints: Int,
+    val threshold: Int,
 )

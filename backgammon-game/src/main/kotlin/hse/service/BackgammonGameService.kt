@@ -55,7 +55,14 @@ class BackgammonGameService(
 
     fun getConfiguration(userId: Int, gameId: Int): ConfigResponse {
         val game = gammonStoreService.getMatchById(gameId)
-        return game.getConfiguration(userId)
+        val configData = game.getConfiguration(userId)
+
+        return ConfigResponse(
+            gameData = configData,
+            blackPoints = game.blackPoints,
+            whitePoints = game.whitePoints,
+            threshold = game.thresholdPoints
+        )
     }
 
     fun getColor(userId: Int, gameId: Int): Color {

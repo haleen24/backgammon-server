@@ -1,5 +1,6 @@
 package hse.service
 
+import de.hdi.mongobumblebee.MongoBumblebee
 import game.backgammon.GammonRestorer
 import game.backgammon.dto.ChangeDto
 import game.backgammon.enums.BackgammonType
@@ -7,7 +8,9 @@ import game.backgammon.enums.Color
 import hse.dto.GammonRestoreContextDto
 import hse.entity.MoveSet
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.TestConstructor
 import kotlin.test.assertEquals
 
@@ -17,6 +20,9 @@ import kotlin.test.assertEquals
 class RegularGammonGameStoreServiceTest(
     private val gammonStoreService: GammonStoreService,
 ) {
+
+    @MockBean
+    lateinit var mongoBumblebee: MongoBumblebee
 
     @Test
     fun restoreBlackTest() {
