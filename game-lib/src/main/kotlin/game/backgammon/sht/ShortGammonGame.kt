@@ -3,6 +3,8 @@ package game.backgammon.sht
 import game.backgammon.*
 import game.backgammon.dto.*
 import game.backgammon.exception.*
+import game.backgammon.lng.RegularGammonGame.Companion.BLACK_STORAGE
+import game.backgammon.lng.RegularGammonGame.Companion.WHITE_STORAGE
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
 import kotlin.math.*
@@ -126,6 +128,31 @@ class ShortGammonGame(
 
     override fun checkEnd(): Boolean {
         return endFlag
+    }
+
+    override fun getWinPoints(): Int {
+        if (!endFlag) {
+            throw CantCountWinPointsGammonException()
+        }
+
+        val points = if (deck[BLACK_STORAGE].absoluteValue == 15) {
+            if (deck[WHITE_STORAGE] != 0) {
+                REGULAR_DEFEAT
+            } else if (bar[WHITE] != 0) {
+                KOKS_DEFEAT
+            } else {
+                MARS_DEFEAT
+            }
+        } else {
+            if (deck[BLACK_STORAGE] != 0) {
+                REGULAR_DEFEAT
+            } else if (bar[BLACK] != 0) {
+                KOKS_DEFEAT
+            } else {
+                MARS_DEFEAT
+            }
+        }
+        return points * 2.0.pow(doubleCube).toInt()
     }
 
     private fun findMaxFromSequence(zar: List<Int>): Int {

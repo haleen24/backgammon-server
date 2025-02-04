@@ -11,10 +11,15 @@ abstract class Gammon(
     var zarResults: ArrayList<Int> = arrayListOf()
     var foolZar = ArrayList<Int>()
     var endFlag: Boolean = false
+    var doubleCube = 0
 
     companion object {
         const val BLACK = -1
         const val WHITE = 1
+
+        const val REGULAR_DEFEAT = 1
+        const val MARS_DEFEAT = 2
+        const val KOKS_DEFEAT = 3
     }
 
     abstract fun reload(): Gammon
@@ -23,6 +28,7 @@ abstract class Gammon(
     abstract fun getEndState(): EndDto?
     abstract fun tossBothZar(): TossZarDto
     abstract fun checkEnd(): Boolean
+    abstract fun getWinPoints(): Int
 
 
 }

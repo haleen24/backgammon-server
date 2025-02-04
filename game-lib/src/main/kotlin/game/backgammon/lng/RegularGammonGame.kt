@@ -5,9 +5,7 @@ import game.backgammon.dto.*
 import game.backgammon.exception.*
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sign
+import kotlin.math.*
 
 class RegularGammonGame(
     zar: Random = Random()
@@ -87,7 +85,7 @@ class RegularGammonGame(
         if (!endFlag) {
             return null
         }
-        return EndDto(if (deck[BLACK_STORAGE] == 15) BLACK else WHITE)
+        return EndDto(if (deck[BLACK_STORAGE].absoluteValue == 15) BLACK else WHITE)
     }
 
     override fun tossBothZar(): TossZarDto {
@@ -101,6 +99,27 @@ class RegularGammonGame(
 
     override fun checkEnd(): Boolean {
         return endFlag
+    }
+
+    override fun getWinPoints(): Int {
+        if (!endFlag) {
+            throw CantCountWinPointsGammonException()
+        }
+
+        val points = if (deck[BLACK_STORAGE].absoluteValue == 15) {
+            if (deck[WHITE_STORAGE] == 0) {
+                MARS_DEFEAT
+            } else {
+                REGULAR_DEFEAT
+            }
+        } else {
+            if (deck[BLACK_STORAGE] == 0) {
+                MARS_DEFEAT
+            } else {
+                REGULAR_DEFEAT
+            }
+        }
+        return points * 2.0.pow(doubleCube).toInt()
     }
 
     private fun validateBeforeMoves(user: Int, moves: List<MoveDto>) {
@@ -171,14 +190,6 @@ class RegularGammonGame(
             return 13 - from
         }
         return to - from
-    }
-
-    private fun getCurrentHead(): Int {
-        return when (turn) {
-            -1 -> BLACK_HEAD
-            1 -> WHITE_HEAD
-            else -> throw IncorrectInputtedUserBackgammonException()
-        }
     }
 
     private fun canMove(from: Int, to: Int): Boolean {

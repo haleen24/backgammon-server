@@ -25,6 +25,7 @@ class UnprocessableEntityBackgammonExceptionResponseMatcher : BackgammonExceptio
             NotEmptyBarBackgammonException::class,
             OutOfBoundsBackgammonException::class,
             ReTossZarBackgammonException::class,
+            CantCountWinPointsGammonException::class,
         )
     }
 

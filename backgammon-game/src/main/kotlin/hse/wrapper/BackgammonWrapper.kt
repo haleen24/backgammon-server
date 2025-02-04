@@ -5,7 +5,6 @@ import game.backgammon.GammonRestorer
 import game.backgammon.dto.*
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
-import game.backgammon.response.ConfigResponse
 import hse.dto.GammonRestoreContextDto
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -98,8 +97,7 @@ class BackgammonWrapper(
     }
 
     fun getPointsForGame(): Int {
-        // TODO: change points in different cases
-        return 1
+        return game.getWinPoints()
     }
 
     fun checkEnd(): Boolean {
