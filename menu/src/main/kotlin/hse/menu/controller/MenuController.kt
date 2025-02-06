@@ -19,6 +19,6 @@ class MenuController(
         @RequestHeader(AUTH_USER) user: Int,
         @RequestBody request: CreateGameRequest,
     ): Int {
-        return menuGameService.connect(user, request.type)
+        return menuGameService.connect(user, request)
     }
 }

@@ -1,6 +1,8 @@
 package hse.menu.service
 
+import game.backgammon.request.CreateGameRequest
 import game.common.enums.GameType
+import game.common.enums.GammonGamePoints
 import hse.menu.adapter.GameAdapter
 import hse.menu.dao.ConnectDao
 import hse.menu.dao.GameDao
@@ -10,6 +12,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 @Service
 class MenuGameService(
@@ -20,9 +24,14 @@ class MenuGameService(
 
     private final val logger = LoggerFactory.getLogger(MenuGameService::class.java)
 
+
+    private var executor: ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
+
     init {
-        GameType.entries.forEach {
-            Thread { connectionJob(it) }.start()
+        GameType.entries.forEach { type ->
+            GammonGamePoints.entries.forEach { points ->
+                executor.execute { connectionJob(type, points) }
+            }
         }
     }
 
@@ -31,9 +40,10 @@ class MenuGameService(
     }
 
 
-    fun connect(userId: Int, gameType: GameType): Int {
-        val connectionDto = ConnectionDto(userId, CountDownLatch(1), gameType)
-        connectionDao.connect(connectionDto, gameType)
+    fun connect(userId: Int, request: CreateGameRequest): Int {
+        val connectionDto = ConnectionDto(userId, CountDownLatch(1), request.type)
+        val points = GammonGamePoints.of(request.points) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        connectionDao.connect(connectionDto, request.type, points)
         connectionDto.latch.await()
         return connectionDto.gameId ?: throw ResponseStatusException(
             HttpStatus.CONFLICT,
@@ -41,32 +51,27 @@ class MenuGameService(
         )
     }
 
-    private fun connectionJob(gameType: GameType) {
+    private fun connectionJob(gameType: GameType, points: GammonGamePoints) {
         var firstPlayerConnection: ConnectionDto
         var secondPlayerConnection: ConnectionDto
         while (true) {
-            logger.info("Начал ждать юзеров")
-            firstPlayerConnection = connectionDao.removeFromConnectionQueue(gameType)
-            logger.info("Зашел первый: ${firstPlayerConnection.userId}")
-            secondPlayerConnection = connectionDao.removeFromConnectionQueue(gameType)
-            logger.info("Зашел второй: ${secondPlayerConnection.userId}")
+            firstPlayerConnection = connectionDao.removeFromConnectionQueue(gameType, points)
+            secondPlayerConnection = connectionDao.removeFromConnectionQueue(gameType, points)
             if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
-                logger.info("Нельзя играть с самим собой")
                 firstPlayerConnection.latch.countDown()
-                secondPlayerConnection.latch.countDown()
+                connectionDao.connect(secondPlayerConnection, gameType, points)
                 continue
             }
-            // Пока только 1 тип игры
             val gameId = storeRoom(gameType)
-            logger.info("Сохраняю комнату")
             val realRoomId = gameAdapter.gameCreation(
                 gameId,
                 firstPlayerConnection.userId,
                 secondPlayerConnection.userId,
                 firstPlayerConnection.gameType,
+                points
             )
             if (realRoomId != gameId) {
-                logger.info("Реальный id комнаты ${realRoomId}, сгенерированный $gameId")
+                logger.info("Не удалось сгенерить игру с id $gameId")
                 firstPlayerConnection.latch.countDown()
                 secondPlayerConnection.latch.countDown()
                 continue
@@ -75,7 +80,6 @@ class MenuGameService(
             secondPlayerConnection.gameId = gameId
             firstPlayerConnection.latch.countDown()
             secondPlayerConnection.latch.countDown()
-            logger.info("Отпустил юзеров")
         }
     }
 }

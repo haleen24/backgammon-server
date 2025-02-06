@@ -3,6 +3,7 @@ package hse.menu.adapter
 import game.backgammon.enums.BackgammonType
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.common.enums.GameType
+import game.common.enums.GammonGamePoints
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -20,10 +21,16 @@ class GameAdapter(
 
     private val logger: Logger = LoggerFactory.getLogger(GameAdapter::class.java)
 
-    private  val gameAddr = "game"
+    private val gameAddr = "game"
 
     private val createRoomTemplate = "$gameUri/$gameAddr/%s/create-room/%d"
-    fun gameCreation(gameId: Int, firstUserId: Int, secondUserId: Int, gameType: GameType): Int? {
+    fun gameCreation(
+        gameId: Int,
+        firstUserId: Int,
+        secondUserId: Int,
+        gameType: GameType,
+        points: GammonGamePoints
+    ): Int? {
         val uri = URI(
             when (gameType.type) {
                 GameType.GeneralGameType.BACKGAMMON -> createRoomTemplate.format("backgammon", gameId)
@@ -34,7 +41,7 @@ class GameAdapter(
                 type = BackgammonType.valueOf(gameType.toString()),
                 firstUserId = firstUserId,
                 secondUserId = secondUserId,
-                points = 2 // todo: replace holder for e2e testing for actual game search
+                points = points.value
             )
         }
 
