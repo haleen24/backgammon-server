@@ -38,18 +38,21 @@ class BackgammonGameService(
         val game = gammonStoreService.getMatchById(matchId)
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
-
         val response = MoveResponse(
             moves = res.changes.map { MoveResponseDto(it.first, it.second) },
             color = playerColor,
         )
-        emitterService.sendEventExceptUser(playerId, matchId, MoveEvent(response.moves, playerColor))
-        val tossZarRes = game.tossZar()
         gammonStoreService.saveAfterMove(matchId, game.gameId, playerId, game, res)
+
+        emitterService.sendEventExceptUser(playerId, matchId, MoveEvent(response.moves, playerColor))
+        
         if (game.checkEnd()) {
             handleGameEnd(matchId, game)
+        } else {
+            val tossZarRes = game.tossZar()
+            emitterService.sendForAll(matchId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))
         }
-        emitterService.sendForAll(matchId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))
+
         return response
     }
 
@@ -115,7 +118,7 @@ class BackgammonGameService(
         return mapOf(firstColor to firstPlayer, firstColor.getOpponent() to secondPlayer)
     }
 
-    // public for testing
+
     fun handleGameEnd(roomId: Int, wrapper: BackgammonWrapper) {
         val endState = wrapper.gameEndStatus()
         val winner = endState[true]!!
