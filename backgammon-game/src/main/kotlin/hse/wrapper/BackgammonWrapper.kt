@@ -129,6 +129,7 @@ class BackgammonWrapper(
     fun restore() {
         game = game.reload()
         gameId += 1
+        numberOfMoves = 0
     }
 
     fun addPointsTo(color: Color): Int {

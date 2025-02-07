@@ -71,7 +71,6 @@ class GammonStoreService(
     }
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
-        logger.info("Get game $gameId from cache")
         val json = redisAdapter.get(gameId.toString()) ?: return null
         val restoreContext = objectMapper.readValue(json, GammonRestoreContextDto::class.java)
 
@@ -91,7 +90,6 @@ class GammonStoreService(
     }
 
     private fun putGameToCache(roomId: Int, context: GammonRestoreContextDto) {
-        logger.info("Putting game $roomId")
         redisAdapter.set(roomId.toString(), objectMapper.writeValueAsString(context))
     }
 
