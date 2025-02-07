@@ -1,7 +1,5 @@
 package game.common.enums
 
-import com.fasterxml.jackson.databind.util.Converter
-
 enum class GammonGamePoints(val value: Int) {
     ONE(1),
     THREE(3),

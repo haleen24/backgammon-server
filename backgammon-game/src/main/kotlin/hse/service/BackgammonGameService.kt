@@ -42,6 +42,7 @@ class BackgammonGameService(
             moves = res.changes.map { MoveResponseDto(it.first, it.second) },
             color = playerColor,
         )
+        val tossZarRes = game.tossZar()
         gammonStoreService.saveAfterMove(matchId, game.gameId, playerId, game, res)
 
         emitterService.sendEventExceptUser(playerId, matchId, MoveEvent(response.moves, playerColor))
@@ -49,7 +50,6 @@ class BackgammonGameService(
         if (game.checkEnd()) {
             handleGameEnd(matchId, game)
         } else {
-            val tossZarRes = game.tossZar()
             emitterService.sendForAll(matchId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))
         }
 
