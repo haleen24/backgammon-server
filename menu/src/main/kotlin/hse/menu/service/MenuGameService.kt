@@ -4,10 +4,10 @@ import game.backgammon.request.CreateGameRequest
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
 import hse.menu.adapter.GameAdapter
-import hse.menu.dao.ConnectDao
 import hse.menu.dao.GameDao
 import hse.menu.dto.ConnectionDto
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -18,8 +18,10 @@ import java.util.concurrent.Executors
 @Service
 class MenuGameService(
     private val menuGameDao: GameDao,
-    private val connectionDao: ConnectDao,
-    private val gameAdapter: GameAdapter
+    private val connectionService: ConnectionService,
+    private val gameAdapter: GameAdapter,
+
+    @Value("\${disable-job}") isTest: Boolean = false
 ) {
 
     private final val logger = LoggerFactory.getLogger(MenuGameService::class.java)
@@ -28,9 +30,11 @@ class MenuGameService(
     private var executor: ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
 
     init {
-        GameType.entries.forEach { type ->
-            GammonGamePoints.entries.forEach { points ->
-                executor.execute { connectionJob(type, points) }
+        if (!isTest) {
+            GameType.entries.forEach { type ->
+                GammonGamePoints.entries.forEach { points ->
+                    executor.execute { connectionJob(type, points) }
+                }
             }
         }
     }
@@ -43,7 +47,7 @@ class MenuGameService(
     fun connect(userId: Int, request: CreateGameRequest): Int {
         val connectionDto = ConnectionDto(userId, CountDownLatch(1), request.type)
         val points = GammonGamePoints.of(request.points) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
-        connectionDao.connect(connectionDto, request.type, points)
+        connectionService.connect(connectionDto, points)
         connectionDto.latch.await()
         return connectionDto.gameId ?: throw ResponseStatusException(
             HttpStatus.CONFLICT,
@@ -51,15 +55,19 @@ class MenuGameService(
         )
     }
 
+    fun disconnect(userId: Int) {
+        connectionService.disconnect(userId)
+    }
+
     private fun connectionJob(gameType: GameType, points: GammonGamePoints) {
         var firstPlayerConnection: ConnectionDto
         var secondPlayerConnection: ConnectionDto
         while (true) {
-            firstPlayerConnection = connectionDao.removeFromConnectionQueue(gameType, points)
-            secondPlayerConnection = connectionDao.removeFromConnectionQueue(gameType, points)
+            firstPlayerConnection = connectionService.take(gameType, points)
+            secondPlayerConnection = connectionService.take(gameType, points)
             if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
                 firstPlayerConnection.latch.countDown()
-                connectionDao.connect(secondPlayerConnection, gameType, points)
+                connectionService.connect(secondPlayerConnection, points)
                 continue
             }
             val gameId = storeRoom(gameType)

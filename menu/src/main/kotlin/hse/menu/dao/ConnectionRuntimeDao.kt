@@ -6,19 +6,18 @@ import hse.menu.dto.ConnectQueueHolder
 import hse.menu.dto.ConnectionDto
 import org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON
 import org.springframework.context.annotation.Scope
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 
-@Component
+@Repository
 @Scope(SCOPE_SINGLETON)
-class ConnectDao(
-    private val connectionContext: ConnectQueueHolder
-) {
-
-    fun connect(connectionDto: ConnectionDto, gameType: GameType, points: GammonGamePoints) {
-        connectionContext.connectionQueues[Pair(gameType, points)]!!.put(connectionDto)
+class ConnectionRuntimeDao(
+    val connectionContext: ConnectQueueHolder,
+) : ConnectionDao {
+    override fun enqueue(connection: ConnectionDto, points: GammonGamePoints) {
+        connectionContext.connectionQueues[Pair(connection.gameType, points)]!!.put(connection)
     }
 
-    fun removeFromConnectionQueue(gameType: GameType, points: GammonGamePoints): ConnectionDto {
+    override fun dequeue(gameType: GameType, points: GammonGamePoints): ConnectionDto {
         return connectionContext.connectionQueues[Pair(gameType, points)]!!.take()
     }
 }

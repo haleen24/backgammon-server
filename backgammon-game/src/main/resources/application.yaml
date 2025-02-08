@@ -3,8 +3,8 @@ spring:
     name: backgammon-game
   data:
     mongodb:
-#      host: mongo-service
-      host: localhost
+      host: mongo-service
+#      host: localhost
       port: 27017
       database: gammon-move
 

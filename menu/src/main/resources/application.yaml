@@ -18,3 +18,5 @@ route:
     backgammon-game:
       #      host: ${GAME_HOST:http://localhost:82}
       uri: 'http://game-service:82'
+
+disable-job: false
