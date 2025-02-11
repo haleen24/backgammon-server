@@ -65,6 +65,12 @@ class MenuGameService(
         while (true) {
             firstPlayerConnection = connectionService.take(gameType, points)
             secondPlayerConnection = connectionService.take(gameType, points)
+            if (connectionService.checkInBan(firstPlayerConnection.userId)) {
+                firstPlayerConnection.latch.countDown()
+                connectionService.connect(secondPlayerConnection, points)
+                continue
+            }
+
             if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
                 firstPlayerConnection.latch.countDown()
                 connectionService.connect(secondPlayerConnection, points)

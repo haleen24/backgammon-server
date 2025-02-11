@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.LinkedBlockingQueue
 
 @Configuration
 class MenuBeanConfig {
@@ -15,11 +16,11 @@ class MenuBeanConfig {
 
     @Bean
     fun connectionQueueHolder(): ConnectQueueHolder {
-        val map = mutableMapOf<Pair<GameType, GammonGamePoints>, ArrayBlockingQueue<ConnectionDto>>()
+        val map = mutableMapOf<Pair<GameType, GammonGamePoints>, LinkedBlockingQueue<ConnectionDto>>()
 
         GameType.entries.forEach { type ->
             GammonGamePoints.entries.forEach { points ->
-                map[type to points] = ArrayBlockingQueue<ConnectionDto>(10)
+                map[type to points] = LinkedBlockingQueue<ConnectionDto>()
             }
         }
 

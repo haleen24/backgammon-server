@@ -44,6 +44,10 @@ class ConnectionService(
         return res
     }
 
+    fun checkInBan(userId: Int): Boolean {
+        return cancelledFilter.contains(userId)
+    }
+
     fun disconnect(userId: Int) {
         inQueueFilter.remove(userId)
         cancelledFilter.add(userId)
