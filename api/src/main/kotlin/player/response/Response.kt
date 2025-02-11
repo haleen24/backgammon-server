@@ -9,3 +9,7 @@ data class GetFriendResponse(
     val username: String,
     val friendId: Long
 )
+
+data class UserInfoResponse(
+    val username: String,
+)

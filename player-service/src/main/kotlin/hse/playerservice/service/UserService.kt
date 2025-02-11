@@ -3,7 +3,6 @@ package hse.playerservice.service
 import hse.playerservice.entity.User
 import hse.playerservice.repository.UserImageStorage
 import hse.playerservice.repository.UserRepository
-import org.apache.tomcat.util.http.fileupload.FileUtils
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -13,8 +12,9 @@ import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import player.request.*
 import player.response.JwtResponse
+import player.response.UserInfoResponse
 import javax.security.sasl.AuthenticationException
-import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.pow
 
 @Service
@@ -128,7 +128,10 @@ class UserService(
     }
 
     fun saveUserImage(userId: Long, image: MultipartFile): ResponseEntity<Void> {
-        val extension = StringUtils.getFilenameExtension(image.originalFilename) ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "file without extension")
+        val extension = StringUtils.getFilenameExtension(image.originalFilename) ?: throw ResponseStatusException(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "file without extension"
+        )
         if (extension !in allowedImageTypes || image.size > maxImageSize) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Image must be less then 50 megabytes")
         }
@@ -138,5 +141,13 @@ class UserService(
 
     fun getImage(userId: Long): UserImageStorage.ImageWithExtension {
         return userImageStorage.getImage(userId)
+    }
+
+    fun getUserInfo(id: Long): UserInfoResponse {
+        val user = userRepository.findById(id).getOrNull() ?: throw ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "User not found"
+        )
+        return UserInfoResponse(username = user.username)
     }
 }
