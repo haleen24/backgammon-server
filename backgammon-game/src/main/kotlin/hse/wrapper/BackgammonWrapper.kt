@@ -82,8 +82,8 @@ class BackgammonWrapper(
         return game.move(getPlayerMask(playerId), moves).also { ++numberOfMoves }
     }
 
-    fun tossZar(): TossZarDto {
-        return game.tossBothZar()
+    fun tossZar(userId: Int): TossZarDto {
+        return game.tossBothZar(getPlayerMask(userId))
     }
 
     fun getPlayerColor(userId: Int): Color {

@@ -7,7 +7,11 @@ import hse.entity.MoveSet
 interface GammonMoveDao {
     fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet)
 
+    fun saveZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>, isDouble: Boolean)
+
     fun getMoves(matchId: Int, gameId: Int): List<MoveSet>
+
+    fun getZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int>
 
     fun checkMatchExists(matchId: Int): Boolean
     fun saveStartGameContext(matchId: Int, gameId: Int, context: GammonRestoreContextDto)

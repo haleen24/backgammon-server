@@ -52,12 +52,11 @@ class RegularGammonGameStoreServiceTest(
                 ),
                 gameId = 1,
                 moveId = 1,
-                nextZar = listOf(1, 2),
                 color = Color.BLACK
             )
         )
 
-        val actualGame = gammonStoreService.restoreBackgammon(state, moves).getRestoreContext()
+        val actualGame = gammonStoreService.restoreBackgammon(state, moves, listOf()).getRestoreContext()
 
         assertEquals(0, actualGame.game.bar[-1])
         assertEquals(-1, actualGame.game.deck[1])
@@ -93,12 +92,11 @@ class RegularGammonGameStoreServiceTest(
                 ),
                 gameId = 1,
                 moveId = 1,
-                nextZar = listOf(1, 2),
                 color = Color.WHITE
             )
         )
 
-        val actualGame = gammonStoreService.restoreBackgammon(state, moves).getRestoreContext()
+        val actualGame = gammonStoreService.restoreBackgammon(state, moves, listOf(1, 2)).getRestoreContext()
 
         assertEquals(0, actualGame.game.bar[1])
         assertEquals(1, actualGame.game.deck[24])

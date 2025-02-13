@@ -52,7 +52,6 @@ class GammonStoreService(
             moves = moves,
             gameId = matchId,
             moveId = restoreContext.numberOfMoves,
-            nextZar = restoreContext.game.zarResult,
             color = game.getPlayerColor(playerId)
         )
         gammonMoveDao.saveMoves(matchId, gameId, moveSet)
@@ -70,6 +69,15 @@ class GammonStoreService(
         gammonMoveDao.storeWinner(GameWinner.of(matchId, gameId, winner))
     }
 
+    fun storeZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>, isDouble: Boolean) {
+        gammonMoveDao.saveZar(matchId, gameId, moveId, zar, isDouble)
+    }
+
+
+    fun getLastZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int> {
+        return gammonMoveDao.getZar(matchId, gameId, lastMoveId)
+    }
+
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
         val json = redisAdapter.get(gameId.toString()) ?: return null
         val restoreContext = objectMapper.readValue(json, GammonRestoreContextDto::class.java)
@@ -82,10 +90,15 @@ class GammonStoreService(
         val gameId = gammonMoveDao.getCurrentGameInMathId(matchId) ?: return null
         val movesPerChange = gammonMoveDao.getMoves(matchId, gameId)
         val startState = gammonMoveDao.getStartGameContext(matchId, gameId) ?: return null
+        val lastZar = if (movesPerChange.isEmpty()) startState.game.zarResult else gammonMoveDao.getZar(
+            matchId,
+            gameId,
+            movesPerChange.size
+        )
 
         return when (startState.type) {
-            BackgammonType.SHORT_BACKGAMMON -> restoreBackgammon(startState, movesPerChange)
-            BackgammonType.REGULAR_GAMMON -> restoreGammon(startState, movesPerChange)
+            BackgammonType.SHORT_BACKGAMMON -> restoreBackgammon(startState, movesPerChange, lastZar)
+            BackgammonType.REGULAR_GAMMON -> restoreGammon(startState, movesPerChange, lastZar)
         }
     }
 
@@ -96,7 +109,8 @@ class GammonStoreService(
 
     fun restoreBackgammon(
         startState: GammonRestoreContextDto,
-        movesPerChange: List<MoveSet>
+        movesPerChange: List<MoveSet>,
+        lastZar: List<Int>
     ): BackgammonWrapper {
         var turn = startState.game.turn
         val deck = ArrayList<Int>(28)
@@ -123,12 +137,6 @@ class GammonStoreService(
             turn = -turn
         }
 
-        val nextZar = if (movesPerChange.isEmpty()) {
-            startState.game.zarResult
-        } else {
-            movesPerChange.last().nextZar
-        }
-
         return BackgammonWrapper.buildFromContext(
             startState.copy(
                 game = startState.game.copy(
@@ -136,7 +144,7 @@ class GammonStoreService(
                     bar = mapOf(-1 to deck.first, 1 to deck.last),
                     deck = deck.subList(1, deck.size - 1).mapIndexed { index, i -> index to i }.toMap()
                         .filterValues { it != 0 },
-                    zarResult = nextZar,
+                    zarResult = lastZar,
                     endFlag = deck[ShortGammonGame.WHITE_STORE + 1].absoluteValue == 15 || deck[ShortGammonGame.BLACK_STORE + 1].absoluteValue == 15
                 ),
                 numberOfMoves = movesPerChange.size,
@@ -146,7 +154,8 @@ class GammonStoreService(
 
     fun restoreGammon(
         startState: GammonRestoreContextDto,
-        movesPerChange: List<MoveSet>
+        movesPerChange: List<MoveSet>,
+        lastZar: List<Int>,
     ): BackgammonWrapper {
         var turn = startState.game.turn
         val deck = ArrayList<Int>(26)
@@ -170,19 +179,13 @@ class GammonStoreService(
             turn = -turn
         }
 
-        val nextZar = if (movesPerChange.isEmpty()) {
-            startState.game.zarResult
-        } else {
-            movesPerChange.last().nextZar
-        }
-
         return BackgammonWrapper.buildFromContext(
             startState.copy(
                 game = startState.game.copy(
                     turn = turn,
                     deck = deck.mapIndexed { index, i -> index to i }.toMap()
                         .filterValues { it != 0 },
-                    zarResult = nextZar,
+                    zarResult = lastZar,
                     endFlag = deck[RegularGammonGame.WHITE_STORAGE].absoluteValue == 15 || deck[RegularGammonGame.BLACK_STORAGE].absoluteValue == 15
                 ),
                 numberOfMoves = movesPerChange.size
