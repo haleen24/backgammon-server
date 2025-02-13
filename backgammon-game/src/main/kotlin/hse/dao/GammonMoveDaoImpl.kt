@@ -5,6 +5,7 @@ import hse.entity.GameWinner
 import hse.entity.GameWithId
 import hse.entity.MoveSet
 import hse.entity.MoveWithId
+import hse.enums.GameEntityType
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
@@ -17,57 +18,66 @@ class GammonMoveDaoImpl(
 ) : GammonMoveDao {
 
     companion object {
-        const val START_STATE_COLLECTION = "matchWithId"
-        const val MATCH_ID = "matchId"
         const val GAME_ID = "gameId"
+        const val ENTITY_TYPE = "type"
     }
 
     override fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet) {
-        mongoTemplate.save(MoveWithId(matchId, gameId, moveSet))
+        mongoTemplate.save(MoveWithId(matchId, gameId, moveSet), getCollectionName(matchId))
     }
 
     override fun getMoves(matchId: Int, gameId: Int): List<MoveSet> {
+        val query = Query().addCriteria(
+            Criteria.where(ENTITY_TYPE).`is`(GameEntityType.MOVE).and(GAME_ID).`is`(gameId)
+        )
+        query.fields().exclude(ENTITY_TYPE)
         return mongoTemplate.find(
-            Query().addCriteria(
-                Criteria.where(MATCH_ID).`is`(matchId).and(GAME_ID).`is`(gameId)
-            ), MoveWithId::class.java
+            query,
+            MoveWithId::class.java,
+            getCollectionName(gameId)
         )
             .map { it.moveSet }
     }
 
     override fun checkMatchExists(matchId: Int): Boolean {
-        return mongoTemplate.exists(
-            Query().addCriteria(Criteria.where(MATCH_ID).`is`(matchId)),
-            START_STATE_COLLECTION
-        )
+        return mongoTemplate.collectionExists(getCollectionName(matchId))
     }
 
     override fun saveStartGameContext(matchId: Int, gameId: Int, context: GammonRestoreContextDto) {
-        mongoTemplate.save(GameWithId(matchId, gameId, context), START_STATE_COLLECTION)
+        mongoTemplate.save(GameWithId(matchId, gameId, context), getCollectionName(matchId))
     }
 
     override fun getStartGameContext(matchId: Int, gameId: Int): GammonRestoreContextDto? {
+        val query =
+            Query().addCriteria(Criteria.where(ENTITY_TYPE).`is`(GameEntityType.START_STATE).and(GAME_ID).`is`(gameId))
+        query.fields().exclude(ENTITY_TYPE)
         return mongoTemplate.find(
-            Query().addCriteria(Criteria.where(MATCH_ID).`is`(matchId).and(GAME_ID).`is`(gameId)),
+            query,
             GameWithId::class.java,
-            START_STATE_COLLECTION
+            getCollectionName(matchId)
         ).firstOrNull()?.restoreContextDto
     }
 
     override fun getCurrentGameInMathId(matchId: Int): Int? {
         val query =
-            Query().addCriteria(Criteria.where(MATCH_ID).`is`(matchId)).with(Sort.by(Sort.Direction.DESC, GAME_ID))
+            Query().addCriteria(Criteria.where(ENTITY_TYPE).`is`(GameEntityType.START_STATE.name))
+                .with(Sort.by(Sort.Direction.DESC, GAME_ID))
                 .limit(1)
+        query.fields().exclude(ENTITY_TYPE)
 
 
         return mongoTemplate.find(
             query,
             GameWithId::class.java,
-            START_STATE_COLLECTION
+            getCollectionName(matchId)
         ).firstOrNull()?.gameId
     }
 
     override fun storeWinner(winner: GameWinner) {
-        mongoTemplate.save(winner)
+        mongoTemplate.save(winner, getCollectionName(winner.matchId))
+    }
+
+    private fun getCollectionName(matchId: Int): String {
+        return "match-$matchId"
     }
 }

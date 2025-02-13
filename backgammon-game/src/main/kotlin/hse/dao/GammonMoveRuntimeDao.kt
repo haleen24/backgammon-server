@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
-class GammonMoveDaoTest(
+class GammonMoveRuntimeDao(
     private val contextMap: MutableMap<Int, MutableList<GammonRestoreContextDto>> = mutableMapOf(),
     private val moveSetMap: MutableMap<Int, MutableList<MutableList<MoveSet>>> = mutableMapOf(),
     private val winnerMap: MutableMap<Int, MutableList<Int>> = mutableMapOf(),
