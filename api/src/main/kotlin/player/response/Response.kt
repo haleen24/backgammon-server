@@ -11,5 +11,6 @@ data class GetFriendResponse(
 )
 
 data class UserInfoResponse(
+    val id: Long,
     val username: String,
 )

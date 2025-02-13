@@ -148,6 +148,6 @@ class UserService(
             HttpStatus.NOT_FOUND,
             "User not found"
         )
-        return UserInfoResponse(username = user.username)
+        return UserInfoResponse(id = user.id, username = user.username)
     }
 }

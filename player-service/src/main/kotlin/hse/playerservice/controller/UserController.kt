@@ -86,6 +86,11 @@ class UserController(
         return userService.getUserInfo(userId)
     }
 
+    @GetMapping("/me")
+    fun getSelfInfo(@RequestHeader(AUTH_HEADER) userId: Long): UserInfoResponse {
+        return userService.getUserInfo(userId)
+    }
+
     @GetMapping("/is-authorized")
     fun checkAuth() {
     }
