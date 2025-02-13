@@ -63,10 +63,16 @@ class ShortGammonGame(
         bar = HashMap(restoreContext.bar)
         turn = restoreContext.turn
         endFlag = restoreContext.endFlag
+        zarResults = ArrayList(restoreContext.zarResult)
+        foolZar = ArrayList(zarResults)
 
         testDeck = ArrayList(deck)
         testZar = ArrayList(zarResults)
         testBar = HashMap(bar)
+
+        if (restoreContext.zarResult.isEmpty()) {
+            return
+        }
 
         validateTossedZar(restoreContext.zarResult[0], restoreContext.zarResult[1])
     }
@@ -116,10 +122,11 @@ class ShortGammonGame(
         return EndDto(if (deck[WHITE_STORE] == 15) WHITE else BLACK)
     }
 
-    override fun tossBothZar(): TossZarDto {
-
+    override fun tossBothZar(user: Int): TossZarDto {
         if (zarResults.isNotEmpty()) {
             throw ReTossZarBackgammonException()
+        } else if (user != turn) {
+            throw IncorrectTurnBackgammonException()
         }
         val res1 = tossZar()
         val res2 = tossZar()

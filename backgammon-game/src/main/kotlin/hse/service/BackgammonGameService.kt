@@ -36,25 +36,41 @@ class BackgammonGameService(
 
     fun moveInGame(matchId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
         val game = gammonStoreService.getMatchById(matchId)
+        val zar = gammonStoreService.getLastZar(matchId, game.gameId, game.numberOfMoves)
+        if (zar.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Should toss zar")
+        }
+
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
         val response = MoveResponse(
             moves = res.changes.map { MoveResponseDto(it.first, it.second) },
             color = playerColor,
         )
-        val tossZarRes = game.tossZar()
         gammonStoreService.saveAfterMove(matchId, game.gameId, playerId, game, res)
 
         emitterService.sendEventExceptUser(playerId, matchId, MoveEvent(response.moves, playerColor))
-        
+
         if (game.checkEnd()) {
             handleGameEnd(matchId, game)
-        } else {
-            emitterService.sendForAll(matchId, TossZarEvent(tossZarRes.value, playerColor.getOpponent()))
         }
-
         return response
     }
+
+    fun tossZar(matchId: Int, userId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+
+        val res = game.tossZar(userId)
+        gammonStoreService.storeZar(
+            matchId,
+            game.gameId,
+            game.numberOfMoves,
+            res.value,
+            false
+        ) // todo: add double functionality
+        emitterService.sendForAll(matchId, TossZarEvent(res.value, game.getPlayerColor(userId)))
+    }
+
 
     fun getConfiguration(userId: Int, gameId: Int): ConfigResponse {
         val game = gammonStoreService.getMatchById(gameId)

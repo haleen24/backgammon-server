@@ -23,8 +23,16 @@ class GammonMoveRuntimeDao(
         moveSets[gameId].add(moveSet)
     }
 
+    override fun saveZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>, isDouble: Boolean) {
+        TODO("Not yet implemented")
+    }
+
     override fun getMoves(matchId: Int, gameId: Int): List<MoveSet> {
         return moveSetMap.getOrDefault(matchId, arrayListOf(arrayListOf()))[gameId]
+    }
+
+    override fun getZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int> {
+        TODO("Not yet implemented")
     }
 
     override fun checkMatchExists(matchId: Int): Boolean {

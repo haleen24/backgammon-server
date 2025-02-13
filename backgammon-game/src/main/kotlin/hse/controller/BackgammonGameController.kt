@@ -43,10 +43,15 @@ class BackgammonGameController(
     @PostMapping("move/{roomId}")
     fun move(
         @RequestHeader(USER_ID_HEADER) userId: Int,
-        @PathVariable("roomId") roomId: Int,
+        @PathVariable roomId: Int,
         @RequestBody request: MoveRequest
     ): MoveResponse {
         return backgammonGameService.moveInGame(roomId, userId, request.moves)
+    }
+
+    @PostMapping("zar/{roomId}")
+    fun tossZar(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int) {
+        backgammonGameService.tossZar(roomId, userId)
     }
 
     @GetMapping("colors/{roomId}")

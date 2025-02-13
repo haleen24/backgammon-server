@@ -5,6 +5,7 @@ import game.backgammon.dto.*
 import game.backgammon.exception.*
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.*
 
 class RegularGammonGame(
@@ -43,9 +44,15 @@ class RegularGammonGame(
         }
         turn = restoreContext.turn
         zarResults = ArrayList(restoreContext.zarResult)
-
+        foolZar = ArrayList(zarResults)
         testDeck = ArrayList(deck)
         testZar = ArrayList(zarResults)
+
+        if (zarResults.isEmpty()) {
+            return
+        }
+
+        validateTossedZar(restoreContext.zarResult[0], restoreContext.zarResult[1])
     }
 
     override fun reload(): Gammon {
@@ -88,9 +95,11 @@ class RegularGammonGame(
         return EndDto(if (deck[BLACK_STORAGE].absoluteValue == 15) BLACK else WHITE)
     }
 
-    override fun tossBothZar(): TossZarDto {
+    override fun tossBothZar(user: Int): TossZarDto {
         if (zarResults.isNotEmpty()) {
             throw ReTossZarBackgammonException()
+        } else if (user != turn) {
+            throw IncorrectTurnBackgammonException()
         }
         val res1 = tossZar()
         val res2 = tossZar()

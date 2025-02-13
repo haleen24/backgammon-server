@@ -26,7 +26,7 @@ abstract class Gammon(
     abstract fun getConfiguration(): ConfigDto
     abstract fun move(user: Int, moves: List<MoveDto>): ChangeDto
     abstract fun getEndState(): EndDto?
-    abstract fun tossBothZar(): TossZarDto
+    abstract fun tossBothZar(user: Int = turn): TossZarDto
     abstract fun checkEnd(): Boolean
     abstract fun getWinPoints(): Int
 
