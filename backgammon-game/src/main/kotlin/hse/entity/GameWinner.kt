@@ -1,13 +1,14 @@
 package hse.entity
 
 import game.backgammon.enums.Color
+import hse.enums.GameEntityType
 
 
 data class GameWinner(
     val matchId: Int,
     val gameId: Int,
-    val winner: Int
-) {
+    val winner: Int,
+): TypedMongoEntity(GameEntityType.WINNER_INFO) {
 
     val color: Color = if (winner == BLACK) Color.BLACK else Color.WHITE
 
