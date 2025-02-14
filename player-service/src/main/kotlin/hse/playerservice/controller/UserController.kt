@@ -86,6 +86,11 @@ class UserController(
         return userService.getUserInfo(userId)
     }
 
+    @GetMapping("/usernames")
+    fun getUsernames(@RequestParam ids: String): List<String> {
+        return userService.getAllUsernames(ids.split(",").map { it.toLong() }.toList())
+    }
+
     @GetMapping("/me")
     fun getSelfInfo(@RequestHeader(AUTH_HEADER) userId: Long): UserInfoResponse {
         return userService.getUserInfo(userId)
