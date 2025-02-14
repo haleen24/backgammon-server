@@ -150,4 +150,8 @@ class UserService(
         )
         return UserInfoResponse(id = user.id, username = user.username)
     }
+
+    fun getAllUsernames(ids: List<Long>): List<String> {
+        return userRepository.findAllById(ids).map { it.username }
+    }
 }
