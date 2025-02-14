@@ -6,4 +6,6 @@ enum class EventType {
     PLAYER_CONNECTED_EVENT,
     END_GAME_EVENT,
     TOSS_ZAR_EVENT,
+    DOUBLE_EVENT,
+    ACCEPT_DOUBLE_EVENT,
 }

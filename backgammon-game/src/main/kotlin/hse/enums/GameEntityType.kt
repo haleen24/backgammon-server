@@ -5,4 +5,5 @@ enum class GameEntityType {
     MOVE,
     WINNER_INFO,
     ZAR,
+    DOUBLE,
 }

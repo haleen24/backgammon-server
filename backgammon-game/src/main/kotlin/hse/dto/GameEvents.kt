@@ -29,3 +29,9 @@ data class TossZarEvent(
     val value: Collection<Int>,
     val tossedBy: Color
 ) : GameEvent(EventType.TOSS_ZAR_EVENT)
+
+data class DoubleEvent(
+    val by: Color
+) : GameEvent(EventType.DOUBLE_EVENT)
+
+class AcceptDoubleEvent : GameEvent(EventType.ACCEPT_DOUBLE_EVENT)

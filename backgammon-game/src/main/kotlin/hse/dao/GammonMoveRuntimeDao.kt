@@ -1,6 +1,7 @@
 package hse.dao
 
 import hse.dto.GammonRestoreContextDto
+import hse.entity.DoubleZar
 import hse.entity.GameWinner
 import hse.entity.MoveSet
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -23,7 +24,7 @@ class GammonMoveRuntimeDao(
         moveSets[gameId].add(moveSet)
     }
 
-    override fun saveZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>, isDouble: Boolean) {
+    override fun saveZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>) {
         TODO("Not yet implemented")
     }
 
@@ -32,6 +33,10 @@ class GammonMoveRuntimeDao(
     }
 
     override fun getZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleZar> {
         TODO("Not yet implemented")
     }
 
@@ -59,6 +64,14 @@ class GammonMoveRuntimeDao(
     override fun storeWinner(winner: GameWinner) {
         winnerMap.putIfAbsent(winner.matchId, arrayListOf())
         winnerMap[winner.matchId]!!.add(winner.gameId, winner.gameId)
+    }
+
+    override fun saveDouble(matchId: Int, doubleZar: DoubleZar) {
+        TODO("Not yet implemented")
+    }
+
+    override fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
+        TODO("Not yet implemented")
     }
 
 }

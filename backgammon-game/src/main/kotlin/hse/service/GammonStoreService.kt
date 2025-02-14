@@ -9,6 +9,7 @@ import game.backgammon.sht.ShortGammonGame
 import hse.adapter.RedisAdapter
 import hse.dao.GammonMoveDao
 import hse.dto.GammonRestoreContextDto
+import hse.entity.DoubleZar
 import hse.entity.GameWinner
 import hse.entity.MoveSet
 import hse.wrapper.BackgammonWrapper
@@ -50,7 +51,7 @@ class GammonStoreService(
         putGameToCache(matchId, restoreContext)
         val moveSet = MoveSet(
             moves = moves,
-            gameId = matchId,
+            gameId = gameId,
             moveId = restoreContext.numberOfMoves,
             color = game.getPlayerColor(playerId)
         )
@@ -69,13 +70,24 @@ class GammonStoreService(
         gammonMoveDao.storeWinner(GameWinner.of(matchId, gameId, winner))
     }
 
-    fun storeZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>, isDouble: Boolean) {
-        gammonMoveDao.saveZar(matchId, gameId, moveId, zar, isDouble)
+    fun storeZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>) {
+        gammonMoveDao.saveZar(matchId, gameId, moveId, zar)
     }
-
 
     fun getLastZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int> {
         return gammonMoveDao.getZar(matchId, gameId, lastMoveId)
+    }
+
+    fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleZar> {
+        return gammonMoveDao.getAllDoubles(matchId, gameId)
+    }
+
+    fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, by: Color) {
+        return gammonMoveDao.saveDouble(matchId, DoubleZar(gameId, moveId, by, false))
+    }
+
+    fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
+        gammonMoveDao.acceptDouble(matchId, gameId, moveId)
     }
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {

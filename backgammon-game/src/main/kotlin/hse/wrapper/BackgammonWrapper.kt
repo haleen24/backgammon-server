@@ -58,6 +58,10 @@ class BackgammonWrapper(
         secondPlayer = second
     }
 
+    fun getPlayers(): Map<Color, Int> {
+        return mapOf(Color.BLACK to firstPlayer, Color.WHITE to secondPlayer)
+    }
+
     fun getConfiguration(playerId: Int): ConfigResponseDto {
         val config = game.getConfiguration()
 
@@ -85,6 +89,7 @@ class BackgammonWrapper(
     fun tossZar(userId: Int): TossZarDto {
         return game.tossBothZar(getPlayerMask(userId))
     }
+
 
     fun getPlayerColor(userId: Int): Color {
         val mask = getPlayerMask(userId)
@@ -141,6 +146,14 @@ class BackgammonWrapper(
             whitePoints += points
             whitePoints
         }
+    }
+
+    fun getZar(): List<Int> {
+        return game.foolZar
+    }
+
+    fun isTurn(userId: Int): Boolean {
+        return game.turn == getPlayerMask(userId)
     }
 
     private fun getDeckItemDto(index: Int, value: Int): DeckItemDto? {

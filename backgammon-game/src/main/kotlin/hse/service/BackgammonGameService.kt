@@ -11,10 +11,7 @@ import game.backgammon.response.ConfigResponse
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
 import game.backgammon.sht.ShortGammonGame
-import hse.dto.EndGameEvent
-import hse.dto.GameStartedEvent
-import hse.dto.MoveEvent
-import hse.dto.TossZarEvent
+import hse.dto.*
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -58,6 +55,13 @@ class BackgammonGameService(
 
     fun tossZar(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
+        val doubles = gammonStoreService.getAllDoubles(matchId, game.gameId)
+
+        if (doubles.isNotEmpty()) {
+            if (!doubles.last().isAccepted) {
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "there is no response on double request")
+            }
+        }
 
         val res = game.tossZar(userId)
         gammonStoreService.storeZar(
@@ -65,11 +69,55 @@ class BackgammonGameService(
             game.gameId,
             game.numberOfMoves,
             res.value,
-            false
-        ) // todo: add double functionality
+        )
         emitterService.sendForAll(matchId, TossZarEvent(res.value, game.getPlayerColor(userId)))
     }
 
+    fun doubleZar(matchId: Int, userId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+        val doubles = gammonStoreService.getAllDoubles(matchId, game.gameId)
+        val userColor = game.getPlayerColor(userId)
+
+        if (!game.isTurn(userId)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "incorrect turn")
+        }
+
+        if (game.getZar().isNotEmpty()) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "zar already thrown")
+        }
+
+        if (doubles.isEmpty()) {
+            return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userColor)
+        }
+
+        val last = doubles.last()
+
+        if (last.by == userColor) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant do 2 doubles in a row")
+        }
+        if (!last.isAccepted) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "last double wasnt accepted")
+        }
+        createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userColor)
+    }
+
+    fun acceptDouble(matchId: Int, userId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+        val doubles = gammonStoreService.getAllDoubles(matchId, game.gameId)
+
+        if (doubles.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "there are no doubles")
+        }
+        val last = doubles.last()
+        if (last.isAccepted) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "no double for accepting")
+        }
+        if (last.by == game.getPlayerColor(userId)) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant accept own double")
+        }
+        gammonStoreService.acceptDouble(matchId, game.gameId, game.numberOfMoves)
+        emitterService.sendForAll(matchId, AcceptDoubleEvent())
+    }
 
     fun getConfiguration(userId: Int, gameId: Int): ConfigResponse {
         val game = gammonStoreService.getMatchById(gameId)
@@ -79,7 +127,8 @@ class BackgammonGameService(
             gameData = configData,
             blackPoints = game.blackPoints,
             whitePoints = game.whitePoints,
-            threshold = game.thresholdPoints
+            threshold = game.thresholdPoints,
+            players = game.getPlayers()
         )
     }
 
@@ -160,5 +209,10 @@ class BackgammonGameService(
         if (zar.isEmpty()) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Should toss zar")
         }
+    }
+
+    private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, by: Color) {
+        gammonStoreService.createDoubleRequest(matchId, gameId, moveId, by)
+        emitterService.sendForAll(matchId, DoubleEvent(by))
     }
 }

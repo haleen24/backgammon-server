@@ -54,6 +54,16 @@ class BackgammonGameController(
         backgammonGameService.tossZar(roomId, userId)
     }
 
+    @PostMapping("/double/{roomId}")
+    fun double(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int) {
+        backgammonGameService.doubleZar(roomId, userId)
+    }
+
+    @PostMapping("/double/accept/{roomId}")
+    fun acceptDouble(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int) {
+        backgammonGameService.acceptDouble(roomId, userId)
+    }
+
     @GetMapping("colors/{roomId}")
     fun getColor(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): Color {
         return backgammonGameService.getColor(userId, roomId)

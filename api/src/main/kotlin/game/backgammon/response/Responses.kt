@@ -22,4 +22,5 @@ data class ConfigResponse(
     val blackPoints: Int,
     val whitePoints: Int,
     val threshold: Int,
+    val players: Map<Color, Int>
 )

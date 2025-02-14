@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.Update
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -24,8 +25,8 @@ class GammonMoveDaoImpl(
         mongoTemplate.save(MoveWithId(matchId, gameId, moveSet), getCollectionName(matchId))
     }
 
-    override fun saveZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>, isDouble: Boolean) {
-        mongoTemplate.save(Zar(gameId, moveId, zar, isDouble), getCollectionName(matchId))
+    override fun saveZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>) {
+        mongoTemplate.save(Zar(gameId, moveId, zar), getCollectionName(matchId))
     }
 
     override fun getMoves(matchId: Int, gameId: Int): List<MoveSet> {
@@ -58,6 +59,16 @@ class GammonMoveDaoImpl(
             Zar::class.java,
             getCollectionName(matchId)
         ).firstOrNull()?.z ?: listOf()
+    }
+
+    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleZar> {
+        return mongoTemplate.find(
+            Query().addCriteria(
+                Criteria.where(ENTITY_TYPE).`is`(GameEntityType.DOUBLE.name).and(GAME_ID).`is`(gameId)
+            ),
+            DoubleZar::class.java,
+            getCollectionName(matchId)
+        )
     }
 
     override fun checkMatchExists(matchId: Int): Boolean {
@@ -98,6 +109,19 @@ class GammonMoveDaoImpl(
 
     override fun storeWinner(winner: GameWinner) {
         mongoTemplate.save(winner, getCollectionName(winner.matchId))
+    }
+
+    override fun saveDouble(matchId: Int, doubleZar: DoubleZar) {
+        mongoTemplate.save(doubleZar, getCollectionName(matchId))
+    }
+
+    override fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
+        val query = Query().addCriteria(
+            Criteria.where(ENTITY_TYPE).`is`(GameEntityType.DOUBLE.name).and(GAME_ID).`is`(gameId).and(MOVE_ID)
+                .`is`(moveId)
+        )
+        val update = Update().set("isAccepted", "true")
+        mongoTemplate.updateFirst(query, update, getCollectionName(matchId))
     }
 
     private fun getCollectionName(matchId: Int): String {
