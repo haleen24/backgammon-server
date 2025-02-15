@@ -87,7 +87,7 @@ class BackgammonGameService(
         }
 
         if (doubles.isEmpty()) {
-            return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userColor)
+            return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
         }
 
         val last = doubles.last()
@@ -98,7 +98,7 @@ class BackgammonGameService(
         if (!last.isAccepted) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "last double wasnt accepted")
         }
-        createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userColor)
+        createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
     }
 
     fun acceptDouble(matchId: Int, userId: Int) {
@@ -116,7 +116,7 @@ class BackgammonGameService(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant accept own double")
         }
         gammonStoreService.acceptDouble(matchId, game.gameId, game.numberOfMoves)
-        emitterService.sendForAll(matchId, AcceptDoubleEvent())
+        emitterService.sendEventExceptUser(userId, matchId, AcceptDoubleEvent(game.getPlayerColor(userId)))
     }
 
     fun getConfiguration(userId: Int, gameId: Int): ConfigResponse {
@@ -211,8 +211,8 @@ class BackgammonGameService(
         }
     }
 
-    private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, by: Color) {
+    private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {
         gammonStoreService.createDoubleRequest(matchId, gameId, moveId, by)
-        emitterService.sendForAll(matchId, DoubleEvent(by))
+        emitterService.sendEventExceptUser(userId, matchId, DoubleEvent(by))
     }
 }

@@ -34,4 +34,6 @@ data class DoubleEvent(
     val by: Color
 ) : GameEvent(EventType.DOUBLE_EVENT)
 
-class AcceptDoubleEvent : GameEvent(EventType.ACCEPT_DOUBLE_EVENT)
+data class AcceptDoubleEvent(
+    val by: Color
+) : GameEvent(EventType.ACCEPT_DOUBLE_EVENT)
