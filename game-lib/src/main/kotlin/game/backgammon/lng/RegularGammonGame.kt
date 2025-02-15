@@ -5,7 +5,6 @@ import game.backgammon.dto.*
 import game.backgammon.exception.*
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.*
 
 class RegularGammonGame(
@@ -42,6 +41,7 @@ class RegularGammonGame(
         for (i in restoreContext.deck) {
             deck[i.key] = i.value
         }
+        endFlag = restoreContext.endFlag
         turn = restoreContext.turn
         zarResults = ArrayList(restoreContext.zarResult)
         foolZar = ArrayList(zarResults)
