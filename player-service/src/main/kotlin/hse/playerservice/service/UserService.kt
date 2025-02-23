@@ -13,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException
 import player.request.*
 import player.response.JwtResponse
 import player.response.UserInfoResponse
-import javax.security.sasl.AuthenticationException
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.pow
 
@@ -88,7 +87,7 @@ class UserService(
                 userId = jwtService.extractUserId(newToken).toLong()
             )
         } else {
-            throw AuthenticationException("invalid token")
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid token")
         }
     }
 
