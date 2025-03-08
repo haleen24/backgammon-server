@@ -82,4 +82,9 @@ class BackgammonGameController(
     fun getHistory(@PathVariable matchId: Int, @RequestParam gameId: Int): HistoryResponse {
         return backgammonGameService.getHistory(matchId, gameId)
     }
+
+    @PutMapping("surrender/{matchId}")
+    fun surrender(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int, @RequestParam endMatch: Boolean) {
+        return backgammonGameService.surrender(userId, roomId, endMatch)
+    }
 }

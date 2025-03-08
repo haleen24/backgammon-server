@@ -6,4 +6,5 @@ enum class GameEntityType {
     WINNER_INFO,
     ZAR,
     DOUBLE,
+    SURRENDER,
 }

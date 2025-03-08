@@ -61,12 +61,12 @@ class GammonMoveDaoImpl(
         ).firstOrNull()?.z ?: listOf()
     }
 
-    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleZar> {
+    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
         return mongoTemplate.find(
             Query().addCriteria(
                 Criteria.where(ENTITY_TYPE).`is`(GameEntityType.DOUBLE.name).and(GAME_ID).`is`(gameId)
             ),
-            DoubleZar::class.java,
+            DoubleCube::class.java,
             getCollectionName(matchId)
         )
     }
@@ -111,8 +111,8 @@ class GammonMoveDaoImpl(
         mongoTemplate.save(winner, getCollectionName(winner.matchId))
     }
 
-    override fun saveDouble(matchId: Int, doubleZar: DoubleZar) {
-        mongoTemplate.save(doubleZar, getCollectionName(matchId))
+    override fun saveDouble(matchId: Int, doubleCube: DoubleCube) {
+        mongoTemplate.save(doubleCube, getCollectionName(matchId))
     }
 
     override fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
@@ -122,6 +122,24 @@ class GammonMoveDaoImpl(
         )
         val update = Update().set("isAccepted", "true")
         mongoTemplate.updateFirst(query, update, getCollectionName(matchId))
+    }
+
+    override fun getWinners(matchId: Int): List<GameWinner> {
+        val query = Query().addCriteria(
+            Criteria.where(ENTITY_TYPE).`is`(GameEntityType.WINNER_INFO.name)
+        )
+        return mongoTemplate.find(query, GameWinner::class.java, getCollectionName(matchId))
+    }
+
+    override fun surrender(matchId: Int, surrenderEntity: SurrenderEntity) {
+        mongoTemplate.save(surrenderEntity, getCollectionName(matchId))
+    }
+
+    override fun getSurrenderInfo(matchId: Int): List<SurrenderEntity> {
+        val query = Query().addCriteria(
+            Criteria.where(ENTITY_TYPE).`is`(GameEntityType.SURRENDER)
+        )
+        return mongoTemplate.find(query, SurrenderEntity::class.java, getCollectionName(matchId))
     }
 
     private fun getCollectionName(matchId: Int): String {

@@ -4,6 +4,7 @@ import game.backgammon.dto.ConfigResponseDto
 import game.backgammon.dto.MoveResponseDto
 import game.backgammon.dto.StartStateDto
 import game.backgammon.enums.Color
+import game.backgammon.enums.DoubleCubePositionEnum
 import jdk.jfr.Threshold
 
 
@@ -22,5 +23,8 @@ data class ConfigResponse(
     val blackPoints: Int,
     val whitePoints: Int,
     val threshold: Int,
-    val players: Map<Color, Int>
+    val players: Map<Color, Int>,
+    val doubleCubeValue: Int?,
+    val doubleCubePosition: DoubleCubePositionEnum,
+    val end: Boolean
 )

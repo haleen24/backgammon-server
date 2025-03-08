@@ -5,6 +5,7 @@ import game.backgammon.dto.MoveResponseDto
 import game.backgammon.dto.StartStateDto
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import game.backgammon.enums.DoubleCubePositionEnum
 import game.backgammon.lng.RegularGammonGame
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.backgammon.response.ConfigResponse
@@ -12,10 +13,12 @@ import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
 import game.backgammon.sht.ShortGammonGame
 import hse.dto.*
+import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import kotlin.math.pow
 
 @Service
 class BackgammonGameService(
@@ -66,8 +69,7 @@ class BackgammonGameService(
         val res = game.tossZar(userId)
         gammonStoreService.storeZar(
             matchId,
-            game.gameId,
-            game.numberOfMoves,
+            game,
             res.value,
         )
         emitterService.sendForAll(matchId, TossZarEvent(res.value, game.getPlayerColor(userId)))
@@ -76,22 +78,21 @@ class BackgammonGameService(
     fun doubleZar(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
         val doubles = gammonStoreService.getAllDoubles(matchId, game.gameId)
-        val userColor = game.getPlayerColor(userId)
-
         if (!game.isTurn(userId)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "incorrect turn")
         }
-
         if (game.getZar().isNotEmpty()) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "zar already thrown")
         }
-
-        if (doubles.isEmpty()) {
+        val userColor = game.getPlayerColor(userId)
+        val doubleCubePosition = getDoubleCubePosition(matchId, game, doubles)
+        if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Decline by Crawford rule")
+        }
+        if (doubleCubePosition == DoubleCubePositionEnum.FREE) {
             return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
         }
-
         val last = doubles.last()
-
         if (last.by == userColor) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant do 2 doubles in a row")
         }
@@ -119,16 +120,24 @@ class BackgammonGameService(
         emitterService.sendEventExceptUser(userId, matchId, AcceptDoubleEvent(game.getPlayerColor(userId)))
     }
 
-    fun getConfiguration(userId: Int, gameId: Int): ConfigResponse {
-        val game = gammonStoreService.getMatchById(gameId)
+    fun getConfiguration(userId: Int, matchId: Int): ConfigResponse {
+        val game = gammonStoreService.getMatchById(matchId)
         val configData = game.getConfiguration(userId)
+        val doubleCubes = gammonStoreService.getAllDoubles(matchId, game.gameId)
+        val doubleCubePosition = getDoubleCubePosition(matchId, game, doubleCubes)
+        val doubleCubeValue =
+            if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) null else 2.0.pow(doubleCubes.size.toDouble())
+                .toInt()
 
         return ConfigResponse(
             gameData = configData,
             blackPoints = game.blackPoints,
             whitePoints = game.whitePoints,
             threshold = game.thresholdPoints,
-            players = game.getPlayers()
+            players = game.getPlayers(),
+            doubleCubeValue = doubleCubeValue,
+            doubleCubePosition = doubleCubePosition,
+            end = game.checkEnd()
         )
     }
 
@@ -204,6 +213,22 @@ class BackgammonGameService(
         )
     }
 
+    fun surrender(userId: Int, matchId: Int, endMatch: Boolean) {
+        val game = gammonStoreService.getMatchById(matchId)
+        if (!game.isTurn(userId)) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "incorrect turn")
+        }
+        gammonStoreService.surrender(userId, matchId, game, endMatch)
+        emitterService.sendForAll(
+            matchId, EndGameEvent(
+                win = game.getPlayerColor(userId),
+                blackPoints = game.blackPoints,
+                whitePoints = game.whitePoints,
+                isMatchEnd = endMatch,
+            )
+        )
+    }
+
     private fun validateZarState(matchId: Int, gameId: Int, moves: Int) {
         val zar = gammonStoreService.getLastZar(matchId, gameId, moves)
         if (zar.isEmpty()) {
@@ -214,5 +239,40 @@ class BackgammonGameService(
     private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {
         gammonStoreService.createDoubleRequest(matchId, gameId, moveId, by)
         emitterService.sendEventExceptUser(userId, matchId, DoubleEvent(by))
+    }
+
+    private fun getDoubleCubePosition(
+        matchId: Int,
+        game: BackgammonWrapper,
+        doubles: List<DoubleCube>
+    ): DoubleCubePositionEnum {
+        val winners = gammonStoreService.getWinnersInMatch(matchId)
+
+        if (winners.isNotEmpty()) {
+            if (game.blackPoints == game.thresholdPoints - 1 && winners.last() == Color.BLACK) {
+                return DoubleCubePositionEnum.UNAVAILABLE
+            } else if (game.whitePoints == game.thresholdPoints - 1 && winners.last() == Color.WHITE) {
+                return DoubleCubePositionEnum.UNAVAILABLE
+            }
+        }
+
+        if (doubles.isEmpty()) {
+            return DoubleCubePositionEnum.FREE
+        }
+
+
+        val last = doubles.last()
+
+        return when (last.isAccepted) {
+            true -> when (last.by) {
+                Color.BLACK -> DoubleCubePositionEnum.BELONGS_TO_WHITE
+                Color.WHITE -> DoubleCubePositionEnum.BELONGS_TO_BLACK
+            }
+
+            false -> when (last.by) {
+                Color.BLACK -> DoubleCubePositionEnum.OFFERED_TO_WHITE
+                Color.WHITE -> DoubleCubePositionEnum.OFFERED_TO_BLACK
+            }
+        }
     }
 }

@@ -9,9 +9,10 @@ import game.backgammon.sht.ShortGammonGame
 import hse.adapter.RedisAdapter
 import hse.dao.GammonMoveDao
 import hse.dto.GammonRestoreContextDto
-import hse.entity.DoubleZar
+import hse.entity.DoubleCube
 import hse.entity.GameWinner
 import hse.entity.MoveSet
+import hse.entity.SurrenderEntity
 import hse.wrapper.BackgammonWrapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -70,24 +71,35 @@ class GammonStoreService(
         gammonMoveDao.storeWinner(GameWinner.of(matchId, gameId, winner))
     }
 
-    fun storeZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>) {
-        gammonMoveDao.saveZar(matchId, gameId, moveId, zar)
+    fun storeZar(matchId: Int, game: BackgammonWrapper, zar: List<Int>) {
+        putGameToCache(matchId, game.getRestoreContext())
+        gammonMoveDao.saveZar(matchId, game.gameId, game.numberOfMoves, zar)
     }
 
     fun getLastZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int> {
         return gammonMoveDao.getZar(matchId, gameId, lastMoveId)
     }
 
-    fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleZar> {
+    fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
         return gammonMoveDao.getAllDoubles(matchId, gameId)
     }
 
     fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, by: Color) {
-        return gammonMoveDao.saveDouble(matchId, DoubleZar(gameId, moveId, by, false))
+        return gammonMoveDao.saveDouble(matchId, DoubleCube(gameId, moveId, by, false))
     }
 
     fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
         gammonMoveDao.acceptDouble(matchId, gameId, moveId)
+    }
+
+    fun getWinnersInMatch(matchId: Int): List<Color> {
+        return gammonMoveDao.getWinners(matchId).sortedBy { it.gameId }.map { it.color }
+    }
+
+    fun surrender(userId: Int, matchId: Int, wrapper: BackgammonWrapper, endMatch: Boolean) {
+        wrapper.surrender()
+        gammonMoveDao.surrender(matchId, SurrenderEntity(wrapper.gameId, wrapper.getPlayerColor(userId), endMatch))
+        putGameToCache(matchId, wrapper.getRestoreContext())
     }
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
@@ -108,14 +120,21 @@ class GammonStoreService(
             movesPerChange.size
         )
 
-        return when (startState.type) {
+        val game = when (startState.type) {
             BackgammonType.SHORT_BACKGAMMON -> restoreBackgammon(startState, movesPerChange, lastZar)
             BackgammonType.REGULAR_GAMMON -> restoreGammon(startState, movesPerChange, lastZar)
         }
+
+        val surrenderInfo = gammonMoveDao.getSurrenderInfo(matchId).lastOrNull() ?: return game
+
+        if (surrenderInfo.gameId == gameId || surrenderInfo.endMatch) {
+            game.surrender()
+        }
+        return game
     }
 
     private fun putGameToCache(roomId: Int, context: GammonRestoreContextDto) {
-        redisAdapter.set(roomId.toString(), objectMapper.writeValueAsString(context))
+        redisAdapter.setex(roomId.toString(), objectMapper.writeValueAsString(context))
     }
 
 

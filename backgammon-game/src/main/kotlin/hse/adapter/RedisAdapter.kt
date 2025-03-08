@@ -21,7 +21,7 @@ class RedisAdapter(
         return jedis?.get(id)
     }
 
-    fun set(id: String, value: String) {
-        jedis?.set(id, value)
+    fun setex(id: String, value: String) {
+        jedis?.setex(id, 300, value)
     }
 }

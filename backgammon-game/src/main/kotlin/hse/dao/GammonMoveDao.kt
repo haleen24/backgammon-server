@@ -1,9 +1,10 @@
 package hse.dao
 
 import hse.dto.GammonRestoreContextDto
-import hse.entity.DoubleZar
+import hse.entity.DoubleCube
 import hse.entity.GameWinner
 import hse.entity.MoveSet
+import hse.entity.SurrenderEntity
 
 interface GammonMoveDao {
     fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet)
@@ -14,7 +15,7 @@ interface GammonMoveDao {
 
     fun getZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int>
 
-    fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleZar>
+    fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube>
 
     fun checkMatchExists(matchId: Int): Boolean
 
@@ -26,7 +27,13 @@ interface GammonMoveDao {
 
     fun storeWinner(winner: GameWinner)
 
-    fun saveDouble(matchId: Int, doubleZar: DoubleZar)
+    fun saveDouble(matchId: Int, doubleCube: DoubleCube)
 
     fun acceptDouble(matchId: Int, gameId: Int, moveId: Int)
+
+    fun getWinners(matchId: Int): List<GameWinner>
+
+    fun surrender(matchId: Int, surrenderEntity: SurrenderEntity)
+
+    fun getSurrenderInfo(matchId: Int): List<SurrenderEntity>
 }

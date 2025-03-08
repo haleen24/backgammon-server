@@ -1,9 +1,11 @@
 package hse.dao
 
+import game.backgammon.enums.Color
 import hse.dto.GammonRestoreContextDto
-import hse.entity.DoubleZar
+import hse.entity.DoubleCube
 import hse.entity.GameWinner
 import hse.entity.MoveSet
+import hse.entity.SurrenderEntity
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Repository
@@ -36,7 +38,7 @@ class GammonMoveRuntimeDao(
         TODO("Not yet implemented")
     }
 
-    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleZar> {
+    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
         TODO("Not yet implemented")
     }
 
@@ -66,11 +68,23 @@ class GammonMoveRuntimeDao(
         winnerMap[winner.matchId]!!.add(winner.gameId, winner.gameId)
     }
 
-    override fun saveDouble(matchId: Int, doubleZar: DoubleZar) {
+    override fun saveDouble(matchId: Int, doubleCube: DoubleCube) {
         TODO("Not yet implemented")
     }
 
     override fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getWinners(matchId: Int): List<GameWinner> {
+        TODO("Not yet implemented")
+    }
+
+    override fun surrender(matchId: Int, surrenderEntity: SurrenderEntity) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getSurrenderInfo(matchId: Int): List<SurrenderEntity> {
         TODO("Not yet implemented")
     }
 

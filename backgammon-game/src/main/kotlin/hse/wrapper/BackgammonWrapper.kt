@@ -158,6 +158,10 @@ class BackgammonWrapper(
         return game.turn == getPlayerMask(userId)
     }
 
+    fun surrender() {
+        game.endFlag = true
+    }
+
     private fun getDeckItemDto(index: Int, value: Int): DeckItemDto? {
         return if (value == 0) {
             null
