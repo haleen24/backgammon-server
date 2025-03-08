@@ -29,6 +29,4 @@ abstract class Gammon(
     abstract fun tossBothZar(user: Int = turn): TossZarDto
     abstract fun checkEnd(): Boolean
     abstract fun getWinPoints(): Int
-
-
 }

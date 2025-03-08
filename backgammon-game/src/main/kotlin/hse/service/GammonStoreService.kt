@@ -49,6 +49,7 @@ class GammonStoreService(
 
     fun saveAfterMove(matchId: Int, gameId: Int, playerId: Int, game: BackgammonWrapper, moves: ChangeDto) {
         val restoreContext = game.getRestoreContext()
+        restoreContext.game.zarResult = listOf()
         putGameToCache(matchId, restoreContext)
         val moveSet = MoveSet(
             moves = moves,

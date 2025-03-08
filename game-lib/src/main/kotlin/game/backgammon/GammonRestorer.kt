@@ -8,7 +8,7 @@ class GammonRestorer {
     data class GammonRestoreContext(
         val deck: Map<Int, Int>,
         val turn: Int,
-        val zarResult: List<Int>,
+        var zarResult: List<Int>,
         val bar: Map<Int, Int>,
         val endFlag: Boolean,
     )
