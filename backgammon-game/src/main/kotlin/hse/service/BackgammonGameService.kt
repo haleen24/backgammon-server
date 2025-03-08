@@ -36,10 +36,6 @@ class BackgammonGameService(
 
     fun moveInGame(matchId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
         val game = gammonStoreService.getMatchById(matchId)
-        if (game.numberOfMoves != 0) {
-            validateZarState(matchId, game.gameId, game.numberOfMoves)
-        }
-
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
         val response = MoveResponse(
@@ -227,13 +223,6 @@ class BackgammonGameService(
                 isMatchEnd = endMatch,
             )
         )
-    }
-
-    private fun validateZarState(matchId: Int, gameId: Int, moves: Int) {
-        val zar = gammonStoreService.getLastZar(matchId, gameId, moves)
-        if (zar.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Should toss zar")
-        }
     }
 
     private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {

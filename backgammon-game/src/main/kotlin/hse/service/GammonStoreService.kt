@@ -77,10 +77,6 @@ class GammonStoreService(
         gammonMoveDao.saveZar(matchId, game.gameId, game.numberOfMoves, zar)
     }
 
-    fun getLastZar(matchId: Int, gameId: Int, lastMoveId: Int): List<Int> {
-        return gammonMoveDao.getZar(matchId, gameId, lastMoveId)
-    }
-
     fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
         return gammonMoveDao.getAllDoubles(matchId, gameId)
     }
@@ -224,6 +220,4 @@ class GammonStoreService(
             )
         )
     }
-
-
 }
