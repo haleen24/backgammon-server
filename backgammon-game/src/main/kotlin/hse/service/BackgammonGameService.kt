@@ -12,8 +12,10 @@ import game.backgammon.response.ConfigResponse
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
 import game.backgammon.sht.ShortGammonGame
-import hse.dto.*
-import hse.entity.DoubleCube
+import hse.dto.EndGameEvent
+import hse.dto.GameStartedEvent
+import hse.dto.MoveEvent
+import hse.dto.TossZarEvent
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -23,7 +25,8 @@ import kotlin.math.pow
 @Service
 class BackgammonGameService(
     private val emitterService: EmitterService,
-    private val gammonStoreService: GammonStoreService
+    private val gammonStoreService: GammonStoreService,
+    private val doubleCubeService: DoubleCubeService,
 ) {
 
     fun createAndConnect(roomId: Int, request: CreateBackgammonGameRequest): Int {
@@ -54,7 +57,7 @@ class BackgammonGameService(
 
     fun tossZar(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
-        val doubles = gammonStoreService.getAllDoubles(matchId, game.gameId)
+        val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId)
 
         if (doubles.isNotEmpty()) {
             if (!doubles.last().isAccepted) {
@@ -71,56 +74,11 @@ class BackgammonGameService(
         emitterService.sendForAll(matchId, TossZarEvent(res.value, game.getPlayerColor(userId)))
     }
 
-    fun doubleZar(matchId: Int, userId: Int) {
-        val game = gammonStoreService.getMatchById(matchId)
-        val doubles = gammonStoreService.getAllDoubles(matchId, game.gameId)
-        if (!game.isTurn(userId)) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "incorrect turn")
-        }
-        if (game.getZar().isNotEmpty()) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "zar already thrown")
-        }
-        val userColor = game.getPlayerColor(userId)
-        val doubleCubePosition = getDoubleCubePosition(matchId, game, doubles)
-        if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Decline by Crawford rule")
-        }
-        if (doubleCubePosition == DoubleCubePositionEnum.FREE) {
-            return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
-        }
-        val last = doubles.last()
-        if (last.by == userColor) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant do 2 doubles in a row")
-        }
-        if (!last.isAccepted) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "last double wasnt accepted")
-        }
-        createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
-    }
-
-    fun acceptDouble(matchId: Int, userId: Int) {
-        val game = gammonStoreService.getMatchById(matchId)
-        val doubles = gammonStoreService.getAllDoubles(matchId, game.gameId)
-
-        if (doubles.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "there are no doubles")
-        }
-        val last = doubles.last()
-        if (last.isAccepted) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "no double for accepting")
-        }
-        if (last.by == game.getPlayerColor(userId)) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant accept own double")
-        }
-        gammonStoreService.acceptDouble(matchId, game.gameId, game.numberOfMoves)
-        emitterService.sendEventExceptUser(userId, matchId, AcceptDoubleEvent(game.getPlayerColor(userId)))
-    }
-
     fun getConfiguration(userId: Int, matchId: Int): ConfigResponse {
         val game = gammonStoreService.getMatchById(matchId)
         val configData = game.getConfiguration(userId)
-        val doubleCubes = gammonStoreService.getAllDoubles(matchId, game.gameId)
-        val doubleCubePosition = getDoubleCubePosition(matchId, game, doubleCubes)
+        val doubleCubes = doubleCubeService.getAllDoubles(matchId, game.gameId)
+        val doubleCubePosition = doubleCubeService.getDoubleCubePosition(matchId, game, doubleCubes)
         val doubleCubeValue =
             if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) null else 2.0.pow(doubleCubes.size.toDouble())
                 .toInt()
@@ -223,45 +181,5 @@ class BackgammonGameService(
                 isMatchEnd = endMatch,
             )
         )
-    }
-
-    private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {
-        gammonStoreService.createDoubleRequest(matchId, gameId, moveId, by)
-        emitterService.sendEventExceptUser(userId, matchId, DoubleEvent(by))
-    }
-
-    private fun getDoubleCubePosition(
-        matchId: Int,
-        game: BackgammonWrapper,
-        doubles: List<DoubleCube>
-    ): DoubleCubePositionEnum {
-        val winners = gammonStoreService.getWinnersInMatch(matchId)
-
-        if (winners.isNotEmpty()) {
-            if (game.blackPoints == game.thresholdPoints - 1 && winners.last() == Color.BLACK) {
-                return DoubleCubePositionEnum.UNAVAILABLE
-            } else if (game.whitePoints == game.thresholdPoints - 1 && winners.last() == Color.WHITE) {
-                return DoubleCubePositionEnum.UNAVAILABLE
-            }
-        }
-
-        if (doubles.isEmpty()) {
-            return DoubleCubePositionEnum.FREE
-        }
-
-
-        val last = doubles.last()
-
-        return when (last.isAccepted) {
-            true -> when (last.by) {
-                Color.BLACK -> DoubleCubePositionEnum.BELONGS_TO_WHITE
-                Color.WHITE -> DoubleCubePositionEnum.BELONGS_TO_BLACK
-            }
-
-            false -> when (last.by) {
-                Color.BLACK -> DoubleCubePositionEnum.OFFERED_TO_WHITE
-                Color.WHITE -> DoubleCubePositionEnum.OFFERED_TO_BLACK
-            }
-        }
     }
 }

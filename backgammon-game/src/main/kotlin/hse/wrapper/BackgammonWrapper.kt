@@ -31,7 +31,7 @@ class BackgammonWrapper(
                 BackgammonType.REGULAR_GAMMON -> GammonRestorer.restoreGammon(restoreContextDto.game)
             }
 
-            game.endFlag = restoreContextDto.endFlag
+            game.endFlag = restoreContextDto.game.endFlag
             val gameWrapper = BackgammonWrapper(
                 game = game,
                 type = restoreContextDto.type,
@@ -129,7 +129,6 @@ class BackgammonWrapper(
             whitePoints = whitePoints,
             thresholdPoints = thresholdPoints,
             gameNumber = gameId,
-            endFlag = game.endFlag
         )
     }
 

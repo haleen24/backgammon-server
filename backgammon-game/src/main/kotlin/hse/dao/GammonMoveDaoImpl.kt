@@ -1,5 +1,9 @@
 package hse.dao
 
+import hse.dao.MongoUtils.Companion.ENTITY_TYPE
+import hse.dao.MongoUtils.Companion.GAME_ID
+import hse.dao.MongoUtils.Companion.MOVE_ID
+import hse.dao.MongoUtils.Companion.getCollectionName
 import hse.dto.GammonRestoreContextDto
 import hse.entity.*
 import hse.enums.GameEntityType
@@ -7,19 +11,12 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.Update
 import org.springframework.stereotype.Repository
 
 @Repository
 class GammonMoveDaoImpl(
     private val mongoTemplate: MongoTemplate
 ) : GammonMoveDao {
-
-    companion object {
-        const val GAME_ID = "gameId"
-        const val ENTITY_TYPE = "type"
-        const val MOVE_ID = "moveId"
-    }
 
     override fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet) {
         mongoTemplate.save(MoveWithId(matchId, gameId, moveSet), getCollectionName(matchId))
@@ -59,16 +56,6 @@ class GammonMoveDaoImpl(
             Zar::class.java,
             getCollectionName(matchId)
         ).firstOrNull()?.z ?: listOf()
-    }
-
-    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
-        return mongoTemplate.find(
-            Query().addCriteria(
-                Criteria.where(ENTITY_TYPE).`is`(GameEntityType.DOUBLE.name).and(GAME_ID).`is`(gameId)
-            ),
-            DoubleCube::class.java,
-            getCollectionName(matchId)
-        )
     }
 
     override fun checkMatchExists(matchId: Int): Boolean {
@@ -111,19 +98,6 @@ class GammonMoveDaoImpl(
         mongoTemplate.save(winner, getCollectionName(winner.matchId))
     }
 
-    override fun saveDouble(matchId: Int, doubleCube: DoubleCube) {
-        mongoTemplate.save(doubleCube, getCollectionName(matchId))
-    }
-
-    override fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
-        val query = Query().addCriteria(
-            Criteria.where(ENTITY_TYPE).`is`(GameEntityType.DOUBLE.name).and(GAME_ID).`is`(gameId).and(MOVE_ID)
-                .`is`(moveId)
-        )
-        val update = Update().set("isAccepted", "true")
-        mongoTemplate.updateFirst(query, update, getCollectionName(matchId))
-    }
-
     override fun getWinners(matchId: Int): List<GameWinner> {
         val query = Query().addCriteria(
             Criteria.where(ENTITY_TYPE).`is`(GameEntityType.WINNER_INFO.name)
@@ -140,9 +114,5 @@ class GammonMoveDaoImpl(
             Criteria.where(ENTITY_TYPE).`is`(GameEntityType.SURRENDER)
         )
         return mongoTemplate.find(query, SurrenderEntity::class.java, getCollectionName(matchId))
-    }
-
-    private fun getCollectionName(matchId: Int): String {
-        return "match$matchId"
     }
 }

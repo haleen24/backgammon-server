@@ -39,7 +39,6 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'redis.clients:jedis:5.2.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-    implementation("de.hdi:mongobumblebee:1.2")
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

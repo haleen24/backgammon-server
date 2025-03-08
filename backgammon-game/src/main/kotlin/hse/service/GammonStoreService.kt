@@ -9,7 +9,6 @@ import game.backgammon.sht.ShortGammonGame
 import hse.adapter.RedisAdapter
 import hse.dao.GammonMoveDao
 import hse.dto.GammonRestoreContextDto
-import hse.entity.DoubleCube
 import hse.entity.GameWinner
 import hse.entity.MoveSet
 import hse.entity.SurrenderEntity
@@ -75,18 +74,6 @@ class GammonStoreService(
     fun storeZar(matchId: Int, game: BackgammonWrapper, zar: List<Int>) {
         putGameToCache(matchId, game.getRestoreContext())
         gammonMoveDao.saveZar(matchId, game.gameId, game.numberOfMoves, zar)
-    }
-
-    fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
-        return gammonMoveDao.getAllDoubles(matchId, gameId)
-    }
-
-    fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, by: Color) {
-        return gammonMoveDao.saveDouble(matchId, DoubleCube(gameId, moveId, by, false))
-    }
-
-    fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
-        gammonMoveDao.acceptDouble(matchId, gameId, moveId)
     }
 
     fun getWinnersInMatch(matchId: Int): List<Color> {
@@ -173,7 +160,7 @@ class GammonStoreService(
                     deck = deck.subList(1, deck.size - 1).mapIndexed { index, i -> index to i }.toMap()
                         .filterValues { it != 0 },
                     zarResult = lastZar,
-                    endFlag = deck[ShortGammonGame.WHITE_STORE + 1].absoluteValue == 15 || deck[ShortGammonGame.BLACK_STORE + 1].absoluteValue == 15
+                    endFlag = startState.game.endFlag || deck[ShortGammonGame.WHITE_STORE + 1].absoluteValue == 15 || deck[ShortGammonGame.BLACK_STORE + 1].absoluteValue == 15
                 ),
                 numberOfMoves = movesPerChange.size,
             )

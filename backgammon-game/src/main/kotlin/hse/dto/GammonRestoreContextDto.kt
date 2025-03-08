@@ -13,5 +13,4 @@ data class GammonRestoreContextDto(
     val whitePoints: Int,
     val thresholdPoints: Int,
     val gameNumber: Int,
-    val endFlag: Boolean,
 )

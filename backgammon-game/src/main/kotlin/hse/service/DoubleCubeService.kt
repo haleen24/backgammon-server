@@ -1,0 +1,128 @@
+package hse.service
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import game.backgammon.enums.Color
+import game.backgammon.enums.DoubleCubePositionEnum
+import hse.adapter.RedisAdapter
+import hse.dao.DoubleCubeDao
+import hse.dto.AcceptDoubleEvent
+import hse.dto.DoubleEvent
+import hse.entity.DoubleCube
+import hse.wrapper.BackgammonWrapper
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
+
+@Service
+class DoubleCubeService(
+    val gammonStoreService: GammonStoreService,
+    val emitterService: EmitterService,
+    val doubleCubeDao: DoubleCubeDao,
+    val redisAdapter: RedisAdapter,
+    val objectMapper: ObjectMapper,
+) {
+
+    fun doubleCube(matchId: Int, userId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+        val doubles = getAllDoubles(matchId, game.gameId)
+        if (!game.isTurn(userId)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "incorrect turn")
+        }
+        if (game.getZar().isNotEmpty()) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "zar already thrown")
+        }
+        val userColor = game.getPlayerColor(userId)
+        val doubleCubePosition = getDoubleCubePosition(matchId, game, doubles)
+        if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Decline by Crawford rule")
+        }
+        if (doubleCubePosition == DoubleCubePositionEnum.FREE) {
+            return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
+        }
+        val last = doubles.last()
+        if (last.by == userColor) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant do 2 doubles in a row")
+        }
+        if (!last.isAccepted) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "last double wasnt accepted")
+        }
+        createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
+    }
+
+    fun acceptDouble(matchId: Int, userId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+        val doubles = getAllDoubles(matchId, game.gameId)
+
+        if (doubles.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "there are no doubles")
+        }
+        val last = doubles.last()
+        if (last.isAccepted) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "no double for accepting")
+        }
+        if (last.by == game.getPlayerColor(userId)) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant accept own double")
+        }
+        acceptDouble(matchId, game.gameId, game.numberOfMoves)
+        emitterService.sendEventExceptUser(userId, matchId, AcceptDoubleEvent(game.getPlayerColor(userId)))
+    }
+
+    fun getDoubleCubePosition(
+        matchId: Int,
+        game: BackgammonWrapper,
+        doubles: List<DoubleCube>
+    ): DoubleCubePositionEnum {
+        val winners = gammonStoreService.getWinnersInMatch(matchId)
+        if (winners.isNotEmpty()) {
+            if (game.blackPoints == game.thresholdPoints - 1 && winners.last() == Color.BLACK) {
+                return DoubleCubePositionEnum.UNAVAILABLE
+            } else if (game.whitePoints == game.thresholdPoints - 1 && winners.last() == Color.WHITE) {
+                return DoubleCubePositionEnum.UNAVAILABLE
+            }
+        }
+        if (doubles.isEmpty()) {
+            return DoubleCubePositionEnum.FREE
+        }
+        val last = doubles.last()
+        return when (last.isAccepted) {
+            true -> when (last.by) {
+                Color.BLACK -> DoubleCubePositionEnum.BELONGS_TO_WHITE
+                Color.WHITE -> DoubleCubePositionEnum.BELONGS_TO_BLACK
+            }
+
+            false -> when (last.by) {
+                Color.BLACK -> DoubleCubePositionEnum.OFFERED_TO_WHITE
+                Color.WHITE -> DoubleCubePositionEnum.OFFERED_TO_BLACK
+            }
+        }
+    }
+
+
+    fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
+        val fromCache =
+            redisAdapter.lrange(getCacheKey(matchId)) ?: return doubleCubeDao.getAllDoubles(matchId, gameId)
+        return fromCache.map { objectMapper.reader().readValue(it, DoubleCube::class.java) }
+    }
+
+    fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
+        val cacheKey = getCacheKey(matchId)
+        val last = objectMapper.reader().readValue<DoubleCube>(redisAdapter.popLast(cacheKey))
+        doubleCubeDao.acceptDouble(matchId, gameId, moveId)
+        putToCache(cacheKey, last.copy(isAccepted = true))
+    }
+
+    private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {
+        val doubleCube = DoubleCube(gameId, moveId, by, false)
+        doubleCubeDao.saveDouble(matchId, doubleCube)
+        putToCache(matchId, doubleCube)
+        emitterService.sendEventExceptUser(userId, matchId, DoubleEvent(by))
+    }
+
+    private fun putToCache(matchId: Any, doubleCube: DoubleCube) {
+        redisAdapter.rpush(getCacheKey(matchId), objectMapper.writeValueAsString(doubleCube))
+    }
+
+    private fun getCacheKey(matchId: Any): String {
+        return "dc-$matchId"
+    }
+}

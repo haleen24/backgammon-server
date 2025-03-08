@@ -1,8 +1,6 @@
 package hse.dao
 
-import game.backgammon.enums.Color
 import hse.dto.GammonRestoreContextDto
-import hse.entity.DoubleCube
 import hse.entity.GameWinner
 import hse.entity.MoveSet
 import hse.entity.SurrenderEntity
@@ -38,10 +36,6 @@ class GammonMoveRuntimeDao(
         TODO("Not yet implemented")
     }
 
-    override fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
-        TODO("Not yet implemented")
-    }
-
     override fun checkMatchExists(matchId: Int): Boolean {
         return matchId in contextMap.keys
     }
@@ -66,14 +60,6 @@ class GammonMoveRuntimeDao(
     override fun storeWinner(winner: GameWinner) {
         winnerMap.putIfAbsent(winner.matchId, arrayListOf())
         winnerMap[winner.matchId]!!.add(winner.gameId, winner.gameId)
-    }
-
-    override fun saveDouble(matchId: Int, doubleCube: DoubleCube) {
-        TODO("Not yet implemented")
-    }
-
-    override fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
-        TODO("Not yet implemented")
     }
 
     override fun getWinners(matchId: Int): List<GameWinner> {

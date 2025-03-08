@@ -7,6 +7,7 @@ import game.backgammon.response.ConfigResponse
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
 import hse.service.BackgammonGameService
+import hse.service.DoubleCubeService
 import hse.service.EmitterService
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.*
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 class BackgammonGameController(
     private val backgammonGameService: BackgammonGameService,
     private val emitterService: EmitterService,
+    private val doubleCubeService: DoubleCubeService,
 ) {
 
     companion object {
@@ -56,12 +58,12 @@ class BackgammonGameController(
 
     @PostMapping("/double/{roomId}")
     fun double(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int) {
-        backgammonGameService.doubleZar(roomId, userId)
+        doubleCubeService.doubleCube(roomId, userId)
     }
 
     @PostMapping("/double/accept/{roomId}")
     fun acceptDouble(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int) {
-        backgammonGameService.acceptDouble(roomId, userId)
+        doubleCubeService.acceptDouble(roomId, userId)
     }
 
     @GetMapping("colors/{roomId}")
@@ -84,7 +86,11 @@ class BackgammonGameController(
     }
 
     @PutMapping("surrender/{matchId}")
-    fun surrender(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int, @RequestParam endMatch: Boolean) {
+    fun surrender(
+        @RequestHeader(USER_ID_HEADER) userId: Int,
+        @PathVariable roomId: Int,
+        @RequestParam endMatch: Boolean
+    ) {
         return backgammonGameService.surrender(userId, roomId, endMatch)
     }
 }

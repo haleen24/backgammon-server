@@ -1,6 +1,5 @@
 package hse.service
 
-import de.hdi.mongobumblebee.MongoBumblebee
 import game.backgammon.GammonRestorer
 import game.backgammon.dto.ChangeDto
 import game.backgammon.enums.BackgammonType
@@ -9,7 +8,6 @@ import hse.dto.GammonRestoreContextDto
 import hse.entity.MoveSet
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.TestConstructor
 import kotlin.test.assertEquals
 
@@ -19,9 +17,6 @@ import kotlin.test.assertEquals
 class RegularGammonGameStoreServiceTest(
     private val gammonStoreService: GammonStoreService,
 ) {
-
-    @MockBean
-    lateinit var mongoBumblebee: MongoBumblebee
 
     @Test
     fun restoreBlackTest() {
@@ -43,7 +38,6 @@ class RegularGammonGameStoreServiceTest(
             whitePoints = 0,
             thresholdPoints = 10,
             gameNumber = 1,
-            endFlag = false
         )
         val moves = listOf(
             MoveSet(
@@ -85,7 +79,6 @@ class RegularGammonGameStoreServiceTest(
             whitePoints = 0,
             thresholdPoints = 10,
             gameNumber = 1,
-            endFlag = false
         )
         val moves = listOf(
             MoveSet(
@@ -117,7 +110,7 @@ class RegularGammonGameStoreServiceTest(
                 turn = 1,
                 zarResult = listOf(),
                 bar = mapOf(-1 to 0, 1 to 2),
-                endFlag = false
+                endFlag = true
             ),
             firstUserId = 1,
             secondUserId = 2,
@@ -127,7 +120,6 @@ class RegularGammonGameStoreServiceTest(
             whitePoints = 0,
             thresholdPoints = 10,
             gameNumber = 1,
-            endFlag = true
         )
         val moves = listOf(
             MoveSet(

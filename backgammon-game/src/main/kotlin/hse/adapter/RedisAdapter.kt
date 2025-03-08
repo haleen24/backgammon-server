@@ -24,4 +24,21 @@ class RedisAdapter(
     fun setex(id: String, value: String) {
         jedis?.setex(id, 300, value)
     }
+
+    fun rpush(id: String, value: String) {
+        jedis?.rpush(id, value)
+        expire(id)
+    }
+
+    fun lrange(id: String): MutableList<String>? {
+        return jedis?.lrange(id, 0, -1)
+    }
+
+    fun popLast(id: String): String? {
+        return jedis?.rpop(id, 1)?.firstOrNull()
+    }
+
+    fun expire(id: String) {
+        jedis?.expire(id, 300)
+    }
 }
