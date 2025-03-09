@@ -46,6 +46,9 @@ class DoubleCubeService(
         if (!last.isAccepted) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "last double wasnt accepted")
         }
+        if (doubles.size >= 6) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "maximum double already reached")
+        }
         createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
     }
 
@@ -101,6 +104,7 @@ class DoubleCubeService(
     fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
         val fromCache =
             redisAdapter.lrange(getCacheKey(matchId)) ?: return doubleCubeDao.getAllDoubles(matchId, gameId)
+                .sortedByDescending { it.moveId }
         return fromCache.map { objectMapper.reader().readValue(it, DoubleCube::class.java) }
     }
 

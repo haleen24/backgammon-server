@@ -26,10 +26,12 @@ class DoubleCubeDao(
     }
 
     fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
+        val query = Query().addCriteria(
+            Criteria.where(ENTITY_TYPE).`is`(GameEntityType.DOUBLE.name).and(GAME_ID).`is`(gameId)
+        )
+        query.fields().exclude(ENTITY_TYPE)
         return mongoTemplate.find(
-            Query().addCriteria(
-                Criteria.where(ENTITY_TYPE).`is`(GameEntityType.DOUBLE.name).and(GAME_ID).`is`(gameId)
-            ),
+            query,
             DoubleCube::class.java,
             getCollectionName(matchId)
         )

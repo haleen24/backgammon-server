@@ -7,5 +7,5 @@ data class DoubleCube(
     val gameId: Int,
     val moveId: Int,
     val by: Color,
-    val isAccepted: Boolean
+    val isAccepted: Boolean,
 ) : TypedMongoEntity(GameEntityType.DOUBLE)
