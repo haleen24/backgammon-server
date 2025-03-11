@@ -9,6 +9,7 @@ import hse.dto.AcceptDoubleEvent
 import hse.dto.DoubleEvent
 import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -22,9 +23,12 @@ class DoubleCubeService(
     val objectMapper: ObjectMapper,
 ) {
 
+    val logger = LoggerFactory.getLogger(this.javaClass)
+
     fun doubleCube(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
         val doubles = getAllDoubles(matchId, game.gameId)
+        logger.info("double: $doubles")
         if (!game.isTurn(userId)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "incorrect turn")
         }
@@ -55,7 +59,7 @@ class DoubleCubeService(
     fun acceptDouble(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
         val doubles = getAllDoubles(matchId, game.gameId)
-
+        logger.info("accept double: $doubles")
         if (doubles.isEmpty()) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "there are no doubles")
         }
@@ -66,7 +70,7 @@ class DoubleCubeService(
         if (last.by == game.getPlayerColor(userId)) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant accept own double")
         }
-        acceptDouble(matchId, game.gameId, game.numberOfMoves)
+        acceptDouble(matchId, last)
         emitterService.sendEventExceptUser(userId, matchId, AcceptDoubleEvent(game.getPlayerColor(userId)))
     }
 
@@ -104,14 +108,13 @@ class DoubleCubeService(
     fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
         val fromCache =
             redisAdapter.lrange(getCacheKey(matchId)) ?: return doubleCubeDao.getAllDoubles(matchId, gameId)
-                .sortedByDescending { it.moveId }
+                .sortedBy { it.moveId }
         return fromCache.map { objectMapper.reader().readValue(it, DoubleCube::class.java) }
     }
 
-    fun acceptDouble(matchId: Int, gameId: Int, moveId: Int) {
+    fun acceptDouble(matchId: Int, last: DoubleCube) {
         val cacheKey = getCacheKey(matchId)
-        val last = objectMapper.reader().readValue<DoubleCube>(redisAdapter.popLast(cacheKey))
-        doubleCubeDao.acceptDouble(matchId, gameId, moveId)
+        doubleCubeDao.acceptDouble(matchId, last.gameId, last.moveId)
         putToCache(cacheKey, last.copy(isAccepted = true))
     }
 
