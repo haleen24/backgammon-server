@@ -128,7 +128,7 @@ class RegularGammonGame(
                 REGULAR_DEFEAT
             }
         }
-        return points * 2.0.pow(doubleCube).toInt()
+        return points
     }
 
     private fun validateBeforeMoves(user: Int, moves: List<MoveDto>) {

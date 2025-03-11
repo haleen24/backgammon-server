@@ -6,6 +6,7 @@ class MongoUtils {
         const val GAME_ID = "gameId"
         const val ENTITY_TYPE = "type"
         const val MOVE_ID = "moveId"
+        const val SURRENDER = "surrender"
 
 
         fun getCollectionName(matchId: Int): String {

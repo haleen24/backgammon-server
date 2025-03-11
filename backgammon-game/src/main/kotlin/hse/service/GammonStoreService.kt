@@ -11,7 +11,6 @@ import hse.dao.GammonMoveDao
 import hse.dto.GammonRestoreContextDto
 import hse.entity.GameWinner
 import hse.entity.MoveSet
-import hse.entity.SurrenderEntity
 import hse.wrapper.BackgammonWrapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -67,8 +66,8 @@ class GammonStoreService(
         return gammonMoveDao.getStartGameContext(matchId, gameId)
     }
 
-    fun storeWinner(matchId: Int, gameId: Int, winner: Color) {
-        gammonMoveDao.storeWinner(GameWinner.of(matchId, gameId, winner))
+    fun storeWinner(matchId: Int, gameId: Int, winner: Color, points: Int, endMatch: Boolean) {
+        gammonMoveDao.storeWinner(GameWinner.of(matchId, gameId, winner, points, false, endMatch))
     }
 
     fun storeZar(matchId: Int, game: BackgammonWrapper, zar: List<Int>) {
@@ -80,9 +79,18 @@ class GammonStoreService(
         return gammonMoveDao.getWinners(matchId).sortedBy { it.gameId }.map { it.color }
     }
 
-    fun surrender(userId: Int, matchId: Int, wrapper: BackgammonWrapper, endMatch: Boolean) {
+    fun surrender(surrendered: Color, matchId: Int, wrapper: BackgammonWrapper, points: Int, endMatch: Boolean) {
         wrapper.surrender()
-        gammonMoveDao.surrender(matchId, SurrenderEntity(wrapper.gameId, wrapper.getPlayerColor(userId), endMatch))
+        gammonMoveDao.storeWinner(
+            GameWinner.of(
+                matchId,
+                wrapper.gameId,
+                surrendered.getOpponent(),
+                points,
+                true,
+                endMatch
+            )
+        )
         putGameToCache(matchId, wrapper.getRestoreContext())
     }
 
@@ -114,6 +122,13 @@ class GammonStoreService(
         if (surrenderInfo.gameId == gameId || surrenderInfo.endMatch) {
             game.surrender()
         }
+
+        var blackPoints = 0
+        var whitePoints = 0
+        gammonMoveDao.getWinners(matchId)
+            .forEach { if (it.color == Color.BLACK) blackPoints += it.points else whitePoints += it.points }
+        game.blackPoints = blackPoints
+        game.whitePoints = whitePoints
         return game
     }
 

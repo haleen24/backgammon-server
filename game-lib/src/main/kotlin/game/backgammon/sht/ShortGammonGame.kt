@@ -159,7 +159,7 @@ class ShortGammonGame(
                 MARS_DEFEAT
             }
         }
-        return points * 2.0.pow(doubleCube).toInt()
+        return points
     }
 
     private fun findMaxFromSequence(zar: List<Int>): Int {

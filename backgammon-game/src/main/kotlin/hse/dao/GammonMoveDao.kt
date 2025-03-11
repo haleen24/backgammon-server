@@ -3,7 +3,6 @@ package hse.dao
 import hse.dto.GammonRestoreContextDto
 import hse.entity.GameWinner
 import hse.entity.MoveSet
-import hse.entity.SurrenderEntity
 
 interface GammonMoveDao {
     fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet)
@@ -26,7 +25,5 @@ interface GammonMoveDao {
 
     fun getWinners(matchId: Int): List<GameWinner>
 
-    fun surrender(matchId: Int, surrenderEntity: SurrenderEntity)
-
-    fun getSurrenderInfo(matchId: Int): List<SurrenderEntity>
+    fun getSurrenderInfo(matchId: Int): List<GameWinner>
 }

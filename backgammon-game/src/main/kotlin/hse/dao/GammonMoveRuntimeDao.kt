@@ -3,7 +3,6 @@ package hse.dao
 import hse.dto.GammonRestoreContextDto
 import hse.entity.GameWinner
 import hse.entity.MoveSet
-import hse.entity.SurrenderEntity
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Repository
@@ -66,12 +65,8 @@ class GammonMoveRuntimeDao(
         TODO("Not yet implemented")
     }
 
-    override fun surrender(matchId: Int, surrenderEntity: SurrenderEntity) {
+
+    override fun getSurrenderInfo(matchId: Int): List<GameWinner> {
         TODO("Not yet implemented")
     }
-
-    override fun getSurrenderInfo(matchId: Int): List<SurrenderEntity> {
-        TODO("Not yet implemented")
-    }
-
 }

@@ -88,9 +88,9 @@ class BackgammonGameController(
     @PutMapping("surrender/{matchId}")
     fun surrender(
         @RequestHeader(USER_ID_HEADER) userId: Int,
-        @PathVariable roomId: Int,
+        @PathVariable matchId: Int,
         @RequestParam endMatch: Boolean
     ) {
-        return backgammonGameService.surrender(userId, roomId, endMatch)
+        return backgammonGameService.surrender(userId, matchId, endMatch)
     }
 }

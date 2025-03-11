@@ -80,6 +80,9 @@ class DoubleCubeService(
         doubles: List<DoubleCube>
     ): DoubleCubePositionEnum {
         val winners = gammonStoreService.getWinnersInMatch(matchId)
+        if (game.thresholdPoints == 1) {
+            return DoubleCubePositionEnum.UNAVAILABLE
+        }
         if (winners.isNotEmpty()) {
             if (game.blackPoints == game.thresholdPoints - 1 && winners.last() == Color.BLACK) {
                 return DoubleCubePositionEnum.UNAVAILABLE

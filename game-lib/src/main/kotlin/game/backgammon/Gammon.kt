@@ -11,7 +11,6 @@ abstract class Gammon(
     var zarResults: ArrayList<Int> = arrayListOf()
     var foolZar = ArrayList<Int>()
     var endFlag: Boolean = false
-    var doubleCube = 0
 
     companion object {
         const val BLACK = -1

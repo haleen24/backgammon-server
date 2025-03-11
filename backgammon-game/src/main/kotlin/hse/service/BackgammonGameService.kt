@@ -148,10 +148,11 @@ class BackgammonGameService(
 
     fun handleGameEnd(roomId: Int, wrapper: BackgammonWrapper) {
         val endState = wrapper.gameEndStatus()
+        val doubles = doubleCubeService.getAllDoubles(roomId, wrapper.gameId).count { it.isAccepted }
         val winner = endState[true]!!
-        val winnerPoints = wrapper.addPointsTo(winner)
+        val winnerPoints = wrapper.addPointsTo(winner) * 2.0.pow(doubles).toInt()
         val endMatch = winnerPoints >= wrapper.thresholdPoints
-        gammonStoreService.storeWinner(roomId, wrapper.gameId, winner)
+        gammonStoreService.storeWinner(roomId, wrapper.gameId, winner, winnerPoints, endMatch)
 
         if (!endMatch) {
             wrapper.restore()
@@ -169,10 +170,13 @@ class BackgammonGameService(
 
     fun surrender(userId: Int, matchId: Int, endMatch: Boolean) {
         val game = gammonStoreService.getMatchById(matchId)
+        val surrenderedColor = game.getPlayerColor(userId)
+        val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId).count { it.isAccepted }
+        val winnerPoints = game.addPointsTo(surrenderedColor.getOpponent()) * 2.0.pow(doubles).toInt()
         if (!game.isTurn(userId)) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "incorrect turn")
         }
-        gammonStoreService.surrender(userId, matchId, game, endMatch)
+        gammonStoreService.surrender(surrenderedColor, matchId, game, winnerPoints, endMatch)
         emitterService.sendForAll(
             matchId, EndGameEvent(
                 win = game.getPlayerColor(userId),
