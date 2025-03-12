@@ -4,9 +4,11 @@ import game.backgammon.Gammon
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import hse.dto.EndGameEvent
+import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.mockito.internal.verification.NoInteractions
 import kotlin.test.assertEquals
 
 class BackgammonGameServiceTest {
@@ -68,5 +70,90 @@ class BackgammonGameServiceTest {
         Mockito.verify(gammonStoreService, Mockito.times(0)).saveGameOnCreation(1, 2, wrapper)
         Mockito.verify(emitterService, Mockito.times(1)).sendForAll(1, EndGameEvent(Color.BLACK, 2, 0, true))
         assertEquals(2, wrapper.blackPoints)
+    }
+
+    @Test
+    fun `surrender game match not ended`() {
+        val wrapper = Mockito.spy(
+            BackgammonWrapper(
+                game = Mockito.mock(Gammon::class.java),
+                type = BackgammonType.SHORT_BACKGAMMON,
+                gameId = 0,
+                blackPoints = 0,
+                whitePoints = 0,
+                thresholdPoints = 2
+            )
+        )
+        Mockito.doReturn(wrapper).`when`(gammonStoreService).getMatchById(1)
+        Mockito.doReturn(Color.BLACK).`when`(wrapper).getPlayerColor(1)
+        Mockito.doReturn(listOf(Mockito.mock(DoubleCube::class.java))).`when`(doubleCubeService).getAllDoubles(1, 0)
+        Mockito.doReturn(1).`when`(wrapper).getPointsForGame()
+
+
+        service.surrender(1, 1, false)
+
+        Mockito.verify(wrapper).restore()
+        Mockito.verify(gammonStoreService).saveGameOnCreation(1, 1, wrapper)
+        Mockito.verify(emitterService).sendForAll(1, EndGameEvent(Color.WHITE, 0, 1, false))
+        assertEquals(1, wrapper.whitePoints)
+        assertEquals(0, wrapper.blackPoints)
+    }
+
+    @Test
+    fun `surrender game end match`() {
+        val wrapper = Mockito.spy(
+            BackgammonWrapper(
+                game = Mockito.mock(Gammon::class.java),
+                type = BackgammonType.SHORT_BACKGAMMON,
+                gameId = 0,
+                blackPoints = 0,
+                whitePoints = 0,
+                thresholdPoints = 2
+            )
+        )
+        val double = Mockito.mock(DoubleCube::class.java)
+        Mockito.`when`(double.isAccepted).thenReturn(true)
+        Mockito.doReturn(wrapper).`when`(gammonStoreService).getMatchById(1)
+        Mockito.doReturn(Color.BLACK).`when`(wrapper).getPlayerColor(1)
+        Mockito.doReturn(listOf(double, Mockito.mock())).`when`(doubleCubeService).getAllDoubles(1, 0)
+        Mockito.doReturn(1).`when`(wrapper).getPointsForGame()
+
+
+        service.surrender(1, 1, false)
+
+        Mockito.verify(wrapper, Mockito.never()).restore()
+        Mockito.verify(gammonStoreService, Mockito.never()).saveGameOnCreation(1, 1, wrapper)
+        Mockito.verify(emitterService).sendForAll(1, EndGameEvent(Color.WHITE, 0, 2, true))
+        assertEquals(2, wrapper.whitePoints)
+        assertEquals(0, wrapper.blackPoints)
+    }
+
+    @Test
+    fun `surrender match`() {
+        val wrapper = Mockito.spy(
+            BackgammonWrapper(
+                game = Mockito.mock(Gammon::class.java),
+                type = BackgammonType.SHORT_BACKGAMMON,
+                gameId = 0,
+                blackPoints = 4,
+                whitePoints = 2,
+                thresholdPoints = 5
+            )
+        )
+        val double = Mockito.mock(DoubleCube::class.java)
+        Mockito.`when`(double.isAccepted).thenReturn(true)
+        Mockito.doReturn(wrapper).`when`(gammonStoreService).getMatchById(1)
+        Mockito.doReturn(Color.BLACK).`when`(wrapper).getPlayerColor(1)
+        Mockito.doReturn(listOf(double, Mockito.mock())).`when`(doubleCubeService).getAllDoubles(1, 0)
+        Mockito.doReturn(1).`when`(wrapper).getPointsForGame()
+
+
+        service.surrender(1, 1, true)
+
+        Mockito.verify(wrapper, Mockito.never()).restore()
+        Mockito.verify(gammonStoreService, Mockito.never()).saveGameOnCreation(1, 1, wrapper)
+        Mockito.verify(emitterService).sendForAll(1, EndGameEvent(Color.WHITE, 4, 4, true))
+        assertEquals(4, wrapper.whitePoints)
+        assertEquals(4, wrapper.blackPoints)
     }
 }

@@ -148,15 +148,14 @@ class BackgammonGameService(
         return mapOf(firstColor to firstPlayer, firstColor.getOpponent() to secondPlayer)
     }
 
-
     fun handleGameEnd(roomId: Int, wrapper: BackgammonWrapper) {
         val endState = wrapper.gameEndStatus()
         val doubles = doubleCubeService.getAllDoubles(roomId, wrapper.gameId).count { it.isAccepted }
         val winner = endState[true]!!
-        val winnerPoints = wrapper.addPointsTo(winner) * 2.0.pow(doubles).toInt()
-        val endMatch = winnerPoints >= wrapper.thresholdPoints
+        val winnerPoints = wrapper.getPointsForGame() * 2.0.pow(doubles).toInt()
+        addPointsToWinner(wrapper, winnerPoints, winner)
+        val endMatch = wrapper.blackPoints >= wrapper.thresholdPoints || wrapper.whitePoints >= wrapper.thresholdPoints
         gammonStoreService.storeWinner(roomId, wrapper.gameId, winner, winnerPoints, endMatch)
-
         if (!endMatch) {
             wrapper.restore()
             gammonStoreService.saveGameOnCreation(roomId, wrapper.gameId, wrapper)
@@ -171,7 +170,7 @@ class BackgammonGameService(
         )
     }
 
-    fun surrender(userId: Int, matchId: Int, endMatch: Boolean) {
+    fun surrender(userId: Int, matchId: Int, surrenderMatch: Boolean) {
         val game = gammonStoreService.getMatchById(matchId)
         checkGameState(game)
         val surrenderedColor = game.getPlayerColor(userId)
@@ -181,7 +180,9 @@ class BackgammonGameService(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant surrender without double cube")
         }
         val winnerPoints =
-            game.addPointsTo(winnerColor) * 2.0.pow(doubles.count { it.isAccepted }).toInt()
+            game.getPointsForGame() * 2.0.pow(doubles.count { it.isAccepted }).toInt()
+        addPointsToWinner(game, winnerPoints, winnerColor)
+        val endMatch = surrenderMatch || game.blackPoints >= game.whitePoints || game.whitePoints >= game.thresholdPoints
         gammonStoreService.surrender(surrenderedColor, matchId, game, winnerPoints, endMatch)
         if (!endMatch) {
             game.restore()
@@ -200,6 +201,14 @@ class BackgammonGameService(
     fun checkGameState(game: BackgammonWrapper) {
         if (game.checkEnd()) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Game is already end")
+        }
+    }
+
+    private fun addPointsToWinner(game: BackgammonWrapper, points: Int, winner: Color) {
+        if (winner == Color.BLACK) {
+            game.blackPoints += points
+        } else {
+            game.whitePoints += points
         }
     }
 }
