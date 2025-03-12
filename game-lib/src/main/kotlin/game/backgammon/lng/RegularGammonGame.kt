@@ -111,10 +111,6 @@ class RegularGammonGame(
     }
 
     override fun getWinPoints(): Int {
-        if (!endFlag) {
-            throw CantCountWinPointsGammonException()
-        }
-
         val points = if (deck[BLACK_STORAGE].absoluteValue == 15) {
             if (deck[WHITE_STORAGE] == 0) {
                 MARS_DEFEAT

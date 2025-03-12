@@ -39,6 +39,7 @@ class BackgammonGameService(
 
     fun moveInGame(matchId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
         val game = gammonStoreService.getMatchById(matchId)
+        checkGameState(game)
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
         val response = MoveResponse(
@@ -57,6 +58,7 @@ class BackgammonGameService(
 
     fun tossZar(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
+        checkGameState(game)
         val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId)
 
         if (doubles.isNotEmpty()) {
@@ -82,6 +84,7 @@ class BackgammonGameService(
         val doubleCubeValue =
             if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) null else 2.0.pow(doubleCubes.size.toDouble())
                 .toInt()
+        val winner = if (game.checkEnd()) gammonStoreService.getWinnersInMatch(matchId).last() else null
 
         return ConfigResponse(
             gameData = configData,
@@ -91,7 +94,7 @@ class BackgammonGameService(
             players = game.getPlayers(),
             doubleCubeValue = doubleCubeValue,
             doubleCubePosition = doubleCubePosition,
-            end = game.checkEnd()
+            winner = winner,
         )
     }
 
@@ -170,20 +173,33 @@ class BackgammonGameService(
 
     fun surrender(userId: Int, matchId: Int, endMatch: Boolean) {
         val game = gammonStoreService.getMatchById(matchId)
+        checkGameState(game)
         val surrenderedColor = game.getPlayerColor(userId)
-        val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId).count { it.isAccepted }
-        val winnerPoints = game.addPointsTo(surrenderedColor.getOpponent()) * 2.0.pow(doubles).toInt()
-        if (!game.isTurn(userId)) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "incorrect turn")
+        val winnerColor = surrenderedColor.getOpponent()
+        val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId)
+        if (doubles.isEmpty() || doubles.last().isAccepted) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant surrender without double cube")
         }
+        val winnerPoints =
+            game.addPointsTo(winnerColor) * 2.0.pow(doubles.count { it.isAccepted }).toInt()
         gammonStoreService.surrender(surrenderedColor, matchId, game, winnerPoints, endMatch)
+        if (!endMatch) {
+            game.restore()
+            gammonStoreService.saveGameOnCreation(matchId, game.gameId, game)
+        }
         emitterService.sendForAll(
             matchId, EndGameEvent(
-                win = game.getPlayerColor(userId),
+                win = winnerColor,
                 blackPoints = game.blackPoints,
                 whitePoints = game.whitePoints,
                 isMatchEnd = endMatch,
             )
         )
+    }
+
+    fun checkGameState(game: BackgammonWrapper) {
+        if (game.checkEnd()) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Game is already end")
+        }
     }
 }

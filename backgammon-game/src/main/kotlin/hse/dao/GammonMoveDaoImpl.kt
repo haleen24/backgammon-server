@@ -3,7 +3,6 @@ package hse.dao
 import hse.dao.MongoUtils.Companion.ENTITY_TYPE
 import hse.dao.MongoUtils.Companion.GAME_ID
 import hse.dao.MongoUtils.Companion.MOVE_ID
-import hse.dao.MongoUtils.Companion.SURRENDER
 import hse.dao.MongoUtils.Companion.getCollectionName
 import hse.dto.GammonRestoreContextDto
 import hse.entity.*
@@ -102,13 +101,6 @@ class GammonMoveDaoImpl(
     override fun getWinners(matchId: Int): List<GameWinner> {
         val query = Query().addCriteria(
             Criteria.where(ENTITY_TYPE).`is`(GameEntityType.WINNER_INFO.name)
-        )
-        return mongoTemplate.find(query, GameWinner::class.java, getCollectionName(matchId))
-    }
-
-    override fun getSurrenderInfo(matchId: Int): List<GameWinner> {
-        val query = Query().addCriteria(
-            Criteria.where(ENTITY_TYPE).`is`(GameEntityType.WINNER_INFO).and(SURRENDER).`is`("true")
         )
         return mongoTemplate.find(query, GameWinner::class.java, getCollectionName(matchId))
     }

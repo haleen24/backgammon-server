@@ -24,6 +24,4 @@ interface GammonMoveDao {
     fun storeWinner(winner: GameWinner)
 
     fun getWinners(matchId: Int): List<GameWinner>
-
-    fun getSurrenderInfo(matchId: Int): List<GameWinner>
 }

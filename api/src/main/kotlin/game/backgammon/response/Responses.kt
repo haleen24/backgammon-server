@@ -26,5 +26,5 @@ data class ConfigResponse(
     val players: Map<Color, Int>,
     val doubleCubeValue: Int?,
     val doubleCubePosition: DoubleCubePositionEnum,
-    val end: Boolean
+    val winner: Color?
 )

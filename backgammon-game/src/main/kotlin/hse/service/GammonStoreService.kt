@@ -80,7 +80,7 @@ class GammonStoreService(
     }
 
     fun surrender(surrendered: Color, matchId: Int, wrapper: BackgammonWrapper, points: Int, endMatch: Boolean) {
-        wrapper.surrender()
+        wrapper.setPossibleEndFlag(true)
         gammonMoveDao.storeWinner(
             GameWinner.of(
                 matchId,
@@ -117,18 +117,15 @@ class GammonStoreService(
             BackgammonType.REGULAR_GAMMON -> restoreGammon(startState, movesPerChange, lastZar)
         }
 
-        val surrenderInfo = gammonMoveDao.getSurrenderInfo(matchId).lastOrNull() ?: return game
-
-        if (surrenderInfo.gameId == gameId || surrenderInfo.endMatch) {
-            game.surrender()
-        }
-
         var blackPoints = 0
         var whitePoints = 0
-        gammonMoveDao.getWinners(matchId)
-            .forEach { if (it.color == Color.BLACK) blackPoints += it.points else whitePoints += it.points }
+        val winners = gammonMoveDao.getWinners(matchId)
+        logger.info("winners: $winners")
+        winners.forEach { if (it.color == Color.BLACK) blackPoints += it.points else whitePoints += it.points }
         game.blackPoints = blackPoints
         game.whitePoints = whitePoints
+        val surrendered = winners.lastOrNull { it.surrender }
+        game.setPossibleEndFlag(blackPoints >= game.thresholdPoints || whitePoints >= game.thresholdPoints || (surrendered != null && surrendered.endMatch))
         return game
     }
 

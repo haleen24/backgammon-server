@@ -1,5 +1,6 @@
 package hse.controller
 
+import feign.Body
 import game.backgammon.enums.Color
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.backgammon.request.MoveRequest
@@ -85,11 +86,11 @@ class BackgammonGameController(
         return backgammonGameService.getHistory(matchId, gameId)
     }
 
-    @PutMapping("surrender/{matchId}")
+    @PostMapping("surrender/{matchId}")
     fun surrender(
         @RequestHeader(USER_ID_HEADER) userId: Int,
         @PathVariable matchId: Int,
-        @RequestParam endMatch: Boolean
+        @RequestBody endMatch: Boolean
     ) {
         return backgammonGameService.surrender(userId, matchId, endMatch)
     }

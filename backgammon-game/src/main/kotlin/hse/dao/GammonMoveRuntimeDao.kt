@@ -64,9 +64,4 @@ class GammonMoveRuntimeDao(
     override fun getWinners(matchId: Int): List<GameWinner> {
         TODO("Not yet implemented")
     }
-
-
-    override fun getSurrenderInfo(matchId: Int): List<GameWinner> {
-        TODO("Not yet implemented")
-    }
 }
