@@ -138,17 +138,6 @@ class BackgammonWrapper(
         numberOfMoves = 0
     }
 
-    fun addPointsTo(color: Color): Int {
-        val points = getPointsForGame()
-        return if (color == Color.BLACK) {
-            blackPoints += points
-            blackPoints
-        } else {
-            whitePoints += points
-            whitePoints
-        }
-    }
-
     fun getZar(): List<Int> {
         return game.foolZar
     }
