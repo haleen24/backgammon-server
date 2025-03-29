@@ -20,7 +20,6 @@ import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.web.client.HttpClientErrorException.UnprocessableEntity
 import org.springframework.web.server.ResponseStatusException
 import kotlin.math.pow
 
@@ -181,7 +180,7 @@ class BackgammonGameService(
         validateSurrender(matchId, userId, surrenderedColor, game, doubles, surrenderMatch)
         val winnerPoints = 2.0.pow(doubles.count { it.isAccepted }).toInt()
         addPointsToWinner(game, winnerPoints, winnerColor)
-        val endMatch = surrenderMatch 
+        val endMatch = surrenderMatch
                 || game.blackPoints >= game.thresholdPoints
                 || game.whitePoints >= game.thresholdPoints
         gammonStoreService.surrender(surrenderedColor, matchId, game, winnerPoints, endMatch)
