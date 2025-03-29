@@ -150,6 +150,10 @@ class BackgammonWrapper(
         game.endFlag = game.endFlag || flag
     }
 
+    fun hasInStore(playerId: Int): Boolean {
+        return game.hasInStore(getPlayerMask(playerId))
+    }
+
     private fun getDeckItemDto(index: Int, value: Int): DeckItemDto? {
         return if (value == 0) {
             null

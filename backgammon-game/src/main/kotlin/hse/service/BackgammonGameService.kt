@@ -16,9 +16,11 @@ import hse.dto.EndGameEvent
 import hse.dto.GameStartedEvent
 import hse.dto.MoveEvent
 import hse.dto.TossZarEvent
+import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException.UnprocessableEntity
 import org.springframework.web.server.ResponseStatusException
 import kotlin.math.pow
 
@@ -176,14 +178,12 @@ class BackgammonGameService(
         val surrenderedColor = game.getPlayerColor(userId)
         val winnerColor = surrenderedColor.getOpponent()
         val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId)
-        if (doubles.isEmpty() || doubles.last().isAccepted) {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant surrender without double cube")
-        }
-        val winnerPoints =
-            game.getPointsForGame() * 2.0.pow(doubles.count { it.isAccepted }).toInt()
+        validateSurrender(matchId, userId, surrenderedColor, game, doubles, surrenderMatch)
+        val winnerPoints = 2.0.pow(doubles.count { it.isAccepted }).toInt()
         addPointsToWinner(game, winnerPoints, winnerColor)
-        val endMatch =
-            surrenderMatch || game.blackPoints >= game.thresholdPoints || game.whitePoints >= game.thresholdPoints
+        val endMatch = surrenderMatch 
+                || game.blackPoints >= game.thresholdPoints
+                || game.whitePoints >= game.thresholdPoints
         gammonStoreService.surrender(surrenderedColor, matchId, game, winnerPoints, endMatch)
         if (!endMatch) {
             game.restore()
@@ -210,6 +210,35 @@ class BackgammonGameService(
             game.blackPoints += points
         } else {
             game.whitePoints += points
+        }
+    }
+
+    private fun validateSurrender(
+        matchId: Int,
+        userId: Int,
+        surrenderColor: Color,
+        game: BackgammonWrapper,
+        doubles: List<DoubleCube>,
+        endMatch: Boolean
+    ) {
+        if (endMatch) {
+            return
+        }
+        val doubleCubePosition = doubleCubeService.getDoubleCubePosition(matchId, game, doubles)
+        val hasInStore = game.hasInStore(userId)
+        if (hasInStore && doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) {
+            return
+        }
+        if (hasInStore && surrenderColor == Color.BLACK && doubleCubePosition == DoubleCubePositionEnum.BELONGS_TO_BLACK) {
+            return
+        }
+        if (hasInStore && surrenderColor == Color.WHITE && doubleCubePosition == DoubleCubePositionEnum.BELONGS_TO_WHITE) {
+            return
+        }
+        if (doubles.isEmpty() || doubles.last().isAccepted || doubles.last().by == surrenderColor) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant surrender")
+        } else {
+            return
         }
     }
 }
