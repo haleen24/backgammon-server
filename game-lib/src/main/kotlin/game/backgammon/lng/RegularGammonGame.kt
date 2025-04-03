@@ -5,7 +5,10 @@ import game.backgammon.dto.*
 import game.backgammon.exception.*
 import org.apache.commons.collections4.CollectionUtils
 import java.util.*
-import kotlin.math.*
+import kotlin.math.absoluteValue
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sign
 
 class RegularGammonGame(
     zar: Random = Random()
@@ -125,6 +128,13 @@ class RegularGammonGame(
             }
         }
         return points
+    }
+
+    override fun hasInStore(user: Int): Boolean {
+        if (user == BLACK) {
+            return deck[BLACK_STORAGE] != 0
+        }
+        return deck[WHITE_STORAGE] != 0
     }
 
     private fun validateBeforeMoves(user: Int, moves: List<MoveDto>) {

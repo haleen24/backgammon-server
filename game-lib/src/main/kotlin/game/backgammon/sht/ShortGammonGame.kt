@@ -158,6 +158,13 @@ class ShortGammonGame(
         return points
     }
 
+    override fun hasInStore(user: Int): Boolean {
+        if (user == BLACK) {
+            return deck[BLACK_STORE] != 0
+        }
+        return deck[WHITE_STORE] != 0
+    }
+
     private fun findMaxFromSequence(zar: List<Int>): Int {
         val canMoveHome = checkAllInHome(turn)
         val currZar = zar.firstOrNull() ?: return 0

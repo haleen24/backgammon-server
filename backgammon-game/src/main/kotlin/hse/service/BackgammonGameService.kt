@@ -177,12 +177,12 @@ class BackgammonGameService(
         val surrenderedColor = game.getPlayerColor(userId)
         val winnerColor = surrenderedColor.getOpponent()
         val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId)
-        validateSurrender(matchId, userId, surrenderedColor, game, doubles, surrenderMatch)
         val winnerPoints = 2.0.pow(doubles.count { it.isAccepted }).toInt()
         addPointsToWinner(game, winnerPoints, winnerColor)
         val endMatch = surrenderMatch
                 || game.blackPoints >= game.thresholdPoints
                 || game.whitePoints >= game.thresholdPoints
+        validateSurrender(matchId, userId, surrenderedColor, game, doubles, endMatch)
         gammonStoreService.surrender(surrenderedColor, matchId, game, winnerPoints, endMatch)
         if (!endMatch) {
             game.restore()

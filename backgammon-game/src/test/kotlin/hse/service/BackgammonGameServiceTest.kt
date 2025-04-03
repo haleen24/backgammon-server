@@ -3,6 +3,7 @@ package hse.service
 import game.backgammon.Gammon
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import game.backgammon.enums.DoubleCubePositionEnum
 import hse.dto.EndGameEvent
 import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
@@ -84,17 +85,22 @@ class BackgammonGameServiceTest {
                 thresholdPoints = 2
             )
         )
-        Mockito.doReturn(wrapper).`when`(gammonStoreService).getMatchById(1)
-        Mockito.doReturn(Color.BLACK).`when`(wrapper).getPlayerColor(1)
-        Mockito.doReturn(listOf(Mockito.mock(DoubleCube::class.java))).`when`(doubleCubeService).getAllDoubles(1, 0)
+        val playerId = 1
+        val matchId = 2
+        val doubles = listOf(Mockito.mock(DoubleCube::class.java))
+        Mockito.doReturn(wrapper).`when`(gammonStoreService).getMatchById(matchId)
+        Mockito.doReturn(Color.BLACK).`when`(wrapper).getPlayerColor(playerId)
+        Mockito.doReturn(doubles).`when`(doubleCubeService).getAllDoubles(matchId, 0)
+        Mockito.doReturn(true).`when`(wrapper).hasInStore(playerId)
+        Mockito.doReturn(DoubleCubePositionEnum.BELONGS_TO_BLACK).`when`(doubleCubeService).getDoubleCubePosition(matchId, wrapper, doubles)
         Mockito.doReturn(1).`when`(wrapper).getPointsForGame()
 
 
-        service.surrender(1, 1, false)
+        service.surrender(playerId, matchId, false)
 
         Mockito.verify(wrapper).restore()
-        Mockito.verify(gammonStoreService).saveGameOnCreation(1, 1, wrapper)
-        Mockito.verify(emitterService).sendForAll(1, EndGameEvent(Color.WHITE, 0, 1, false))
+        Mockito.verify(gammonStoreService).saveGameOnCreation(matchId, 1, wrapper)
+        Mockito.verify(emitterService).sendForAll(matchId, EndGameEvent(Color.WHITE, 0, 1, false))
         assertEquals(1, wrapper.whitePoints)
         assertEquals(0, wrapper.blackPoints)
     }
