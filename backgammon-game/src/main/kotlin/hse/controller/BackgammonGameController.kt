@@ -1,6 +1,5 @@
 package hse.controller
 
-import feign.Body
 import game.backgammon.enums.Color
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.backgammon.request.MoveRequest
@@ -10,6 +9,7 @@ import game.backgammon.response.MoveResponse
 import hse.service.BackgammonGameService
 import hse.service.DoubleCubeService
 import hse.service.EmitterService
+import hse.service.GammonHistoryService
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -21,6 +21,7 @@ class BackgammonGameController(
     private val backgammonGameService: BackgammonGameService,
     private val emitterService: EmitterService,
     private val doubleCubeService: DoubleCubeService,
+    private val gammonHistoryService: GammonHistoryService
 ) {
 
     companion object {
@@ -82,8 +83,12 @@ class BackgammonGameController(
     }
 
     @GetMapping("history/{matchId}")
-    fun getHistory(@PathVariable matchId: Int, @RequestParam gameId: Int): HistoryResponse {
-        return backgammonGameService.getHistory(matchId, gameId)
+    fun getHistory(
+        @RequestHeader(USER_ID_HEADER) userId: Int,
+        @PathVariable matchId: Int,
+        @RequestParam gameId: Int
+    ): HistoryResponse {
+        return gammonHistoryService.getHistory(matchId, gameId)
     }
 
     @PostMapping("surrender/{matchId}")

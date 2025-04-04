@@ -104,28 +104,6 @@ class BackgammonGameService(
         return game.getPlayerColor(userId)
     }
 
-    fun getHistory(matchId: Int, gameId: Int): HistoryResponse {
-        val moves = gammonStoreService.getAllMovesInGame(matchId, gameId)
-            .sortedBy { it.moveId }
-            .map { MoveResponse(it.moves.changes.map { pair -> MoveResponseDto(pair.first, pair.second) }, it.color) }
-
-        val startState =
-            gammonStoreService.getStartGameContext(matchId, gameId) ?: throw ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Game $gameId in match $matchId not found"
-            )
-        return HistoryResponse(
-            allMoves = moves,
-            startState = StartStateDto(
-                userMap = getColorMap(startState.firstUserId, startState.secondUserId, matchId),
-                type = startState.type,
-                deck = startState.game.deck,
-                turn = startState.game.turn,
-                zarResult = startState.game.zarResult,
-            )
-        )
-    }
-
     private fun createMatch(roomId: Int, points: Int, gameType: BackgammonType): BackgammonWrapper {
         if (gammonStoreService.checkMatchExists(roomId)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "Game $roomId already exists")

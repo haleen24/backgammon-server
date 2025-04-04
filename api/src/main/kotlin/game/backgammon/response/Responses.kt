@@ -13,11 +13,6 @@ data class MoveResponse(
     val color: Color
 )
 
-data class HistoryResponse(
-    val allMoves: List<MoveResponse>,
-    val startState: StartStateDto,
-)
-
 data class ConfigResponse(
     val gameData: ConfigResponseDto,
     val blackPoints: Int,

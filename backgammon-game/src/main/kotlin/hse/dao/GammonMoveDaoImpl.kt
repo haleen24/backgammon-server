@@ -104,4 +104,10 @@ class GammonMoveDaoImpl(
         )
         return mongoTemplate.find(query, GameWinner::class.java, getCollectionName(matchId))
     }
+
+    override fun getAllInGameOrderByInsertionTime(matchId: Int, gameId: Int): List<TypedMongoEntity> {
+        val query = Query().addCriteria(Criteria.where(GAME_ID).`is`(gameId)).with(Sort.by(Sort.Direction.ASC, "_id"))
+        query.fields().exclude(ENTITY_TYPE)
+        return mongoTemplate.find(query, TypedMongoEntity::class.java, getCollectionName(matchId))
+    }
 }

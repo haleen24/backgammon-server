@@ -11,6 +11,7 @@ import hse.dao.GammonMoveDao
 import hse.dto.GammonRestoreContextDto
 import hse.entity.GameWinner
 import hse.entity.MoveSet
+import hse.entity.TypedMongoEntity
 import hse.wrapper.BackgammonWrapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -92,6 +93,10 @@ class GammonStoreService(
             )
         )
         putGameToCache(matchId, wrapper.getRestoreContext())
+    }
+
+    fun getAllInGameInOrderByInsertionTime(matchId: Int, gameId: Int): List<TypedMongoEntity> {
+        return gammonMoveDao.getAllInGameOrderByInsertionTime(matchId, gameId)
     }
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
