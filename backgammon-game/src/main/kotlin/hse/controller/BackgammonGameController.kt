@@ -86,7 +86,7 @@ class BackgammonGameController(
     fun getHistory(
         @RequestHeader(USER_ID_HEADER) userId: Int,
         @PathVariable matchId: Int,
-        @RequestParam gameId: Int?
+        @RequestParam(required = false) gameId: Int? = null
     ): HistoryResponse {
         return if (gameId == null) {
             gammonHistoryService.getLastGameHistory(matchId)
