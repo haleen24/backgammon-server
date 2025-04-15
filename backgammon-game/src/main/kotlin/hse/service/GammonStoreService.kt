@@ -99,6 +99,13 @@ class GammonStoreService(
         return gammonMoveDao.getAllInGameOrderByInsertionTime(matchId, gameId)
     }
 
+    fun getCurrentGameId(matchId: Int): Int {
+        return gammonMoveDao.getCurrentGameInMathId(matchId) ?: throw ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Game $matchId not found"
+        )
+    }
+
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
         val json = redisAdapter.get(gameId.toString()) ?: return null
         val restoreContext = objectMapper.readValue(json, GammonRestoreContextDto::class.java)
@@ -108,7 +115,7 @@ class GammonStoreService(
 
 
     private fun getGameFromDataBase(matchId: Int): BackgammonWrapper? {
-        val gameId = gammonMoveDao.getCurrentGameInMathId(matchId) ?: return null
+        val gameId = getCurrentGameId(matchId)
         val movesPerChange = gammonMoveDao.getMoves(matchId, gameId)
         val startState = gammonMoveDao.getStartGameContext(matchId, gameId) ?: return null
         val lastZar = if (movesPerChange.isEmpty()) startState.game.zarResult else gammonMoveDao.getZar(

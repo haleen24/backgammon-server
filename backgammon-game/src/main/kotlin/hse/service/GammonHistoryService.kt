@@ -22,6 +22,11 @@ class GammonHistoryService(
 
     private final val logger = LoggerFactory.getLogger(GammonHistoryService::class.java)
 
+    fun getLastGameHistory(matchId: Int): HistoryResponse {
+        val gameId = gammonStoreService.getCurrentGameId(matchId)
+        return getHistory(matchId, gameId)
+    }
+
     fun getHistory(matchId: Int, gameId: Int): HistoryResponse {
         val history = gammonStoreService.getAllInGameInOrderByInsertionTime(matchId, gameId)
         if (history.isEmpty()) {

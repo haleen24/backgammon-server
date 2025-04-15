@@ -86,9 +86,13 @@ class BackgammonGameController(
     fun getHistory(
         @RequestHeader(USER_ID_HEADER) userId: Int,
         @PathVariable matchId: Int,
-        @RequestParam gameId: Int
+        @RequestParam gameId: Int?
     ): HistoryResponse {
-        return gammonHistoryService.getHistory(matchId, gameId)
+        return if (gameId == null) {
+            gammonHistoryService.getLastGameHistory(matchId)
+        } else {
+            gammonHistoryService.getHistory(matchId, gameId)
+        }
     }
 
     @PostMapping("surrender/{matchId}")
