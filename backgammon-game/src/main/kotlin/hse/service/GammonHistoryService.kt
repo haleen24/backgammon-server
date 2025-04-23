@@ -28,7 +28,7 @@ class GammonHistoryService(
     }
 
     fun getHistory(matchId: Int, gameId: Int): HistoryResponse {
-        val history = gammonStoreService.getAllInGameInOrderByInsertionTime(matchId, gameId)
+        val history = ArrayList(gammonStoreService.getAllInGameInOrderByInsertionTime(matchId, gameId))
         if (history.isEmpty()) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "No game found")
         }
@@ -37,6 +37,7 @@ class GammonHistoryService(
         } catch (exception: RuntimeException) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "В игре нет начального состояния")
         }
+        history.addFirst(Zar(gameId, 0, startState.restoreContextDto.game.zarResult))
         val firstToMove = if (startState.restoreContextDto.game.turn == Gammon.BLACK) Color.BLACK else Color.WHITE
         val responseHistoryItems = mutableListOf<HistoryResponseItem>()
         var doubleCubeCounter = 0
