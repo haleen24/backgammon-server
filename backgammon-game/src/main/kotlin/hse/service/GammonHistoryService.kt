@@ -37,12 +37,12 @@ class GammonHistoryService(
         } catch (exception: RuntimeException) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "В игре нет начального состояния")
         }
-        history.addFirst(Zar(gameId, 0, startState.restoreContextDto.game.zarResult))
+        history[0] = Zar(gameId, 0, startState.restoreContextDto.game.zarResult)
         val firstToMove = if (startState.restoreContextDto.game.turn == Gammon.BLACK) Color.BLACK else Color.WHITE
         val responseHistoryItems = mutableListOf<HistoryResponseItem>()
         var doubleCubeCounter = 0
-        var i = 1
-        while (i in 1 until history.size) {
+        var i = 0
+        while (i in 0 until history.size) {
             val entity = history[i]
             if (entity is Zar) {
                 if (i + 1 == history.size) {
