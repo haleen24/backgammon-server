@@ -49,17 +49,17 @@ class GammonHistoryService(
                     break
                 }
                 if (history[i + 1] is MoveWithId) {
-                    responseHistoryItems.add(toMoveHistoryItem(entity, history[i + 1] as MoveWithId))
+                    responseHistoryItems.add(addDoubleCubeActionsToHistory(entity, history[i + 1] as MoveWithId))
                     i += 2
                     continue
                 }
                 logger.warn("После броска зара не ход! игра $matchId-$gameId; ход ${entity.moveId}")
             } else if (entity is DoubleCube) {
                 ++doubleCubeCounter
-                responseHistoryItems.add(toMoveHistoryItem(entity, doubleCubeCounter))
+                addDoubleCubeActionsToHistory(entity, doubleCubeCounter, responseHistoryItems)
             } else if (entity is GameWinner) {
                 responseHistoryItems.add(
-                    toMoveHistoryItem(
+                    addDoubleCubeActionsToHistory(
                         entity, startState.restoreContextDto.whitePoints,
                         startState.restoreContextDto.blackPoints
                     )
@@ -75,25 +75,30 @@ class GammonHistoryService(
         )
     }
 
-    private fun toMoveHistoryItem(zar: Zar, moveWithId: MoveWithId): HistoryResponseItem {
+    private fun addDoubleCubeActionsToHistory(zar: Zar, moveWithId: MoveWithId): HistoryResponseItem {
         return MoveHistoryResponseItem(
             dice = zar.z,
             moves = moveWithId.moveSet.moves.changes.map { MoveHistoryResponseItem.MoveItem(it.first, it.second) }
         )
     }
 
-    private fun toMoveHistoryItem(doubleCube: DoubleCube, n: Int): HistoryResponseItem {
-        return if (!doubleCube.isAccepted) {
+    private fun addDoubleCubeActionsToHistory(
+        doubleCube: DoubleCube,
+        n: Int,
+        responseHistoryItems: MutableList<HistoryResponseItem>
+    ) {
+        responseHistoryItems.add(
             OfferDoubleHistoryResponseItem(
                 by = doubleCube.by,
                 newValue = 2.0.pow(n).toInt(),
             )
-        } else {
-            AcceptDoubleHistoryResponseItem()
+        )
+        if (doubleCube.isAccepted) {
+            responseHistoryItems.add(AcceptDoubleHistoryResponseItem())
         }
     }
 
-    private fun toMoveHistoryItem(
+    private fun addDoubleCubeActionsToHistory(
         gameWinner: GameWinner,
         initialWhitePoints: Int,
         initialBlackPoints: Int
