@@ -71,7 +71,9 @@ class GammonHistoryService(
         }
         return HistoryResponse(
             items = responseHistoryItems,
-            firstToMove = firstToMove
+            firstToMove = firstToMove,
+            gameId = gameId,
+            thresholdPoints = startState.restoreContextDto.thresholdPoints,
         )
     }
 

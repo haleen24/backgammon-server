@@ -5,6 +5,8 @@ import game.backgammon.enums.Color
 data class HistoryResponse(
     val items: List<HistoryResponseItem>,
     val firstToMove: Color,
+    val gameId: Int,
+    val thresholdPoints: Int,
 )
 
 open class HistoryResponseItem(
