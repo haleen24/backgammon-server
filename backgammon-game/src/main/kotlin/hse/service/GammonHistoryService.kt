@@ -10,6 +10,9 @@ import hse.dto.MoveHistoryResponseItem
 import hse.dto.OfferDoubleHistoryResponseItem
 import hse.entity.*
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Lookup
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -19,14 +22,22 @@ import kotlin.math.pow
 class GammonHistoryService(
     private val gammonStoreService: GammonStoreService
 ) {
-
     private final val logger = LoggerFactory.getLogger(GammonHistoryService::class.java)
+
+    @Lookup
+    fun lookUp(): GammonHistoryService = this
 
     fun getLastGameHistory(matchId: Int): HistoryResponse {
         val gameId = gammonStoreService.getCurrentGameId(matchId)
+        lookUp().clearHistoryCache()
         return getHistory(matchId, gameId)
     }
 
+    @CacheEvict(value = ["history"], allEntries = true )
+    fun clearHistoryCache() {
+    }
+
+    @Cacheable("history")
     fun getHistory(matchId: Int, gameId: Int): HistoryResponse {
         val history = ArrayList(gammonStoreService.getAllInGameInOrderByInsertionTime(matchId, gameId))
         if (history.isEmpty()) {

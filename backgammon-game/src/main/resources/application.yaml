@@ -7,6 +7,17 @@ spring:
 #      host: localhost
       port: 27017
       database: gammon-move
+    redis:
+      host: ${config.jedis.host}
+      port: ${config.jedis.port}
+  cache:
+    type: redis
+    redis:
+      time-to-live: 50s
+
+
+  # spring.cache.redis.time-to-live=600000
+  # spring.cache.redis.cache-null-values=false
 
 server:
   error:

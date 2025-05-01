@@ -3,5 +3,4 @@ package hse.dto
 import game.backgammon.response.HistoryResponseItem
 import game.backgammon.response.HistoryResponseItemType
 
-class AcceptDoubleHistoryResponseItem : HistoryResponseItem(HistoryResponseItemType.ACCEPT_DOUBLE) {
-}
+class AcceptDoubleHistoryResponseItem : HistoryResponseItem(HistoryResponseItemType.ACCEPT_DOUBLE)

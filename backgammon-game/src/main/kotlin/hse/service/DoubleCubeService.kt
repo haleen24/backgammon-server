@@ -15,11 +15,12 @@ import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 
 @Service
+// TODO продумать взаимодействие с кешом
 class DoubleCubeService(
     val gammonStoreService: GammonStoreService,
     val emitterService: EmitterService,
     val doubleCubeDao: DoubleCubeDao,
-    val redisAdapter: RedisAdapter,
+//    val redisAdapter: RedisAdapter,
     val objectMapper: ObjectMapper,
 ) {
 
@@ -109,30 +110,31 @@ class DoubleCubeService(
 
 
     fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
-        val fromCache =
-            redisAdapter.lrange(getCacheKey(matchId)) ?: return doubleCubeDao.getAllDoubles(matchId, gameId)
-                .sortedBy { it.moveId }
-        return fromCache.map { objectMapper.reader().readValue(it, DoubleCube::class.java) }
+//        val fromCache =
+//            redisAdapter.lrange(getCacheKey(matchId)) ?: return doubleCubeDao.getAllDoubles(matchId, gameId)
+//                .sortedBy { it.moveId }
+//        return fromCache.map { objectMapper.reader().readValue(it, DoubleCube::class.java) }
+        return doubleCubeDao.getAllDoubles(matchId, gameId)
     }
 
     fun acceptDouble(matchId: Int, last: DoubleCube) {
-        val cacheKey = getCacheKey(matchId)
+//        val cacheKey = getCacheKey(matchId)
         doubleCubeDao.acceptDouble(matchId, last.gameId, last.moveId)
-        putToCache(cacheKey, last.copy(isAccepted = true))
+//        putToCache(cacheKey, last.copy(isAccepted = true))
     }
 
     private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {
         val doubleCube = DoubleCube(gameId, moveId, by, false)
         doubleCubeDao.saveDouble(matchId, doubleCube)
-        putToCache(matchId, doubleCube)
+//        putToCache(matchId, doubleCube)
         emitterService.sendEventExceptUser(userId, matchId, DoubleEvent(by))
     }
 
-    private fun putToCache(matchId: Any, doubleCube: DoubleCube) {
-        redisAdapter.rpush(getCacheKey(matchId), objectMapper.writeValueAsString(doubleCube))
-    }
+//    private fun putToCache(matchId: Any, doubleCube: DoubleCube) {
+//        redisAdapter.rpush(getCacheKey(matchId), objectMapper.writeValueAsString(doubleCube))
+//    }
 
-    private fun getCacheKey(matchId: Any): String {
-        return "dc-$matchId"
-    }
+//    private fun getCacheKey(matchId: Any): String {
+//        return "dc-$matchId"
+//    }
 }

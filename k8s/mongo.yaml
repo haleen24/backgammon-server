@@ -6,7 +6,6 @@ metadata:
     type: local
     app: mongo
 spec:
-  storageClassName: manual
   capacity:
     storage: 2Gi
   accessModes:
@@ -22,9 +21,8 @@ metadata:
   labels:
     app: mongo
 spec:
-  storageClassName: manual
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
