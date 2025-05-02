@@ -13,6 +13,7 @@ import hse.service.GammonHistoryService
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.util.Objects
 
 
 @RestController
@@ -93,6 +94,14 @@ class BackgammonGameController(
         } else {
             gammonHistoryService.getHistory(matchId, gameId)
         }
+    }
+
+    @GetMapping("analysis/{matchId}")
+    fun getAnalysis(
+        @RequestHeader(USER_ID_HEADER) userId: Int,
+        @PathVariable matchId: Int,
+    ): Any {
+       return gammonHistoryService.getAnalysis(matchId)
     }
 
     @PostMapping("surrender/{matchId}")

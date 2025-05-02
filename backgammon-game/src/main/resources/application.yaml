@@ -13,7 +13,15 @@ spring:
   cache:
     type: redis
     redis:
-      time-to-live: 50s
+      time-to-live: 2m
+  cloud:
+    openfeign:
+      client:
+        config:
+          engine:
+            url: "http:/game-engine"
+            read-timeout: 30_000
+
 
 
   # spring.cache.redis.time-to-live=600000

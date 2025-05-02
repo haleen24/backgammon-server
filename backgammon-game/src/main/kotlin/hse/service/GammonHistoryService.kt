@@ -4,6 +4,8 @@ import game.backgammon.Gammon
 import game.backgammon.enums.Color
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.HistoryResponseItem
+import hse.adapter.dto.AnalyzeMatchRequest
+import hse.adapter.dto.GameEngineAdapter
 import hse.dto.AcceptDoubleHistoryResponseItem
 import hse.dto.GameEndHistoryResponseItem
 import hse.dto.MoveHistoryResponseItem
@@ -20,7 +22,8 @@ import kotlin.math.pow
 
 @Service
 class GammonHistoryService(
-    private val gammonStoreService: GammonStoreService
+    private val gammonStoreService: GammonStoreService,
+    private val gameEngineAdapter: GameEngineAdapter
 ) {
     private final val logger = LoggerFactory.getLogger(GammonHistoryService::class.java)
 
@@ -29,13 +32,13 @@ class GammonHistoryService(
 
     fun getLastGameHistory(matchId: Int): HistoryResponse {
         val gameId = gammonStoreService.getCurrentGameId(matchId)
-        lookUp().clearHistoryCache()
+//        lookUp().clearHistoryCache()
         return getHistory(matchId, gameId)
     }
 
-    @CacheEvict(value = ["history"], allEntries = true )
-    fun clearHistoryCache() {
-    }
+//    @CacheEvict(value = ["history"], allEntries = true)
+//    fun clearHistoryCache() {
+//    }
 
     @Cacheable("history")
     fun getHistory(matchId: Int, gameId: Int): HistoryResponse {
@@ -86,6 +89,14 @@ class GammonHistoryService(
             gameId = gameId,
             thresholdPoints = startState.restoreContextDto.thresholdPoints,
         )
+    }
+
+    fun getAnalysis(matchId: Int): Map<Any, Any> {
+        val gameIds = gammonStoreService.getAllGamesId(matchId)
+        val lookup = lookUp()
+        val request =
+            AnalyzeMatchRequest(matchId = matchId, games = gameIds.map { gameId -> lookup.getHistory(matchId, gameId) })
+        return gameEngineAdapter.getAnalysis(request)
     }
 
     private fun addDoubleCubeActionsToHistory(zar: Zar, moveWithId: MoveWithId): HistoryResponseItem {

@@ -106,6 +106,10 @@ class GammonStoreService(
         )
     }
 
+    fun getAllGamesId(matchId: Int): List<Int> {
+        return gammonMoveDao.getAllGameIds(matchId)
+    }
+
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
         val json = redisAdapter.get(gameId.toString()) ?: return null
         val restoreContext = objectMapper.readValue(json, GammonRestoreContextDto::class.java)

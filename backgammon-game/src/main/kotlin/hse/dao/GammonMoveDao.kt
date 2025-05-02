@@ -22,6 +22,8 @@ interface GammonMoveDao {
 
     fun getCurrentGameInMathId(matchId: Int): Int?
 
+    fun getAllGameIds(matchId: Int): List<Int>
+
     fun storeWinner(winner: GameWinner)
 
     fun getWinners(matchId: Int): List<GameWinner>
