@@ -1,5 +1,6 @@
-package hse.adapter.dto
+package hse.adapter
 
+import hse.adapter.dto.AnalyzeMatchRequest
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.PostMapping
 

@@ -5,7 +5,7 @@ import game.backgammon.enums.Color
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.HistoryResponseItem
 import hse.adapter.dto.AnalyzeMatchRequest
-import hse.adapter.dto.GameEngineAdapter
+import hse.adapter.GameEngineAdapter
 import hse.dto.AcceptDoubleHistoryResponseItem
 import hse.dto.GameEndHistoryResponseItem
 import hse.dto.MoveHistoryResponseItem
@@ -13,7 +13,6 @@ import hse.dto.OfferDoubleHistoryResponseItem
 import hse.entity.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Lookup
-import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service

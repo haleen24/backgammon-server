@@ -19,7 +19,7 @@ spring:
       client:
         config:
           engine:
-            url: "http:/game-engine"
+            url: "http://game-engine:80"
             read-timeout: 30_000
 
 
