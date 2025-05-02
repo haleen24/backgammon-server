@@ -5,14 +5,17 @@ import subprocess
 
 def analyze(request):
     path = str("/tmp/" + str(request["matchId"]) + ".sgf")
-    print(path)
+    analyze_path = path + ".txt"
+    if os.path.exists(analyze_path):
+        return read_analysis(analyze_path, len(request["games"]))
+
     if os.path.exists(path):
-        print(f"clear {path}")
         os.remove(path)
+
     with open(path, 'w', encoding="utf-8") as file:
         for game in request["games"]:
             convert_game_and_write(game, file)
-    analyze_path = path + ".txt"
+
     engine_analyze(path, analyze_path)
     return read_analysis(analyze_path, len(request["games"]))
 
@@ -31,9 +34,8 @@ def convert_game_and_write(request, file):
         bs = 0
         length = 3
     game_id = request["gameId"]
-    print(f"write")
     file.write(
-        f"(;FF[4]GM[6]AP[GNU Backgammon]MI[length:{length}][game:{game_id}][ws:{ws}][bs:{bs}]PW[gnubg]PB[Admin]DT[2025-04-30]\n")
+        f"(;FF[4]GM[6]AP[GNU Backgammon]MI[length:{length}][game:{game_id}][ws:{ws}][bs:{bs}]PW[WHITE]PB[BLACK]DT[2025-04-30]\n")
     for item in items:
         file.write(";")
         item_type = item["type"]
@@ -49,7 +51,6 @@ def convert_game_and_write(request, file):
             file.write(f"{turn}[take]\n")
             turn = "B" if turn == "W" else "W"
     file.write(")\n")
-    print(f"written")
 
 
 def engine_analyze(game_path, analyze_path):
@@ -73,13 +74,10 @@ def engine_analyze(game_path, analyze_path):
     # Посылаем команды и ждем завершения
     stdout, stderr = process.communicate(gnubg_commands)
 
-    print(f"stdout={stdout}, stderr={stderr}")
     # Проверяем результат
     if process.returncode != 0:
         print(f"Ошибка при выполнении gnubg: {stderr}")
         return
-
-    print(f"Анализ сохранен в {analyze_path}")
 
 
 def convert_moves_to_sgf_notation(moves):

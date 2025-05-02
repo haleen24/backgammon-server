@@ -13,7 +13,6 @@ def analyze():
     try:
         body = request.get_json()
         sem.acquire(timeout=10)
-        print(body)
         return jsonify(analyze_match(body))
     finally:
         sem.release()
