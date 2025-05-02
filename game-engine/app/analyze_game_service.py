@@ -4,17 +4,20 @@ import subprocess
 
 
 def analyze(request):
-    path = str(request["matchId"]) + ".sgf"
+    path = str("/tmp/" + str(request["matchId"]) + ".sgf")
+    print(path)
     if os.path.exists(path):
+        print(f"clear {path}")
         os.remove(path)
-    for game in request["games"]:
-        convert_game_and_write(game, path)
+    with open(path, 'w', encoding="utf-8") as file:
+        for game in request["games"]:
+            convert_game_and_write(game, file)
     analyze_path = path + ".txt"
     engine_analyze(path, analyze_path)
     return read_analysis(analyze_path, len(request["games"]))
 
 
-def convert_game_and_write(request, path):
+def convert_game_and_write(request, file):
     items = request["items"]
     turn = "B" if request["firstToMove"] == "BLACK" else "W"
     end_game_event = items[-1]
@@ -28,33 +31,32 @@ def convert_game_and_write(request, path):
         bs = 0
         length = 3
     game_id = request["gameId"]
-    with open(path, 'a', encoding="utf-8") as file:
-        file.write(
-            f"(;FF[4]GM[6]AP[GNU Backgammon]MI[length:{length}][game:{game_id}][ws:{ws}][bs:{bs}]PW[gnubg]PB[Admin]DT[2025-04-30]\n")
-        for item in items:
-            file.write(";")
-            item_type = item["type"]
-            if item_type == "MOVE":
-                dice = item["dice"]
-                moves = item["moves"]
-                file.write(f"{turn}[{dice[0]}{dice[1]}{convert_moves_to_sgf_notation(moves)}]\n")
-                turn = "B" if turn == "W" else "W"
-            elif item_type == "OFFER_DOUBLE":
-                file.write(f"{turn}[double]\n")
-                turn = "B" if turn == "W" else "W"
-            elif item_type == "ACCEPT_DOUBLE":
-                file.write(f"{turn}[take]\n")
-                turn = "B" if turn == "W" else "W"
-        file.write(")\n")
+    print(f"write")
+    file.write(
+        f"(;FF[4]GM[6]AP[GNU Backgammon]MI[length:{length}][game:{game_id}][ws:{ws}][bs:{bs}]PW[gnubg]PB[Admin]DT[2025-04-30]\n")
+    for item in items:
+        file.write(";")
+        item_type = item["type"]
+        if item_type == "MOVE":
+            dice = item["dice"]
+            moves = item["moves"]
+            file.write(f"{turn}[{dice[0]}{dice[1]}{convert_moves_to_sgf_notation(moves)}]\n")
+            turn = "B" if turn == "W" else "W"
+        elif item_type == "OFFER_DOUBLE":
+            file.write(f"{turn}[double]\n")
+            turn = "B" if turn == "W" else "W"
+        elif item_type == "ACCEPT_DOUBLE":
+            file.write(f"{turn}[take]\n")
+            turn = "B" if turn == "W" else "W"
+    file.write(")\n")
+    print(f"written")
 
 
 def engine_analyze(game_path, analyze_path):
-    ab_analyze_path = os.path.join(os.getcwd(), analyze_path)
-    ab_game_path = os.path.join(os.getcwd(), game_path)
     gnubg_commands = f"""
-    load match {ab_game_path}
+    load match {game_path}
     analyze match 
-    export match text {ab_analyze_path}
+    export match text {analyze_path}
     quit
     """
     # Запускаем gnubg как подпроцесс с передачей команд через stdin
@@ -71,6 +73,7 @@ def engine_analyze(game_path, analyze_path):
     # Посылаем команды и ждем завершения
     stdout, stderr = process.communicate(gnubg_commands)
 
+    print(f"stdout={stdout}, stderr={stderr}")
     # Проверяем результат
     if process.returncode != 0:
         print(f"Ошибка при выполнении gnubg: {stderr}")

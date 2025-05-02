@@ -8,11 +8,11 @@ analyze_bp = Blueprint('analyze', __name__)
 sem = Semaphore(5)
 
 
-@analyze_bp.route("/", methods=["POST"])
+@analyze_bp.route("", methods=["POST"])
 def analyze():
     try:
         body = request.get_json()
-        sem.acquire()
+        sem.acquire(timeout=10)
         return jsonify(analyze_match(body))
     finally:
         sem.release()
