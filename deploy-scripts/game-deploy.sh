@@ -7,9 +7,6 @@ ssh "$SERVER_HOST" "
   sudo chmod +x gradlew
   ./gradlew clean build -x test
   echo '---- jar built'
-  echo '---- build docker image'
-  docker build -t $label .
-  echo '---- docker image built'
   echo '---- deploy'
   bash ./../deploy-scripts/deploy.sh $label
   echo '---- deployed'
