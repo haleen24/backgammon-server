@@ -98,7 +98,7 @@ class GammonMoveDaoImpl(
         val query = Query().addCriteria(Criteria.where(ENTITY_TYPE).`is`(GameEntityType.START_STATE.name))
             .with(Sort.by(Sort.Direction.ASC, GAME_ID))
         query.fields().exclude(ENTITY_TYPE)
-        return mongoTemplate.find(query, GameWithId::class.java).map { it.gameId }
+        return mongoTemplate.find(query, GameWithId::class.java, getCollectionName(matchId)).map { it.gameId }
     }
 
     override fun storeWinner(winner: GameWinner) {
