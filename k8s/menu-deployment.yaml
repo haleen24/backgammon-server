@@ -16,7 +16,7 @@ spec:
         app: narde-menu
     spec:
       containers:
-        - name: gateway
+        - name: menu
           image: narde-menu:latest
           imagePullPolicy: Never
           ports:

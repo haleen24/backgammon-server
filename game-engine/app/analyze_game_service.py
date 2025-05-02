@@ -57,30 +57,26 @@ def engine_analyze(game_path, analyze_path):
     export match text {ab_analyze_path}
     quit
     """
-    try:
-        # Запускаем gnubg как подпроцесс с передачей команд через stdin
-        gnubg_path = shutil.which("gnubg-cli")
-        process = subprocess.Popen(
-            [gnubg_path],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True,
-            text=True
-        )
+    # Запускаем gnubg как подпроцесс с передачей команд через stdin
+    gnubg_path = shutil.which("gnubg")
+    process = subprocess.Popen(
+        [gnubg_path],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True,
+        text=True
+    )
 
-        # Посылаем команды и ждем завершения
-        stdout, stderr = process.communicate(gnubg_commands)
+    # Посылаем команды и ждем завершения
+    stdout, stderr = process.communicate(gnubg_commands)
 
-        # Проверяем результат
-        if process.returncode != 0:
-            print(f"Ошибка при выполнении gnubg: {stderr}")
-            return
+    # Проверяем результат
+    if process.returncode != 0:
+        print(f"Ошибка при выполнении gnubg: {stderr}")
+        return
 
-        print(f"Анализ сохранен в {analyze_path}")
-
-    except Exception as e:
-        print(f"Ошибка: {e}")
+    print(f"Анализ сохранен в {analyze_path}")
 
 
 def convert_moves_to_sgf_notation(moves):
