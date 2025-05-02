@@ -1,13 +1,16 @@
+import glob
 import os
+import re
 import shutil
 import subprocess
+from typing import Iterable
 
 
 def analyze(request):
     path = str("/tmp/" + str(request["matchId"]) + ".sgf")
     analyze_path = path + ".txt"
-    if os.path.exists(analyze_path):
-        return read_analysis(analyze_path, len(request["games"]))
+    if os.path.exists(path):
+        return read_analysis(get_paths(path), len(request["games"]))
 
     if os.path.exists(path):
         os.remove(path)
@@ -17,7 +20,12 @@ def analyze(request):
             convert_game_and_write(game, file)
 
     engine_analyze(path, analyze_path)
-    return read_analysis(analyze_path, len(request["games"]))
+    return read_analysis(get_paths(path), len(request["games"]))
+
+
+def get_paths(path):
+    res = [i for i in glob.glob(f"{path}*") if i != path]
+    return [res[-1]] + res[:-1]
 
 
 def convert_game_and_write(request, file):
@@ -100,55 +108,121 @@ def split_without_empty(line):
     return [i for i in line.split("  ") if i]
 
 
-def read_analysis(path: str, games_count):
+def read_analysis(paths: Iterable[str], games_count):
     current_game = 0
-    data_by_game = [{"items": [], "overall": []}] * games_count
+    data_by_game = [{"items": [], "overall": []} for _ in range(games_count)]
     overall_match = []
-    move_data = None
-    stage = None
-    with open(path, 'r', encoding='utf-8') as file:
-        for line in file:
-            line = line.strip()
-            if len(line) == 0:
-                continue
-            if line.startswith("Move number"):
-                if move_data:
+    for path in paths:
+        move_data = None
+        stage = None
+        rolled_block = None
+        with open(path, 'r', encoding='utf-8') as file:
+            print(f"path:{path}, current_game:{current_game}")
+            for line in file:
+                line = line.strip()
+                line = ";".join(i.strip() for i in line.split("  ") if i.strip() != "")
+                if len(line) == 0:
+                    continue
+                if line.startswith("Pip counts:"):
+                    line = line.replace("Pip counts:", "")
+                    split = line.split(",")
+                    white = split[0].strip()
+                    black = split[1].strip()
+                    move_data["pip_counts"]["white"] = int(white[1:])
+                    move_data["pip_counts"]["black"] = int(black[1:])
+                    continue
+
+                if line.startswith("Move number"):
+                    if move_data:
+                        data_by_game[current_game]["items"].append(move_data)
+                    move_data = {
+                        "rolled": None,
+                        "best_moves": [],
+                        "alerts": [],
+                        "cube": [],
+                        "pip_counts": dict()
+                    }
+                    stage = "READ_MOVE"
+                    # if stage == "READ_MOVE" and line.startswith("*"):
+                    #     move_data["move"] = line
+                    continue
+                if stage == "READ_MOVE" and line.startswith("Alert:"):
+                    alert = parse_alert(line)
+                    move_data["alerts"].append(alert)
+                    continue
+                if line.startswith("Cube analysis"):
+                    stage = "CUBE_ANALYSIS"
+                    continue
+                if line.startswith("Rolled"):
+                    match = find_in_parentheses(line)
+                    if match:
+                        move_data["rolled"] = match.group(0)[1:-1]
+                    else:
+                        print(f"cant find numbers:{line}")
+                    stage = "ROLLED"
+                    continue
+                if stage == "CUBE_ANALYSIS":
+                    if line.startswith("Alert:"):
+                        alert = parse_alert(line)
+                        move_data["alerts"].append(alert)
+                        continue
+                    if line.startswith("Proper cube action"):
+                        continue
+                    if line.startswith("Cubeful"):
+                        continue
+                    match = re.search('\d{1}-ply cubeless equity', line)
+                    if match:
+                        line = line.replace(match.group(0), "")
+                        line = line.strip().split()[0]
+                    if line[0].isdigit() and line[0] != '0':
+                        line = line[2:]
+                        match = find_in_parentheses(line)
+                        if match:
+                            line = line.replace(";" + match.group(0), "")
+                    move_data["cube"].append(line.strip())
+                    continue
+                if stage == "ROLLED" and (line[0] == '*' or line[1] == '.'):
+                    match = re.search("Cubeful \d{1}-ply", line)
+                    if match:
+                        rolled_block = line.replace(match.group(0), "").split(";")
+                        if rolled_block[0] == "*":
+                            rolled_block = rolled_block[1:]
+                        rolled_block = rolled_block[1:]
+                        rolled_block[1] = rolled_block[1].replace("Eq.:", "").strip().split()[0]
+                        rolled_block = ";".join(rolled_block)
+                    else:
+                        if rolled_block:
+                            move_data["best_moves"].append(rolled_block + ";" + line)
+                        else:
+                            print(f"rolled_block incomplete: {line}")
+                        rolled_block = None
+                    continue
+                if line.startswith("Game statistics"):
                     data_by_game[current_game]["items"].append(move_data)
-                move_data = {
-                    "move": None,
-                    "rolled": None,
-                    "best_moves": [],
-                    "alerts": [],
-                    "cube": []
-                }
-                stage = "READ_MOVE"
-            if stage == "READ_MOVE" and line.startswith("*"):
-                move_data["move"] = line
-            if stage == "READ_MOVE" and line.startswith("Alert:"):
-                move_data["alerts"].append(line[:-1])
-
-            if line.startswith("Cube analysis"):
-                stage = "CUBE_ANALYSIS"
-            if stage == "CUBE_ANALYSIS":
-                move_data["cube"].append(line)
-
-            if line.startswith("Rolled"):
-                move_data["rolled"] = line
-                stage = "ROLLED"
-            if stage == "ROLLED" and (line[0] == '*' or line[1] == '.'):
-                move_data["best_moves"].append(line)
-
-            if line.startswith("Game statistics"):
-                data_by_game[current_game]["items"].append(move_data)
-                move_data = None
-                current_game += 1
-                stage = "GAME_STATISTICS"
-            elif stage == "GAME_STATISTICS":
-                data_by_game[current_game - 1]["overall"].append(line)
-
-            if line.startswith("Match statistics"):
-                stage = "MATCH_STATISTICS"
-            elif stage == "MATCH_STATISTICS":
-                overall_match.append(line)
-
+                    move_data = None
+                    stage = "GAME_STATISTICS"
+                    rolled_block = None
+                    continue
+                if line.startswith("Match statistics"):
+                    stage = "MATCH_STATISTICS"
+                    continue
+                if stage == "GAME_STATISTICS":
+                    data_by_game[current_game]["overall"].append(line)
+                    continue
+                if stage == "MATCH_STATISTICS":
+                    overall_match.append(line)
+                    continue
+        current_game += 1
+    print([len(i["items"]) for i in data_by_game])
     return {"games": data_by_game, "overall": overall_match}
+
+
+def parse_alert(x):
+    x = x.replace("Alert:", "").replace("!", "").replace(":", "")
+    split = x.split("(")
+    x = ";".join([split[0].strip(), split[1][:-1].strip()])
+    return x
+
+
+def find_in_parentheses(x):
+    return re.search(r'\([-+.\d]+\)', x)
