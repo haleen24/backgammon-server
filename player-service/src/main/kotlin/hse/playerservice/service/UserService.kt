@@ -1,6 +1,7 @@
 package hse.playerservice.service
 
 import hse.playerservice.entity.User
+import hse.playerservice.mapper.UserMapper
 import hse.playerservice.repository.UserImageStorage
 import hse.playerservice.repository.UserRepository
 import org.springframework.http.HttpStatus
@@ -10,7 +11,10 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
-import player.request.*
+import player.request.ChangePasswordRequest
+import player.request.CreateUserRequest
+import player.request.DeleteUserRequest
+import player.request.UpdateUserInfoRequest
 import player.response.JwtResponse
 import player.response.UserInfoResponse
 import kotlin.jvm.optionals.getOrNull
@@ -21,7 +25,8 @@ class UserService(
     private val userRepository: UserRepository,
     private val jwtService: JwtService,
     private val userImageStorage: UserImageStorage,
-    val passwordEncoder: PasswordEncoder,
+    private val passwordEncoder: PasswordEncoder,
+    private val userMapper: UserMapper,
 ) {
     companion object {
         const val NO_ID = 0L
@@ -115,15 +120,15 @@ class UserService(
         return ResponseEntity(HttpStatus.OK)
     }
 
-    fun updateName(userId: Long, request: UpdateUsernameRequest): ResponseEntity<Void> {
-        val user = findUserNotNull(userId).copy(username = request.newUsername)
+    fun update(userId: Long, updateUserInfoRequest: UpdateUserInfoRequest): UserInfoResponse {
+        var user = findUserNotNull(userId)
+        updateUserInfoRequest.login?.apply { user = user.copy(login = updateUserInfoRequest.login!!) }
+        updateUserInfoRequest.username?.apply { user = user.copy(username = updateUserInfoRequest.username!!) }
+        updateUserInfoRequest.invitePolicy?.apply {
+            user = user.copy(invitePolicyCode = updateUserInfoRequest.invitePolicy!!.code)
+        }
         userRepository.save(user)
-        return ResponseEntity(HttpStatus.OK)
-    }
-
-    fun changeInvitePolicy(userId: Long, request: ChangeInvitePolicyRequest): ResponseEntity<Void> {
-        userRepository.changePolicy(userId, request.newPolicy.name)
-        return ResponseEntity(HttpStatus.OK)
+        return userMapper.toUserInfoResponse(user)
     }
 
     fun saveUserImage(userId: Long, image: MultipartFile): ResponseEntity<Void> {
@@ -147,7 +152,7 @@ class UserService(
             HttpStatus.NOT_FOUND,
             "User not found"
         )
-        return UserInfoResponse(id = user.id, username = user.username)
+        return userMapper.toUserInfoResponse(user)
     }
 
     fun getAllUsernames(ids: List<Long>): List<String> {

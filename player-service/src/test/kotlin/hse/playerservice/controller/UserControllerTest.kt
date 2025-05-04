@@ -2,6 +2,7 @@ package hse.playerservice.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import hse.playerservice.annotations.PlayerIntegrationTest
+import hse.playerservice.entity.User
 import hse.playerservice.repository.UserRepository
 import hse.playerservice.service.JwtService
 import hse.playerservice.service.UserService
@@ -128,11 +129,11 @@ class UserControllerTest {
 
     @Test
     fun `update username test`() {
-        val request = UpdateUsernameRequest("timur")
+        val request = UpdateUserInfoRequest(null, "timur", null)
         val userId = 1489L
         val body = objectMapper.writeValueAsString(request)
         mockMvc.perform(
-            put("http://localhost:$port/username").contentType(MediaType.APPLICATION_JSON).header(
+            put("http://localhost:$port/userinfo").contentType(MediaType.APPLICATION_JSON).header(
                 AUTH_HEADER, userId
             ).content(body)
         ).andExpect {

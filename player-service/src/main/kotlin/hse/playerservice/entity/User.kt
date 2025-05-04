@@ -16,5 +16,5 @@ data class User(
     val login: String,
     val username: String,
     val password: String,
-    val invitePolicyCode: Int = InvitePolicy.ALL.ordinal,
+    val invitePolicyCode: Int = InvitePolicy.ALL.code,
 )

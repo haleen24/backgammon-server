@@ -24,10 +24,6 @@ data class DeleteUserRequest(
     val password: String
 )
 
-data class UpdateUsernameRequest(
-    val newUsername: String
-)
-
 data class CreateUserRequest(
     val login: String,
     val password: String,
@@ -75,6 +71,8 @@ open class RemoveFriendRequest(
     data class RemoveFriendByLogin(val friendLogin: String) : RemoveFriendRequest(RemoveType.BY_LOGIN)
 }
 
-data class ChangeInvitePolicyRequest(
-    val newPolicy: InvitePolicy
+data class UpdateUserInfoRequest(
+    val login: String?,
+    val username: String?,
+    val invitePolicy: InvitePolicy?
 )

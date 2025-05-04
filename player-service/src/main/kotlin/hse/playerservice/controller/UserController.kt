@@ -54,22 +54,6 @@ class UserController(
         return userService.deleteUser(userId, request)
     }
 
-    @PutMapping("/username")
-    fun updateName(
-        @RequestHeader(AUTH_HEADER) userId: Long,
-        @RequestBody updateUsernameRequest: UpdateUsernameRequest
-    ): ResponseEntity<Void> {
-        return userService.updateName(userId, updateUsernameRequest)
-    }
-
-    @PostMapping("/policy")
-    fun changeInvitePolicy(
-        @RequestHeader(AUTH_HEADER) userId: Long,
-        @RequestBody request: ChangeInvitePolicyRequest
-    ): ResponseEntity<Void> {
-        return userService.changeInvitePolicy(userId, request)
-    }
-
     @PostMapping("/image")
     fun uploadImage(@RequestHeader(AUTH_HEADER) userId: Long, @RequestBody file: MultipartFile): ResponseEntity<Void> {
         return userService.saveUserImage(userId, file)
@@ -84,6 +68,14 @@ class UserController(
     @GetMapping("/userinfo")
     fun getUserInfo(@RequestParam userId: Long): UserInfoResponse {
         return userService.getUserInfo(userId)
+    }
+
+    @PutMapping("/userinfo")
+    fun updateUserInfo(
+        @RequestHeader(AUTH_HEADER) userId: Long,
+        @RequestBody updateUserInfoRequest: UpdateUserInfoRequest
+    ): UserInfoResponse {
+        return userService.update(userId, updateUserInfoRequest)
     }
 
     @GetMapping("/usernames")
