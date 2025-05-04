@@ -2,10 +2,12 @@ package hse.entity
 
 import game.backgammon.enums.Color
 import hse.enums.GameEntityType
+import java.time.ZonedDateTime
 
-data class DoubleCube(
+class DoubleCube(
     val gameId: Int,
     val moveId: Int,
     val by: Color,
     val isAccepted: Boolean,
-) : TypedMongoEntity(GameEntityType.DOUBLE)
+    at: ZonedDateTime
+) : TypedMongoEntity(GameEntityType.DOUBLE, at)

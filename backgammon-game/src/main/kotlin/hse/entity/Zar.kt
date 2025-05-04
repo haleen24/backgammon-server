@@ -1,9 +1,11 @@
 package hse.entity
 
 import hse.enums.GameEntityType
+import java.time.ZonedDateTime
 
-data class Zar(
+class Zar(
     val gameId: Int,
     val moveId: Int,
     val z: List<Int>,
-) : TypedMongoEntity(GameEntityType.ZAR)
+    at: ZonedDateTime
+) : TypedMongoEntity(GameEntityType.ZAR, at)

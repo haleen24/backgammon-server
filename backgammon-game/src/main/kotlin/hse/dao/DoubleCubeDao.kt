@@ -3,7 +3,7 @@ package hse.dao
 import hse.dao.MongoUtils.Companion.ENTITY_TYPE
 import hse.dao.MongoUtils.Companion.GAME_ID
 import hse.dao.MongoUtils.Companion.MOVE_ID
-import hse.dao.MongoUtils.Companion.getCollectionName
+import hse.dao.MongoUtils.Companion.getMatchCollectionName
 import hse.entity.DoubleCube
 import hse.enums.GameEntityType
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -22,7 +22,7 @@ class DoubleCubeDao(
                 .`is`(moveId)
         )
         val update = Update().set("isAccepted", "true")
-        mongoTemplate.updateFirst(query, update, getCollectionName(matchId))
+        mongoTemplate.updateFirst(query, update, getMatchCollectionName(matchId))
     }
 
     fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
@@ -33,11 +33,11 @@ class DoubleCubeDao(
         return mongoTemplate.find(
             query,
             DoubleCube::class.java,
-            getCollectionName(matchId)
+            getMatchCollectionName(matchId)
         )
     }
 
     fun saveDouble(matchId: Int, doubleCube: DoubleCube) {
-        mongoTemplate.save(doubleCube, getCollectionName(matchId))
+        mongoTemplate.save(doubleCube, getMatchCollectionName(matchId))
     }
 }

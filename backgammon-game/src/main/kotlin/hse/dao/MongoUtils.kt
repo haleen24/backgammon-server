@@ -7,7 +7,7 @@ class MongoUtils {
         const val ENTITY_TYPE = "type"
         const val MOVE_ID = "moveId"
 
-        fun getCollectionName(matchId: Int): String {
+        fun getMatchCollectionName(matchId: Int): String {
             return "match$matchId"
         }
     }

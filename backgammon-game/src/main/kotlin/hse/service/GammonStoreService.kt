@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
+import java.time.Clock
+import java.time.ZonedDateTime
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
@@ -25,7 +27,8 @@ import kotlin.math.sign
 class GammonStoreService(
     private val gammonMoveDao: GammonMoveDao,
     private val redisAdapter: RedisAdapter,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val clock: Clock,
 ) {
     private val logger = LoggerFactory.getLogger(GammonStoreService::class.java)
 
@@ -68,7 +71,17 @@ class GammonStoreService(
     }
 
     fun storeWinner(matchId: Int, gameId: Int, winner: Color, points: Int, endMatch: Boolean) {
-        gammonMoveDao.storeWinner(GameWinner.of(matchId, gameId, winner, points, false, endMatch))
+        gammonMoveDao.storeWinner(
+            GameWinner.of(
+                matchId,
+                gameId,
+                winner,
+                points,
+                false,
+                endMatch,
+                ZonedDateTime.now(clock)
+            )
+        )
     }
 
     fun storeZar(matchId: Int, game: BackgammonWrapper, zar: List<Int>) {
@@ -89,7 +102,8 @@ class GammonStoreService(
                 surrendered.getOpponent(),
                 points,
                 true,
-                endMatch
+                endMatch,
+                ZonedDateTime.now(clock)
             )
         )
         putGameToCache(matchId, wrapper.getRestoreContext())

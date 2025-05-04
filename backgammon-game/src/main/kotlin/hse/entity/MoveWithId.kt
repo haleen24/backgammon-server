@@ -1,9 +1,11 @@
 package hse.entity
 
 import hse.enums.GameEntityType
+import java.time.ZonedDateTime
 
-data class MoveWithId(
+class MoveWithId(
     val matchId: Int,
     val gameId: Int,
     val moveSet: MoveSet,
-): TypedMongoEntity(GameEntityType.MOVE)
+    at: ZonedDateTime
+): TypedMongoEntity(GameEntityType.MOVE, at)

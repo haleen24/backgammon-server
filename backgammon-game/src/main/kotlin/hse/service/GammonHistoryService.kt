@@ -4,8 +4,8 @@ import game.backgammon.Gammon
 import game.backgammon.enums.Color
 import game.backgammon.response.HistoryResponse
 import game.backgammon.response.HistoryResponseItem
-import hse.adapter.dto.AnalyzeMatchRequest
 import hse.adapter.GameEngineAdapter
+import hse.adapter.dto.AnalyzeMatchRequest
 import hse.dto.AcceptDoubleHistoryResponseItem
 import hse.dto.GameEndHistoryResponseItem
 import hse.dto.MoveHistoryResponseItem
@@ -22,7 +22,7 @@ import kotlin.math.pow
 @Service
 class GammonHistoryService(
     private val gammonStoreService: GammonStoreService,
-    private val gameEngineAdapter: GameEngineAdapter
+    private val gameEngineAdapter: GameEngineAdapter,
 ) {
     private final val logger = LoggerFactory.getLogger(GammonHistoryService::class.java)
 
@@ -50,7 +50,7 @@ class GammonHistoryService(
         } catch (exception: RuntimeException) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "В игре нет начального состояния")
         }
-        history[0] = Zar(gameId, 0, startState.restoreContextDto.game.zarResult)
+        history[0] = Zar(gameId, 0, startState.restoreContextDto.game.zarResult, startState.at)
         val firstToMove = if (startState.restoreContextDto.game.turn == Gammon.BLACK) Color.BLACK else Color.WHITE
         val responseHistoryItems = mutableListOf<HistoryResponseItem>()
         var doubleCubeCounter = 0
