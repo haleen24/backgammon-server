@@ -4,6 +4,7 @@ import game.backgammon.GammonRestorer
 import game.backgammon.dto.ChangeDto
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import game.common.enums.TimePolicy
 import hse.dto.GammonRestoreContextDto
 import hse.entity.MoveSet
 import org.junit.jupiter.api.Test
@@ -38,6 +39,7 @@ class RegularGammonGameStoreServiceTest(
             whitePoints = 0,
             thresholdPoints = 10,
             gameNumber = 1,
+            timePolicy = TimePolicy.NO_TIMER
         )
         val moves = listOf(
             MoveSet(
@@ -79,6 +81,7 @@ class RegularGammonGameStoreServiceTest(
             whitePoints = 0,
             thresholdPoints = 10,
             gameNumber = 1,
+            timePolicy = TimePolicy.NO_TIMER
         )
         val moves = listOf(
             MoveSet(
@@ -120,6 +123,7 @@ class RegularGammonGameStoreServiceTest(
             whitePoints = 0,
             thresholdPoints = 10,
             gameNumber = 1,
+            timePolicy = TimePolicy.NO_TIMER
         )
         val moves = listOf(
             MoveSet(

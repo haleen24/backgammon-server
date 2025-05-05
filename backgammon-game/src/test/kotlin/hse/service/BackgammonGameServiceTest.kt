@@ -4,6 +4,7 @@ import game.backgammon.Gammon
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import game.backgammon.enums.DoubleCubePositionEnum
+import game.common.enums.TimePolicy
 import hse.dto.EndGameEvent
 import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
@@ -36,7 +37,8 @@ class BackgammonGameServiceTest {
                 gameId = 1,
                 blackPoints = 0,
                 whitePoints = 0,
-                thresholdPoints = 2
+                thresholdPoints = 2,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
         Mockito.doReturn(mapOf(true to Color.BLACK, false to Color.WHITE)).`when`(wrapper).gameEndStatus()
@@ -59,7 +61,8 @@ class BackgammonGameServiceTest {
                 gameId = 1,
                 blackPoints = 1,
                 whitePoints = 0,
-                thresholdPoints = 2
+                thresholdPoints = 2,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
         Mockito.doReturn(mapOf(true to Color.BLACK, false to Color.WHITE)).`when`(wrapper).gameEndStatus()
@@ -82,7 +85,8 @@ class BackgammonGameServiceTest {
                 gameId = 0,
                 blackPoints = 0,
                 whitePoints = 0,
-                thresholdPoints = 2
+                thresholdPoints = 2,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
         val playerId = 1
@@ -114,7 +118,8 @@ class BackgammonGameServiceTest {
                 gameId = 0,
                 blackPoints = 0,
                 whitePoints = 0,
-                thresholdPoints = 2
+                thresholdPoints = 2,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
         val double = Mockito.mock(DoubleCube::class.java)
@@ -143,7 +148,8 @@ class BackgammonGameServiceTest {
                 gameId = 0,
                 blackPoints = 4,
                 whitePoints = 2,
-                thresholdPoints = 5
+                thresholdPoints = 5,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
         val double = Mockito.mock(DoubleCube::class.java)

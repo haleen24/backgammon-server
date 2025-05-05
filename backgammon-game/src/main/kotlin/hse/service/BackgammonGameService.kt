@@ -2,14 +2,12 @@ package hse.service
 
 import game.backgammon.dto.MoveDto
 import game.backgammon.dto.MoveResponseDto
-import game.backgammon.dto.StartStateDto
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import game.backgammon.enums.DoubleCubePositionEnum
 import game.backgammon.lng.RegularGammonGame
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.backgammon.response.ConfigResponse
-import game.backgammon.response.HistoryResponse
 import game.backgammon.response.MoveResponse
 import game.backgammon.sht.ShortGammonGame
 import hse.dto.EndGameEvent
@@ -31,7 +29,7 @@ class BackgammonGameService(
 ) {
 
     fun createAndConnect(roomId: Int, request: CreateBackgammonGameRequest): Int {
-        val game = createMatch(roomId, request.points, request.type)
+        val game = createMatch(roomId, request)
         game.connect(request.firstUserId, request.secondUserId)
         gammonStoreService.saveGameOnCreation(roomId, 1, game)
         emitterService.sendForAll(roomId, GameStartedEvent())
@@ -104,10 +102,11 @@ class BackgammonGameService(
         return game.getPlayerColor(userId)
     }
 
-    private fun createMatch(roomId: Int, points: Int, gameType: BackgammonType): BackgammonWrapper {
+    private fun createMatch(roomId: Int, request: CreateBackgammonGameRequest): BackgammonWrapper {
         if (gammonStoreService.checkMatchExists(roomId)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "Game $roomId already exists")
         }
+        val gameType = request.type
         val game = when (gameType) {
             BackgammonType.SHORT_BACKGAMMON -> ShortGammonGame()
             BackgammonType.REGULAR_GAMMON -> RegularGammonGame()
@@ -117,8 +116,9 @@ class BackgammonGameService(
             type = gameType,
             blackPoints = 0,
             whitePoints = 0,
-            thresholdPoints = points,
-            gameId = 1
+            thresholdPoints = request.points,
+            gameId = 1,
+            timePolicy = request.timePolicy
         )
     }
 

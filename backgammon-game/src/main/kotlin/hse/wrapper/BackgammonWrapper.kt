@@ -5,6 +5,7 @@ import game.backgammon.GammonRestorer
 import game.backgammon.dto.*
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
+import game.common.enums.TimePolicy
 import hse.dto.GammonRestoreContextDto
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -19,6 +20,7 @@ class BackgammonWrapper(
     var blackPoints: Int,
     var whitePoints: Int,
     val thresholdPoints: Int,
+    val timePolicy: TimePolicy,
 ) {
 
     companion object {
@@ -39,6 +41,7 @@ class BackgammonWrapper(
                 whitePoints = restoreContextDto.whitePoints,
                 thresholdPoints = restoreContextDto.thresholdPoints,
                 gameId = restoreContextDto.gameNumber,
+                timePolicy = restoreContextDto.timePolicy,
             )
 
             gameWrapper.firstPlayer = restoreContextDto.firstUserId
@@ -129,6 +132,7 @@ class BackgammonWrapper(
             whitePoints = whitePoints,
             thresholdPoints = thresholdPoints,
             gameNumber = gameId,
+            timePolicy = timePolicy
         )
     }
 

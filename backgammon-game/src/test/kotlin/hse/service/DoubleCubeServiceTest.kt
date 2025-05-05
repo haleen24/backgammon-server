@@ -1,33 +1,32 @@
 package hse.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import game.backgammon.Gammon
 import game.backgammon.GammonRestorer
 import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
-import hse.adapter.RedisAdapter
+import game.common.enums.TimePolicy
 import hse.dao.DoubleCubeDao
 import hse.dto.GammonRestoreContextDto
 import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito
+import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.TestConstructor
 import org.springframework.web.server.ResponseStatusException
+import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class DoubleCubeServiceTest {
-    @MockBean
-    lateinit var redisAdapter: RedisAdapter
-
     @MockBean
     lateinit var doubleCubeDao: DoubleCubeDao
 
@@ -36,9 +35,6 @@ class DoubleCubeServiceTest {
 
     @Autowired
     lateinit var doubleCubeService: DoubleCubeService
-
-    @Autowired
-    lateinit var objectMapper: ObjectMapper
 
 
     @Test
@@ -60,12 +56,14 @@ class DoubleCubeServiceTest {
                 whitePoints = 0,
                 thresholdPoints = 7,
                 gameNumber = 1,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
         Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
+
         doubleCubeService.doubleCube(0, 0)
 
-        Mockito.verify(redisAdapter).rpush(Mockito.anyString(), Mockito.anyString())
+        Mockito.verify(doubleCubeDao).saveDouble(eq(0), any())
     }
 
     @Test
@@ -87,18 +85,18 @@ class DoubleCubeServiceTest {
                 whitePoints = 0,
                 thresholdPoints = 7,
                 gameNumber = 1,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
-        val doubleCube = objectMapper.writeValueAsString(
-            DoubleCube(
-                gameId = 0,
-                moveId = 1,
-                by = Color.BLACK,
-                isAccepted = false
-            )
+        val doubleCube = DoubleCube(
+            gameId = 0,
+            moveId = 1,
+            by = Color.BLACK,
+            isAccepted = false,
+            at = ZonedDateTime.now()
         )
         Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
-        Mockito.`when`(redisAdapter.lrange((Mockito.anyString()))).thenReturn(
+        Mockito.`when`(doubleCubeDao.getAllDoubles(0, 1)).thenReturn(
             mutableListOf(
                 doubleCube
             )
@@ -127,18 +125,18 @@ class DoubleCubeServiceTest {
                 whitePoints = 0,
                 thresholdPoints = 7,
                 gameNumber = 1,
+                timePolicy = TimePolicy.NO_TIMER
             )
         )
-        val doubleCube = objectMapper.writeValueAsString(
-            DoubleCube(
-                gameId = 0,
-                moveId = 1,
-                by = Color.BLACK,
-                isAccepted = true
-            )
+        val doubleCube = DoubleCube(
+            gameId = 0,
+            moveId = 1,
+            by = Color.BLACK,
+            isAccepted = true,
+            at = ZonedDateTime.now()
         )
         Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
-        Mockito.`when`(redisAdapter.lrange((Mockito.anyString()))).thenReturn(
+        Mockito.`when`(doubleCubeDao.getAllDoubles(0, 1)).thenReturn(
             mutableListOf(
                 doubleCube
             )

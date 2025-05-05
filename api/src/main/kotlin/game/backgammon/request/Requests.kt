@@ -4,6 +4,7 @@ import game.backgammon.dto.MoveDto
 import game.backgammon.enums.BackgammonType
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
+import game.common.enums.TimePolicy
 
 data class CreateGameRequest(
     val type: GameType,
@@ -19,4 +20,5 @@ data class CreateBackgammonGameRequest(
     val firstUserId: Int,
     val secondUserId: Int,
     val points: Int,
+    val timePolicy: TimePolicy = TimePolicy.NO_TIMER
 )

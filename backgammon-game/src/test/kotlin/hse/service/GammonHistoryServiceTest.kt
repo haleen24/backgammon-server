@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.TestConstructor
+import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 
 @SpringBootTest
@@ -40,12 +41,14 @@ class GammonHistoryServiceTest {
             GameWithId(
                 matchId = matchId,
                 gameId = gameId,
-                restoreContextDto = restoreContextDto
+                restoreContextDto = restoreContextDto,
+                at = ZonedDateTime.now()
             ),
             Zar(
                 gameId = gameId,
                 moveId = 0,
-                z = listOf(1, 2)
+                z = listOf(1, 2),
+                at = ZonedDateTime.now()
             ),
             MoveWithId(
                 matchId = matchId,
@@ -54,14 +57,16 @@ class GammonHistoryServiceTest {
                     moves = ChangeDto(listOf(0 to 1, 0 to 2)),
                     gameId = gameId,
                     moveId = 0,
-                    color = Color.BLACK
-                )
+                    color = Color.BLACK,
+                ),
+                at = ZonedDateTime.now()
             ),
             DoubleCube(
                 gameId = gameId,
                 moveId = 1,
                 by = Color.WHITE,
-                isAccepted = false
+                isAccepted = false,
+                at = ZonedDateTime.now()
             ),
             GameWinner(
                 matchId = matchId,
@@ -69,7 +74,8 @@ class GammonHistoryServiceTest {
                 winner = Gammon.WHITE,
                 points = 1,
                 surrender = false,
-                endMatch = false
+                endMatch = false,
+                at = ZonedDateTime.now()
             )
         )
         `when`(gammonStoreService.getAllInGameInOrderByInsertionTime(matchId, gameId)).thenReturn(gameHistoryFromDb)
