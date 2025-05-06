@@ -79,7 +79,7 @@ class GammonStoreService(
                 points,
                 false,
                 endMatch,
-                ZonedDateTime.now(clock)
+                clock.instant()
             )
         )
     }
@@ -103,7 +103,7 @@ class GammonStoreService(
                 points,
                 true,
                 endMatch,
-                ZonedDateTime.now(clock)
+                clock.instant()
             )
         )
         putGameToCache(matchId, wrapper.getRestoreContext())

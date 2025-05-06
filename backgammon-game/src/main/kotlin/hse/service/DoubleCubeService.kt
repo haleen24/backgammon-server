@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.time.Clock
-import java.time.ZonedDateTime
 
 @Service
 // TODO продумать взаимодействие с кешом
@@ -123,7 +122,7 @@ class DoubleCubeService(
     }
 
     private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {
-        val doubleCube = DoubleCube(gameId, moveId, by, false, ZonedDateTime.now(clock))
+        val doubleCube = DoubleCube(gameId, moveId, by, false, clock.instant())
         doubleCubeDao.saveDouble(matchId, doubleCube)
 //        putToCache(matchId, doubleCube)
         emitterService.sendEventExceptUser(userId, matchId, DoubleEvent(by))

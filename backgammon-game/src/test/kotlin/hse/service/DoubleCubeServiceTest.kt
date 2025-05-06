@@ -20,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.TestConstructor
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
 import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 
@@ -93,7 +94,7 @@ class DoubleCubeServiceTest {
             moveId = 1,
             by = Color.BLACK,
             isAccepted = false,
-            at = ZonedDateTime.now()
+            at = Instant.now()
         )
         Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
         Mockito.`when`(doubleCubeDao.getAllDoubles(0, 1)).thenReturn(
@@ -133,7 +134,7 @@ class DoubleCubeServiceTest {
             moveId = 1,
             by = Color.BLACK,
             isAccepted = true,
-            at = ZonedDateTime.now()
+            at = Instant.now()
         )
         Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
         Mockito.`when`(doubleCubeDao.getAllDoubles(0, 1)).thenReturn(

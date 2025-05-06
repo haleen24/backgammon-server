@@ -70,7 +70,7 @@ class UserController(
         return userService.getUserInfo(userId)
     }
 
-    @PutMapping("/userinfo")
+    @PostMapping("/userinfo")
     fun updateUserInfo(
         @RequestHeader(AUTH_HEADER) userId: Long,
         @RequestBody updateUserInfoRequest: UpdateUserInfoRequest

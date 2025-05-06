@@ -2,6 +2,7 @@ package hse.entity
 
 import game.backgammon.enums.Color
 import hse.enums.GameEntityType
+import java.time.Instant
 import java.time.ZonedDateTime
 
 class GameWinner(
@@ -11,7 +12,7 @@ class GameWinner(
     val points: Int,
     val surrender: Boolean,
     val endMatch: Boolean,
-    at: ZonedDateTime
+    at: Instant
 ) : TypedMongoEntity(GameEntityType.WINNER_INFO, at) {
 
     val color: Color
@@ -29,7 +30,7 @@ class GameWinner(
             points: Int,
             surrender: Boolean,
             endMatch: Boolean,
-            at: ZonedDateTime
+            at: Instant
         ): GameWinner {
             val intColor = if (color == Color.BLACK) BLACK else WHITE
             return GameWinner(matchId, gameId, intColor, points, surrender, endMatch, at)

@@ -41,7 +41,7 @@ class GameTimerService(
     }
 
     fun update(matchId: Int, currentTurn: Color, gameTimer: GameTimer) {
-        val now = ZonedDateTime.now(clock)
+        val now = clock.instant()
         if (currentTurn == Color.WHITE) {
             val remainTime = between(gameTimer.lastBlackAction, now)
             gameTimer.lastWhiteAction = now

@@ -23,11 +23,11 @@ class GammonMoveDaoImpl(
 
 
     override fun saveMoves(matchId: Int, gameId: Int, moveSet: MoveSet) {
-        mongoTemplate.save(MoveWithId(matchId, gameId, moveSet, ZonedDateTime.now(clock)), getMatchCollectionName(matchId))
+        mongoTemplate.save(MoveWithId(matchId, gameId, moveSet, clock.instant()), getMatchCollectionName(matchId))
     }
 
     override fun saveZar(matchId: Int, gameId: Int, moveId: Int, zar: List<Int>) {
-        mongoTemplate.save(Zar(gameId, moveId, zar, ZonedDateTime.now(clock)), getMatchCollectionName(matchId))
+        mongoTemplate.save(Zar(gameId, moveId, zar, clock.instant()), getMatchCollectionName(matchId))
     }
 
     override fun getMoves(matchId: Int, gameId: Int): List<MoveSet> {
@@ -67,7 +67,7 @@ class GammonMoveDaoImpl(
     }
 
     override fun saveStartGameContext(matchId: Int, gameId: Int, context: GammonRestoreContextDto) {
-        mongoTemplate.save(GameWithId(matchId, gameId, context, ZonedDateTime.now(clock)), getMatchCollectionName(matchId))
+        mongoTemplate.save(GameWithId(matchId, gameId, context, clock.instant()), getMatchCollectionName(matchId))
     }
 
     override fun getStartGameContext(matchId: Int, gameId: Int): GammonRestoreContextDto? {
