@@ -68,9 +68,10 @@ class BackgammonWrapper(
 
     fun getConfiguration(playerId: Int): ConfigResponseDto {
         val config = game.getConfiguration()
-
+        val playerMask = safeGetPlayerMask(playerId)
+        val color = if (playerMask == null) null else getColor(playerMask)
         return ConfigResponseDto(
-            color = getPlayerColor(playerId),
+            color = color,
             turn = getColor(config.turn),
             bar = config.bar.entries.associate { getColor(it.key) to it.value.absoluteValue },
             deck = config.deck
@@ -179,15 +180,19 @@ class BackgammonWrapper(
     }
 
     private fun getPlayerMask(playerId: Int): Int {
+        return safeGetPlayerMask(playerId) ?: throw ResponseStatusException(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "Player not connected"
+        )
+    }
+
+    private fun safeGetPlayerMask(playerId: Int): Int? {
         return if (firstPlayer == playerId) {
             BLACK_COLOR
         } else if (secondPlayer == playerId) {
             WHITE_COLOR
         } else {
-            throw ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                "Player not connected"
-            )
+            null
         }
     }
 }
