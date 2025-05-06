@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.time.Clock
 import java.time.Duration.between
-import java.time.ZonedDateTime
 
 @Service
 class GameTimerService(
@@ -27,7 +26,7 @@ class GameTimerService(
         if (wrapper.timePolicy == TimePolicy.NO_TIMER) {
             return null
         }
-        val now = ZonedDateTime.now(clock)
+        val now = clock.instant()
         val gameTimer =
             gameTimerDao.getByMatchId(matchId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found")
         val timerActionContext = getActionContext(currentTurn, gameTimer)
@@ -43,11 +42,11 @@ class GameTimerService(
     fun update(matchId: Int, currentTurn: Color, gameTimer: GameTimer) {
         val now = clock.instant()
         if (currentTurn == Color.WHITE) {
-            val remainTime = between(gameTimer.lastBlackAction, now)
+            val remainTime = gameTimer.remainWhiteTime.minus(between(gameTimer.lastBlackAction, now))
             gameTimer.lastWhiteAction = now
             gameTimer.remainWhiteTime = remainTime.plus(gameTimer.increment)
         } else {
-            val remainTime = between(gameTimer.lastWhiteAction, now)
+            val remainTime = gameTimer.remainBlackTime.minus(between(gameTimer.lastWhiteAction, now))
             gameTimer.lastBlackAction = now
             gameTimer.remainBlackTime = remainTime.plus(gameTimer.increment)
         }
