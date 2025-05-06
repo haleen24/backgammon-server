@@ -114,6 +114,9 @@ class BackgammonWrapper(
         return game.checkEnd()
     }
 
+    fun getCurrentTurn(): Color {
+        return getPlayerColor(game.turn)
+    }
 
     fun getRestoreContext(): GammonRestoreContextDto {
         val config = game.getConfiguration()

@@ -29,8 +29,9 @@ class GameTimerServiceTest {
     fun `validateAndGet do nothing when time police = NO_TIMER`() {
         val wrapper = mock(BackgammonWrapper::class.java)
         `when`(wrapper.timePolicy).thenReturn(TimePolicy.NO_TIMER)
+        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
 
-        service.validateAndGet(1, Color.BLACK, wrapper) { throw RuntimeException() }
+        service.validateAndGet(1, wrapper) { throw RuntimeException() }
 
         verifyNoInteractions(gameTimerDao)
     }
@@ -39,11 +40,11 @@ class GameTimerServiceTest {
     fun `validateAndGet throws NOT_FOUND exception when policy != NO_TIMER and timer does not exists`() {
         val wrapper = mock(BackgammonWrapper::class.java)
         `when`(wrapper.timePolicy).thenReturn(TimePolicy.DEFAULT_TIMER)
+        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
 
         val exception = assertThrows<ResponseStatusException> {
             service.validateAndGet(
                 1,
-                Color.BLACK,
                 wrapper
             ) { throw RuntimeException() }
         }
@@ -68,8 +69,9 @@ class GameTimerServiceTest {
         `when`(wrapper.timePolicy).thenReturn(TimePolicy.DEFAULT_TIMER)
         `when`(gameTimerDao.getByMatchId(1)).thenReturn(gameTimer)
         `when`(clock.instant()).thenReturn(now)
+        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
 
-        val actual = service.validateAndGet(1, Color.BLACK, wrapper) { throw RuntimeException() }
+        val actual = service.validateAndGet(1, wrapper) { throw RuntimeException() }
 
         verify(gameTimerDao).getByMatchId(1)
         assertEquals(gameTimer, actual)
@@ -91,9 +93,11 @@ class GameTimerServiceTest {
         `when`(wrapper.timePolicy).thenReturn(TimePolicy.DEFAULT_TIMER)
         `when`(gameTimerDao.getByMatchId(1)).thenReturn(gameTimer)
         `when`(clock.instant()).thenReturn(now)
+        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
         val onOutOfTime = mock<() -> Unit>()
 
-        val exception = assertThrows<ResponseStatusException> { service.validateAndGet(1, Color.BLACK, wrapper, onOutOfTime) }
+        val exception =
+            assertThrows<ResponseStatusException> { service.validateAndGet(1, wrapper, onOutOfTime) }
 
         verify(gameTimerDao).getByMatchId(1)
         verify(gameTimerDao).deleteByMatchId(1)
@@ -103,7 +107,7 @@ class GameTimerServiceTest {
 
     @Test
     fun `update by WHITE set gameTimer in match`() {
-       `when`(clock.instant()).thenReturn(now)
+        `when`(clock.instant()).thenReturn(now)
         val increment = Duration.ofSeconds(2)
         val remainTime = Duration.ofSeconds(3)
         val gameTimer = GameTimer(
@@ -115,7 +119,7 @@ class GameTimerServiceTest {
             increment
         )
 
-        service.update(1, Color.WHITE,  gameTimer)
+        service.update(1, Color.WHITE, gameTimer)
 
         verify(gameTimerDao).setByMatchId(1, gameTimer)
         assertEquals(Duration.ofSeconds(4), gameTimer.remainWhiteTime)
@@ -137,7 +141,7 @@ class GameTimerServiceTest {
             increment
         )
 
-        service.update(1, Color.BLACK,  gameTimer)
+        service.update(1, Color.BLACK, gameTimer)
 
         verify(gameTimerDao).setByMatchId(1, gameTimer)
         assertEquals(Duration.ofSeconds(4), gameTimer.remainBlackTime)

@@ -21,10 +21,11 @@ class BackgammonGameServiceTest {
     private val emitterService: EmitterService = Mockito.mock(EmitterService::class.java)
     private val gammonStoreService: GammonStoreService = Mockito.mock(GammonStoreService::class.java)
     private val doubleCubeService: DoubleCubeService = Mockito.mock(DoubleCubeService::class.java)
+    private val timerService: GameTimerService = Mockito.mock(GameTimerService::class.java)
 
     init {
         service = BackgammonGameService(
-            emitterService, gammonStoreService, doubleCubeService
+            emitterService, gammonStoreService, doubleCubeService, timerService
         )
     }
 

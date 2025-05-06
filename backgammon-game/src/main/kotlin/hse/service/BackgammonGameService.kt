@@ -26,6 +26,7 @@ class BackgammonGameService(
     private val emitterService: EmitterService,
     private val gammonStoreService: GammonStoreService,
     private val doubleCubeService: DoubleCubeService,
+    private val timerService: GameTimerService,
 ) {
 
     fun createAndConnect(roomId: Int, request: CreateBackgammonGameRequest): Int {
@@ -39,6 +40,7 @@ class BackgammonGameService(
     fun moveInGame(matchId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
         val game = gammonStoreService.getMatchById(matchId)
         checkGameState(game)
+        val timer = timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
         val response = MoveResponse(
@@ -46,9 +48,10 @@ class BackgammonGameService(
             color = playerColor,
         )
         gammonStoreService.saveAfterMove(matchId, game.gameId, playerId, game, res)
-
+        if (timer != null) {
+            timerService.update(matchId, game.getCurrentTurn(), timer)
+        }
         emitterService.sendEventExceptUser(playerId, matchId, MoveEvent(response.moves, playerColor))
-
         if (game.checkEnd()) {
             handleGameEnd(matchId, game)
         }
@@ -58,25 +61,28 @@ class BackgammonGameService(
     fun tossZar(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
         checkGameState(game)
+        val timer = timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
         val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId)
-
         if (doubles.isNotEmpty()) {
             if (!doubles.last().isAccepted) {
                 throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "there is no response on double request")
             }
         }
-
         val res = game.tossZar(userId)
         gammonStoreService.storeZar(
             matchId,
             game,
             res.value,
         )
+        if (timer != null) {
+            timerService.update(matchId, game.getCurrentTurn(), timer)
+        }
         emitterService.sendForAll(matchId, TossZarEvent(res.value, game.getPlayerColor(userId)))
     }
 
     fun getConfiguration(userId: Int, matchId: Int): ConfigResponse {
         val game = gammonStoreService.getMatchById(matchId)
+        timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
         val configData = game.getConfiguration(userId)
         val doubleCubes = doubleCubeService.getAllDoubles(matchId, game.gameId)
         val doubleCubePosition = doubleCubeService.getDoubleCubePosition(matchId, game, doubleCubes)
@@ -97,8 +103,9 @@ class BackgammonGameService(
         )
     }
 
-    fun getColor(userId: Int, gameId: Int): Color {
-        val game = gammonStoreService.getMatchById(gameId)
+    fun getColor(userId: Int, matchId: Int): Color {
+        val game = gammonStoreService.getMatchById(matchId)
+        timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
         return game.getPlayerColor(userId)
     }
 
@@ -161,7 +168,7 @@ class BackgammonGameService(
                 || game.blackPoints >= game.thresholdPoints
                 || game.whitePoints >= game.thresholdPoints
         validateSurrender(matchId, userId, surrenderedColor, game, doubles, endMatch)
-        gammonStoreService.surrender(surrenderedColor, matchId, game, winnerPoints, endMatch)
+        gammonStoreService.endMatch(winnerColor, matchId, game, winnerPoints, endMatch, true)
         if (!endMatch) {
             game.restore()
             gammonStoreService.saveGameOnCreation(matchId, game.gameId, game)
@@ -176,7 +183,7 @@ class BackgammonGameService(
         )
     }
 
-    fun checkGameState(game: BackgammonWrapper) {
+    private fun checkGameState(game: BackgammonWrapper) {
         if (game.checkEnd()) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Game is already end")
         }
@@ -217,5 +224,19 @@ class BackgammonGameService(
         } else {
             return
         }
+    }
+
+    private fun handleOutOfTime(matchId: Int, wrapper: BackgammonWrapper) {
+        val winner = wrapper.getCurrentTurn().getOpponent()
+        val winnerPoints = if (winner == Color.BLACK) wrapper.blackPoints else wrapper.whitePoints
+        gammonStoreService.endMatch(winner, matchId, wrapper, winnerPoints, endMatch = true, isSurrender = false)
+        emitterService.sendForAll(
+            matchId, EndGameEvent(
+                win = winner,
+                blackPoints = wrapper.blackPoints,
+                whitePoints = wrapper.whitePoints,
+                isMatchEnd = true,
+            )
+        )
     }
 }

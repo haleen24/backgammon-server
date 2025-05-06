@@ -19,7 +19,6 @@ class GameTimerService(
 ) {
     fun validateAndGet(
         matchId: Int,
-        currentTurn: Color,
         wrapper: BackgammonWrapper,
         onOutOfTime: () -> Unit
     ): GameTimer? {
@@ -29,7 +28,7 @@ class GameTimerService(
         val now = clock.instant()
         val gameTimer =
             gameTimerDao.getByMatchId(matchId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found")
-        val timerActionContext = getActionContext(currentTurn, gameTimer)
+        val timerActionContext = getActionContext(wrapper.getCurrentTurn(), gameTimer)
         val actionTime = between(timerActionContext.opponentLastAction, now)
         if (actionTime.toMillis() > timerActionContext.playerRemainTime.toMillis()) {
             onOutOfTime()

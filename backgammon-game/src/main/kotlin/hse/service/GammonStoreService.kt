@@ -18,7 +18,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
 import java.time.Clock
-import java.time.ZonedDateTime
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
@@ -93,15 +92,15 @@ class GammonStoreService(
         return gammonMoveDao.getWinners(matchId).sortedBy { it.gameId }.map { it.color }
     }
 
-    fun surrender(surrendered: Color, matchId: Int, wrapper: BackgammonWrapper, points: Int, endMatch: Boolean) {
+    fun endMatch(winner: Color, matchId: Int, wrapper: BackgammonWrapper, points: Int, endMatch: Boolean, isSurrender: Boolean) {
         wrapper.setPossibleEndFlag(true)
         gammonMoveDao.storeWinner(
             GameWinner.of(
                 matchId,
                 wrapper.gameId,
-                surrendered.getOpponent(),
+                winner,
                 points,
-                true,
+                isSurrender,
                 endMatch,
                 clock.instant()
             )
