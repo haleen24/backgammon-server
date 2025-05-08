@@ -98,7 +98,6 @@ class GammonFacadeTest {
                 timePolicy = TimePolicy.NO_TIMER
             )
         )
-        wrapper.connect(1, 2)
         val playerId = 1
         val matchId = 2
         val doubles = listOf(Mockito.mock(DoubleCube::class.java))
@@ -135,7 +134,6 @@ class GammonFacadeTest {
                 timePolicy = TimePolicy.NO_TIMER
             )
         )
-        wrapper.connect(1, 2)
         val double = Mockito.mock(DoubleCube::class.java)
         Mockito.`when`(double.isAccepted).thenReturn(true)
         Mockito.doReturn(wrapper).`when`(gammonStoreService).getMatchById(1)
@@ -168,7 +166,6 @@ class GammonFacadeTest {
                 timePolicy = TimePolicy.NO_TIMER
             )
         )
-        wrapper.connect(1, 2)
         val double = Mockito.mock(DoubleCube::class.java)
         Mockito.`when`(double.isAccepted).thenReturn(true)
         Mockito.doReturn(wrapper).`when`(gammonStoreService).getMatchById(1)

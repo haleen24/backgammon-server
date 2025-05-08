@@ -115,7 +115,7 @@ class BackgammonWrapper(
     }
 
     fun getCurrentTurn(): Color {
-        return getPlayerColor(game.turn)
+        return getColor(game.turn)
     }
 
     fun getRestoreContext(): GammonRestoreContextDto {
