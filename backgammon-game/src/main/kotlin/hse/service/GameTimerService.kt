@@ -19,16 +19,17 @@ class GameTimerService(
 ) {
     fun validateAndGet(
         matchId: Int,
-        wrapper: BackgammonWrapper,
+        timePolicy: TimePolicy,
+        turn: Color,
         onOutOfTime: () -> Unit
     ): GameTimer? {
-        if (wrapper.timePolicy == TimePolicy.NO_TIMER) {
+        if (timePolicy == TimePolicy.NO_TIMER) {
             return null
         }
         val now = clock.instant()
         val gameTimer =
             gameTimerDao.getByMatchId(matchId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found")
-        val timerActionContext = getActionContext(wrapper.getCurrentTurn(), gameTimer)
+        val timerActionContext = getActionContext(turn, gameTimer)
         val actionTime = between(timerActionContext.opponentLastAction, now)
         if (actionTime.toMillis() > timerActionContext.playerRemainTime.toMillis()) {
             onOutOfTime()
@@ -50,6 +51,12 @@ class GameTimerService(
             gameTimer.remainBlackTime = remainTime.plus(gameTimer.increment)
         }
         gameTimerDao.setByMatchId(matchId, gameTimer)
+    }
+
+    fun save(matchId: Int, gameTimer: GameTimer?) {
+        if (gameTimer != null) {
+            gameTimerDao.setByMatchId(matchId, gameTimer)
+        }
     }
 
     private fun getActionContext(currentTurn: Color, gameTimer: GameTimer): TimerActionContext {

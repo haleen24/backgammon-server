@@ -17,15 +17,14 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.TestConstructor
 import java.time.Instant
-import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-class GammonHistoryServiceTest {
+class GameHistoryServiceTest {
 
     @Autowired
-    private lateinit var gammonHistoryService: GammonHistoryService
+    private lateinit var gameHistoryService: GameHistoryService
 
     @MockBean
     private lateinit var gammonStoreService: GammonStoreService
@@ -82,7 +81,7 @@ class GammonHistoryServiceTest {
         `when`(gammonStoreService.getAllInGameInOrderByInsertionTime(matchId, gameId)).thenReturn(gameHistoryFromDb)
 
 
-        val result = gammonHistoryService.getHistory(matchId, gameId)
+        val result = gameHistoryService.getHistory(matchId, gameId)
 
         assertEquals(Color.BLACK, result.firstToMove)
         assertEquals(3, result.items.size)

@@ -4,7 +4,6 @@ import game.backgammon.enums.Color
 import game.common.enums.TimePolicy
 import hse.dao.GameTimerDao
 import hse.entity.GameTimer
-import hse.wrapper.BackgammonWrapper
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
@@ -27,25 +26,18 @@ class GameTimerServiceTest {
 
     @Test
     fun `validateAndGet do nothing when time police = NO_TIMER`() {
-        val wrapper = mock(BackgammonWrapper::class.java)
-        `when`(wrapper.timePolicy).thenReturn(TimePolicy.NO_TIMER)
-        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
-
-        service.validateAndGet(1, wrapper) { throw RuntimeException() }
+        service.validateAndGet(1, TimePolicy.NO_TIMER, Color.BLACK) { throw RuntimeException() }
 
         verifyNoInteractions(gameTimerDao)
     }
 
     @Test
     fun `validateAndGet throws NOT_FOUND exception when policy != NO_TIMER and timer does not exists`() {
-        val wrapper = mock(BackgammonWrapper::class.java)
-        `when`(wrapper.timePolicy).thenReturn(TimePolicy.DEFAULT_TIMER)
-        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
-
         val exception = assertThrows<ResponseStatusException> {
             service.validateAndGet(
                 1,
-                wrapper
+                TimePolicy.DEFAULT_TIMER,
+                Color.BLACK
             ) { throw RuntimeException() }
         }
 
@@ -55,7 +47,6 @@ class GameTimerServiceTest {
 
     @Test
     fun `validateAndGet returns timer`() {
-        val wrapper = mock(BackgammonWrapper::class.java)
         val increment = Duration.ofSeconds(2)
         val remainTime = Duration.ofSeconds(3)
         val gameTimer = GameTimer(
@@ -66,12 +57,10 @@ class GameTimerServiceTest {
             remainTime,
             increment
         )
-        `when`(wrapper.timePolicy).thenReturn(TimePolicy.DEFAULT_TIMER)
         `when`(gameTimerDao.getByMatchId(1)).thenReturn(gameTimer)
         `when`(clock.instant()).thenReturn(now)
-        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
 
-        val actual = service.validateAndGet(1, wrapper) { throw RuntimeException() }
+        val actual = service.validateAndGet(1, TimePolicy.DEFAULT_TIMER, Color.BLACK) { throw RuntimeException() }
 
         verify(gameTimerDao).getByMatchId(1)
         assertEquals(gameTimer, actual)
@@ -79,7 +68,6 @@ class GameTimerServiceTest {
 
     @Test
     fun `validateAndGet calls onOutOfTime and throws HTTP exception when time is out`() {
-        val wrapper = mock(BackgammonWrapper::class.java)
         val increment = Duration.ofSeconds(2)
         val remainTime = Duration.ofSeconds(3)
         val gameTimer = GameTimer(
@@ -90,14 +78,19 @@ class GameTimerServiceTest {
             remainTime,
             increment
         )
-        `when`(wrapper.timePolicy).thenReturn(TimePolicy.DEFAULT_TIMER)
         `when`(gameTimerDao.getByMatchId(1)).thenReturn(gameTimer)
         `when`(clock.instant()).thenReturn(now)
-        `when`(wrapper.getCurrentTurn()).thenReturn(Color.BLACK)
         val onOutOfTime = mock<() -> Unit>()
 
         val exception =
-            assertThrows<ResponseStatusException> { service.validateAndGet(1, wrapper, onOutOfTime) }
+            assertThrows<ResponseStatusException> {
+                service.validateAndGet(
+                    1,
+                    TimePolicy.DEFAULT_TIMER,
+                    Color.BLACK,
+                    onOutOfTime
+                )
+            }
 
         verify(gameTimerDao).getByMatchId(1)
         verify(gameTimerDao).deleteByMatchId(1)

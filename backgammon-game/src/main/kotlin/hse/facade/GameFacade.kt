@@ -1,4 +1,4 @@
-package hse.service
+package hse.facade
 
 import game.backgammon.dto.MoveDto
 import game.backgammon.dto.MoveResponseDto
@@ -15,6 +15,11 @@ import hse.dto.GameStartedEvent
 import hse.dto.MoveEvent
 import hse.dto.TossZarEvent
 import hse.entity.DoubleCube
+import hse.factory.GameTimerFactory
+import hse.service.DoubleCubeService
+import hse.service.EmitterService
+import hse.service.GameTimerService
+import hse.service.GammonStoreService
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -22,25 +27,33 @@ import org.springframework.web.server.ResponseStatusException
 import kotlin.math.pow
 
 @Service
-class BackgammonGameService(
+class GameFacade(
     private val emitterService: EmitterService,
     private val gammonStoreService: GammonStoreService,
     private val doubleCubeService: DoubleCubeService,
     private val timerService: GameTimerService,
+    private val gameTimerFactory: GameTimerFactory
 ) {
 
-    fun createAndConnect(roomId: Int, request: CreateBackgammonGameRequest): Int {
-        val game = createMatch(roomId, request)
+    fun createAndConnect(matchId: Int, request: CreateBackgammonGameRequest): Int {
+        val game = createMatch(matchId, request)
+        val timer = gameTimerFactory.getTimer(matchId, request.points, request.timePolicy)
         game.connect(request.firstUserId, request.secondUserId)
-        gammonStoreService.saveGameOnCreation(roomId, 1, game)
-        emitterService.sendForAll(roomId, GameStartedEvent())
-        return roomId
+        gammonStoreService.saveGameOnCreation(matchId, 1, game)
+        timerService.save(matchId, timer)
+        emitterService.sendForAll(matchId, GameStartedEvent())
+        return matchId
     }
 
     fun moveInGame(matchId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
         val game = gammonStoreService.getMatchById(matchId)
         checkGameState(game)
-        val timer = timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
+        val timer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) {
+            handleOutOfTime(
+                matchId,
+                game
+            )
+        }
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
         val response = MoveResponse(
@@ -61,7 +74,12 @@ class BackgammonGameService(
     fun tossZar(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
         checkGameState(game)
-        val timer = timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
+        val timer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) {
+            handleOutOfTime(
+                matchId,
+                game
+            )
+        }
         val doubles = doubleCubeService.getAllDoubles(matchId, game.gameId)
         if (doubles.isNotEmpty()) {
             if (!doubles.last().isAccepted) {
@@ -82,7 +100,7 @@ class BackgammonGameService(
 
     fun getConfiguration(userId: Int, matchId: Int): ConfigResponse {
         val game = gammonStoreService.getMatchById(matchId)
-        timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
+        timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { handleOutOfTime(matchId, game) }
         val configData = game.getConfiguration(userId)
         val doubleCubes = doubleCubeService.getAllDoubles(matchId, game.gameId)
         val doubleCubePosition = doubleCubeService.getDoubleCubePosition(matchId, game, doubleCubes)
@@ -105,8 +123,25 @@ class BackgammonGameService(
 
     fun getColor(userId: Int, matchId: Int): Color {
         val game = gammonStoreService.getMatchById(matchId)
-        timerService.validateAndGet(matchId, game) { handleOutOfTime(matchId, game) }
+        timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { handleOutOfTime(matchId, game) }
         return game.getPlayerColor(userId)
+    }
+
+    fun checkTimeOut(matchId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+        try {
+            timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) {
+                handleOutOfTime(
+                    matchId,
+                    game
+                )
+            }
+        } catch (e: ResponseStatusException) {
+            if (e.statusCode == HttpStatus.FORBIDDEN) {
+                return
+            }
+        }
+        throw ResponseStatusException(HttpStatus.TOO_EARLY, "Game not ended")
     }
 
     private fun createMatch(roomId: Int, request: CreateBackgammonGameRequest): BackgammonWrapper {
@@ -127,6 +162,10 @@ class BackgammonGameService(
             gameId = 1,
             timePolicy = request.timePolicy
         )
+    }
+
+    fun getGamesCountInMatch(matchId: Int): Int {
+        return gammonStoreService.getAllGamesId(matchId).size
     }
 
     private fun getColorMap(firstPlayer: Int, secondPlayer: Int, roomId: Int): Map<Color, Int> {
@@ -238,5 +277,33 @@ class BackgammonGameService(
                 isMatchEnd = true,
             )
         )
+    }
+
+    fun doubleCube(matchId: Int, userId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+        val gameTimer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) {
+            handleOutOfTime(
+                matchId,
+                game
+            )
+        }
+        doubleCubeService.doubleCube(matchId, userId, game)
+        if (gameTimer != null) {
+            timerService.update(matchId, game.getCurrentTurn(), gameTimer)
+        }
+    }
+
+    fun acceptDouble(matchId: Int, userId: Int) {
+        val game = gammonStoreService.getMatchById(matchId)
+        val turn = game.getCurrentTurn().getOpponent()
+        val gameTimer = timerService.validateAndGet(
+            matchId,
+            game.timePolicy,
+            turn
+        ) { handleOutOfTime(matchId, game) }
+        doubleCubeService.acceptDouble(matchId, userId, game)
+        if (gameTimer != null) {
+            timerService.update(matchId, turn, gameTimer)
+        }
     }
 }

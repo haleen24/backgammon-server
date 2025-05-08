@@ -1,11 +1,5 @@
 package hse.scheduler
 
-import hse.service.BackgammonGameService
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
-import org.springframework.stereotype.Component
-import java.time.Duration
-
 //@Component
 //class GameScheduler(
 //    private val scheduler: ThreadPoolTaskScheduler = ThreadPoolTaskScheduler(),

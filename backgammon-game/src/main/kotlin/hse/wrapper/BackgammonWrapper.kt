@@ -190,12 +190,16 @@ class BackgammonWrapper(
     }
 
     private fun safeGetPlayerMask(playerId: Int): Int? {
-        return if (firstPlayer == playerId) {
-            BLACK_COLOR
-        } else if (secondPlayer == playerId) {
-            WHITE_COLOR
-        } else {
-            null
+        return when (playerId) {
+            firstPlayer -> {
+                BLACK_COLOR
+            }
+            secondPlayer -> {
+                WHITE_COLOR
+            }
+            else -> {
+                null
+            }
         }
     }
 }

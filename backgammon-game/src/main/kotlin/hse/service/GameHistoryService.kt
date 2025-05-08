@@ -20,24 +20,19 @@ import org.springframework.web.server.ResponseStatusException
 import kotlin.math.pow
 
 @Service
-class GammonHistoryService(
+class GameHistoryService(
     private val gammonStoreService: GammonStoreService,
     private val gameEngineAdapter: GameEngineAdapter,
 ) {
-    private final val logger = LoggerFactory.getLogger(GammonHistoryService::class.java)
+    private final val logger = LoggerFactory.getLogger(GameHistoryService::class.java)
 
     @Lookup
-    fun lookUp(): GammonHistoryService = this
+    fun lookUp(): GameHistoryService = this
 
     fun getLastGameHistory(matchId: Int): HistoryResponse {
         val gameId = gammonStoreService.getCurrentGameId(matchId)
-//        lookUp().clearHistoryCache()
         return getHistory(matchId, gameId)
     }
-
-//    @CacheEvict(value = ["history"], allEntries = true)
-//    fun clearHistoryCache() {
-//    }
 
     @Cacheable("history")
     fun getHistory(matchId: Int, gameId: Int): HistoryResponse {

@@ -1,4 +1,4 @@
-package hse.service
+package hse.facade
 
 import game.backgammon.Gammon
 import game.backgammon.enums.BackgammonType
@@ -7,25 +7,28 @@ import game.backgammon.enums.DoubleCubePositionEnum
 import game.common.enums.TimePolicy
 import hse.dto.EndGameEvent
 import hse.entity.DoubleCube
+import hse.factory.GameTimerFactory
+import hse.service.DoubleCubeService
+import hse.service.EmitterService
+import hse.service.GameTimerService
+import hse.service.GammonStoreService
 import hse.wrapper.BackgammonWrapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-import org.mockito.internal.verification.NoInteractions
 import kotlin.test.assertEquals
 
-class BackgammonGameServiceTest {
-
-
-    private var service: BackgammonGameService
+class GammonFacadeTest {
+    private var service: GameFacade
 
     private val emitterService: EmitterService = Mockito.mock(EmitterService::class.java)
     private val gammonStoreService: GammonStoreService = Mockito.mock(GammonStoreService::class.java)
     private val doubleCubeService: DoubleCubeService = Mockito.mock(DoubleCubeService::class.java)
     private val timerService: GameTimerService = Mockito.mock(GameTimerService::class.java)
+    private val gameTimerFactory: GameTimerFactory = Mockito.mock(GameTimerFactory::class.java)
 
     init {
-        service = BackgammonGameService(
-            emitterService, gammonStoreService, doubleCubeService, timerService
+        service = GameFacade(
+            emitterService, gammonStoreService, doubleCubeService, timerService, gameTimerFactory
         )
     }
 
@@ -97,7 +100,8 @@ class BackgammonGameServiceTest {
         Mockito.doReturn(Color.BLACK).`when`(wrapper).getPlayerColor(playerId)
         Mockito.doReturn(doubles).`when`(doubleCubeService).getAllDoubles(matchId, 0)
         Mockito.doReturn(true).`when`(wrapper).hasInStore(playerId)
-        Mockito.doReturn(DoubleCubePositionEnum.BELONGS_TO_BLACK).`when`(doubleCubeService).getDoubleCubePosition(matchId, wrapper, doubles)
+        Mockito.doReturn(DoubleCubePositionEnum.BELONGS_TO_BLACK).`when`(doubleCubeService)
+            .getDoubleCubePosition(matchId, wrapper, doubles)
         Mockito.doReturn(1).`when`(wrapper).getPointsForGame()
 
 

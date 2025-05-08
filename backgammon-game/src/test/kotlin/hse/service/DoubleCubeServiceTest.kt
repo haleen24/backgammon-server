@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.TestConstructor
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
-import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 
 
@@ -40,7 +39,7 @@ class DoubleCubeServiceTest {
 
     @Test
     fun doubleZarCreateTest() {
-        val res = BackgammonWrapper.buildFromContext(
+        val game = BackgammonWrapper.buildFromContext(
             restoreContextDto = GammonRestoreContextDto(
                 game = GammonRestorer.GammonRestoreContext(
                     deck = mapOf(10 to -1),
@@ -60,16 +59,14 @@ class DoubleCubeServiceTest {
                 timePolicy = TimePolicy.NO_TIMER
             )
         )
-        Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
-
-        doubleCubeService.doubleCube(0, 0)
+        doubleCubeService.doubleCube(0, 0, game)
 
         Mockito.verify(doubleCubeDao).saveDouble(eq(0), any())
     }
 
     @Test
     fun doubleZarAlreadyHaveOfferedOneTest() {
-        val res = BackgammonWrapper.buildFromContext(
+        val game = BackgammonWrapper.buildFromContext(
             restoreContextDto = GammonRestoreContextDto(
                 game = GammonRestorer.GammonRestoreContext(
                     deck = mapOf(10 to -1),
@@ -96,20 +93,19 @@ class DoubleCubeServiceTest {
             isAccepted = false,
             at = Instant.now()
         )
-        Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
         Mockito.`when`(doubleCubeDao.getAllDoubles(0, 1)).thenReturn(
             mutableListOf(
                 doubleCube
             )
         )
-        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0) }
+        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0, game) }
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, thrown.statusCode)
     }
 
     @Test
     fun doubleZarOffered2InARowTest() {
-        val res = BackgammonWrapper.buildFromContext(
+        val game = BackgammonWrapper.buildFromContext(
             restoreContextDto = GammonRestoreContextDto(
                 game = GammonRestorer.GammonRestoreContext(
                     deck = mapOf(10 to -1),
@@ -136,13 +132,12 @@ class DoubleCubeServiceTest {
             isAccepted = true,
             at = Instant.now()
         )
-        Mockito.`when`(gammonStoreService.getMatchById(Mockito.anyInt())).thenReturn(res)
         Mockito.`when`(doubleCubeDao.getAllDoubles(0, 1)).thenReturn(
             mutableListOf(
                 doubleCube
             )
         )
-        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0) }
+        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0, game) }
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, thrown.statusCode)
     }

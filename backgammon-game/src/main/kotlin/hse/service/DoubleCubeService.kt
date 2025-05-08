@@ -7,6 +7,7 @@ import hse.dto.AcceptDoubleEvent
 import hse.dto.DoubleEvent
 import hse.entity.DoubleCube
 import hse.wrapper.BackgammonWrapper
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -22,10 +23,9 @@ class DoubleCubeService(
     val clock: Clock,
 ) {
 
-    val logger = LoggerFactory.getLogger(this.javaClass)
+    val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun doubleCube(matchId: Int, userId: Int) {
-        val game = gammonStoreService.getMatchById(matchId)
+    fun doubleCube(matchId: Int, userId: Int, game: BackgammonWrapper) {
         val doubles = getAllDoubles(matchId, game.gameId)
         logger.info("double: $doubles")
         if (!game.isTurn(userId)) {
@@ -55,8 +55,7 @@ class DoubleCubeService(
         createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
     }
 
-    fun acceptDouble(matchId: Int, userId: Int) {
-        val game = gammonStoreService.getMatchById(matchId)
+    fun acceptDouble(matchId: Int, userId: Int, game: BackgammonWrapper) {
         val doubles = getAllDoubles(matchId, game.gameId)
         logger.info("accept double: $doubles")
         if (doubles.isEmpty()) {
