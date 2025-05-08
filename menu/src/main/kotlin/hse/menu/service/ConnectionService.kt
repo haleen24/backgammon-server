@@ -2,6 +2,7 @@ package hse.menu.service
 
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
+import game.common.enums.TimePolicy
 import hse.menu.dao.ConnectionDao
 import hse.menu.dto.ConnectionDto
 import org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON
@@ -17,21 +18,21 @@ class ConnectionService(
     val cancelledFilter: MutableSet<Int> = ConcurrentHashMap.newKeySet(),
 ) {
 
-    fun connect(connectionDto: ConnectionDto, points: GammonGamePoints) {
+    fun connect(connectionDto: ConnectionDto, points: GammonGamePoints, timePolicy: TimePolicy) {
         val userId = connectionDto.userId
         cancelledFilter.remove(userId)
         if (userId in inQueueFilter) {
             return
         }
         inQueueFilter.add(userId)
-        connectionDao.enqueue(connectionDto, points)
+        connectionDao.enqueue(connectionDto, points, timePolicy )
     }
 
-    fun take(gameType: GameType, points: GammonGamePoints): ConnectionDto {
+    fun take(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): ConnectionDto {
         var res: ConnectionDto? = null
 
         while (res == null) {
-            res = connectionDao.dequeue(gameType, points)
+            res = connectionDao.dequeue(gameType, points, timePolicy)
             val userId = res.userId
 
             inQueueFilter.remove(userId)

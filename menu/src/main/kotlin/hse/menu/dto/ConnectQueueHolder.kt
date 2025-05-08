@@ -1,11 +1,13 @@
 package hse.menu.dto
 
-import game.common.enums.GameType
-import game.common.enums.GammonGamePoints
-import java.util.concurrent.ArrayBlockingQueue
+import org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON
+import org.springframework.context.annotation.Scope
+import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 
+@Component
+@Scope(SCOPE_SINGLETON)
 data class ConnectQueueHolder(
-    val connectionQueues: ConcurrentHashMap<Pair<GameType, GammonGamePoints>, LinkedBlockingQueue<ConnectionDto>>
+    val connectionQueues: ConcurrentHashMap<GameSearchDetails, LinkedBlockingQueue<ConnectionDto>>
 )

@@ -3,6 +3,7 @@ package hse.menu.service
 import game.backgammon.request.CreateGameRequest
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
+import game.common.enums.TimePolicy
 import hse.menu.adapter.GameAdapter
 import hse.menu.dao.GameDao
 import hse.menu.dto.ConnectionDto
@@ -31,9 +32,11 @@ class MenuGameService(
 
     init {
         if (!isTest) {
-            GameType.entries.forEach { type ->
-                GammonGamePoints.entries.forEach { points ->
-                    executor.execute { connectionJob(type, points) }
+            TimePolicy.entries.forEach { timePolicy ->
+                GameType.entries.forEach { type ->
+                    GammonGamePoints.entries.forEach { points ->
+                        executor.execute { connectionJob(type, points, timePolicy) }
+                    }
                 }
             }
         }
@@ -47,7 +50,7 @@ class MenuGameService(
     fun connect(userId: Int, request: CreateGameRequest): Int {
         val connectionDto = ConnectionDto(userId, CountDownLatch(1), request.type)
         val points = GammonGamePoints.of(request.points) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
-        connectionService.connect(connectionDto, points)
+        connectionService.connect(connectionDto, points, request.timePolicy)
         connectionDto.latch.await()
         return connectionDto.gameId ?: throw ResponseStatusException(
             HttpStatus.CONFLICT,
@@ -59,21 +62,21 @@ class MenuGameService(
         connectionService.disconnect(userId)
     }
 
-    private fun connectionJob(gameType: GameType, points: GammonGamePoints) {
+    private fun connectionJob(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy) {
         var firstPlayerConnection: ConnectionDto
         var secondPlayerConnection: ConnectionDto
         while (true) {
-            firstPlayerConnection = connectionService.take(gameType, points)
-            secondPlayerConnection = connectionService.take(gameType, points)
+            firstPlayerConnection = connectionService.take(gameType, points, timePolicy)
+            secondPlayerConnection = connectionService.take(gameType, points, timePolicy)
             if (connectionService.checkInBan(firstPlayerConnection.userId)) {
                 firstPlayerConnection.latch.countDown()
-                connectionService.connect(secondPlayerConnection, points)
+                connectionService.connect(secondPlayerConnection, points, timePolicy)
                 continue
             }
 
             if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
                 firstPlayerConnection.latch.countDown()
-                connectionService.connect(secondPlayerConnection, points)
+                connectionService.connect(secondPlayerConnection, points, timePolicy)
                 continue
             }
             val gameId = storeRoom(gameType)
@@ -82,7 +85,8 @@ class MenuGameService(
                 firstPlayerConnection.userId,
                 secondPlayerConnection.userId,
                 firstPlayerConnection.gameType,
-                points
+                points,
+                timePolicy
             )
             if (realRoomId != gameId) {
                 logger.info("Не удалось сгенерить игру с id $gameId")

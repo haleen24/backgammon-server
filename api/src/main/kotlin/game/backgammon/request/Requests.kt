@@ -8,7 +8,8 @@ import game.common.enums.TimePolicy
 
 data class CreateGameRequest(
     val type: GameType,
-    val points: Int = GammonGamePoints.THREE.value
+    val points: Int = GammonGamePoints.THREE.value,
+    val timePolicy: TimePolicy = TimePolicy.NO_TIMER,
 )
 
 data class MoveRequest(

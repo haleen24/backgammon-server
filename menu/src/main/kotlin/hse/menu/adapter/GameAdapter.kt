@@ -4,6 +4,7 @@ import game.backgammon.enums.BackgammonType
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
+import game.common.enums.TimePolicy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -29,7 +30,8 @@ class GameAdapter(
         firstUserId: Int,
         secondUserId: Int,
         gameType: GameType,
-        points: GammonGamePoints
+        points: GammonGamePoints,
+        timePolicy: TimePolicy
     ): Int? {
         val uri = URI(
             when (gameType.type) {
@@ -41,7 +43,8 @@ class GameAdapter(
                 type = BackgammonType.valueOf(gameType.toString()),
                 firstUserId = firstUserId,
                 secondUserId = secondUserId,
-                points = points.value
+                points = points.value,
+                timePolicy = timePolicy
             )
         }
 
