@@ -82,6 +82,7 @@ class GameHistoryService(
             firstToMove = firstToMove,
             gameId = gameId,
             thresholdPoints = startState.restoreContextDto.thresholdPoints,
+            type = startState.restoreContextDto.type
         )
     }
 

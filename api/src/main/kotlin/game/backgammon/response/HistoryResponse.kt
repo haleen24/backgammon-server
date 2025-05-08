@@ -1,5 +1,6 @@
 package game.backgammon.response
 
+import game.backgammon.enums.BackgammonType
 import game.backgammon.enums.Color
 import java.io.Serializable
 
@@ -8,6 +9,7 @@ data class HistoryResponse(
     val firstToMove: Color,
     val gameId: Int,
     val thresholdPoints: Int,
+    val type: BackgammonType
 ): Serializable
 
 open class HistoryResponseItem(
