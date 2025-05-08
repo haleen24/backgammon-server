@@ -5,8 +5,7 @@ import java.time.Instant
 
 class GameTimer(
     val matchId: Int,
-    var lastBlackAction: Instant,
-    var lastWhiteAction: Instant,
+    var lastAction: Instant,
     var remainBlackTime: Duration,
     var remainWhiteTime: Duration,
     var increment: Duration,

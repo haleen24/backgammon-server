@@ -52,7 +52,6 @@ class GameTimerServiceTest {
         val gameTimer = GameTimer(
             1,
             now.minusSeconds(1),
-            now.minusSeconds(1),
             remainTime,
             remainTime,
             increment
@@ -73,14 +72,13 @@ class GameTimerServiceTest {
         val gameTimer = GameTimer(
             1,
             now.minusSeconds(100),
-            now.minusSeconds(100),
             remainTime,
             remainTime,
             increment
         )
         `when`(gameTimerDao.getByMatchId(1)).thenReturn(gameTimer)
         `when`(clock.instant()).thenReturn(now)
-        val onOutOfTime = mock<() -> Unit>()
+        val onOutOfTime = mock<(GameTimer) -> Unit>()
 
         val exception =
             assertThrows<ResponseStatusException> {
@@ -94,7 +92,7 @@ class GameTimerServiceTest {
 
         verify(gameTimerDao).getByMatchId(1)
         verify(gameTimerDao).deleteByMatchId(1)
-        verify(onOutOfTime).invoke()
+        verify(onOutOfTime).invoke(gameTimer)
         assertEquals(HttpStatus.FORBIDDEN, exception.statusCode)
     }
 
@@ -106,7 +104,6 @@ class GameTimerServiceTest {
         val gameTimer = GameTimer(
             1,
             now.minusSeconds(1),
-            now.minusSeconds(1),
             remainTime,
             remainTime,
             increment
@@ -116,8 +113,7 @@ class GameTimerServiceTest {
 
         verify(gameTimerDao).setByMatchId(1, gameTimer)
         assertEquals(Duration.ofSeconds(4), gameTimer.remainWhiteTime)
-        assertEquals(now.minusSeconds(1), gameTimer.lastBlackAction)
-        assertEquals(now, gameTimer.lastWhiteAction)
+        assertEquals(now, gameTimer.lastAction)
     }
 
     @Test
@@ -128,7 +124,6 @@ class GameTimerServiceTest {
         val gameTimer = GameTimer(
             1,
             now.minusSeconds(1),
-            now.minusSeconds(1),
             remainTime,
             remainTime,
             increment
@@ -138,7 +133,6 @@ class GameTimerServiceTest {
 
         verify(gameTimerDao).setByMatchId(1, gameTimer)
         assertEquals(Duration.ofSeconds(4), gameTimer.remainBlackTime)
-        assertEquals(now.minusSeconds(1), gameTimer.lastWhiteAction)
-        assertEquals(now, gameTimer.lastBlackAction)
+        assertEquals(now, gameTimer.lastAction)
     }
 }

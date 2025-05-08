@@ -23,7 +23,7 @@ class GameTimerFactory(
         } else {
             null
         } ?: return null
-        return GameTimer(matchId, now, now, remainTime, remainTime, Duration.ofSeconds(8))
+        return GameTimer(matchId, now, remainTime, remainTime, Duration.ofSeconds(8))
     }
 
     private fun getBlitzRemainTime(points: Int): Duration? {

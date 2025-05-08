@@ -59,7 +59,7 @@ class DoubleCubeServiceTest {
                 timePolicy = TimePolicy.NO_TIMER
             )
         )
-        doubleCubeService.doubleCube(0, 0, game)
+        doubleCubeService.doubleCube(0, 0, game, null)
 
         Mockito.verify(doubleCubeDao).saveDouble(eq(0), any())
     }
@@ -98,7 +98,7 @@ class DoubleCubeServiceTest {
                 doubleCube
             )
         )
-        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0, game) }
+        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0, game, null) }
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, thrown.statusCode)
     }
@@ -137,7 +137,7 @@ class DoubleCubeServiceTest {
                 doubleCube
             )
         )
-        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0, game) }
+        val thrown = assertThrows<ResponseStatusException> { doubleCubeService.doubleCube(0, 0, game, null) }
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, thrown.statusCode)
     }

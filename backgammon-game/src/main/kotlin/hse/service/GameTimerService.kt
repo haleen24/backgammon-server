@@ -3,13 +3,12 @@ package hse.service
 import game.backgammon.enums.Color
 import game.common.enums.TimePolicy
 import hse.dao.GameTimerDao
-import hse.dto.TimerActionContext
 import hse.entity.GameTimer
-import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.time.Clock
+import java.time.Duration
 import java.time.Duration.between
 
 @Service
@@ -21,7 +20,7 @@ class GameTimerService(
         matchId: Int,
         timePolicy: TimePolicy,
         turn: Color,
-        onOutOfTime: () -> Unit
+        onOutOfTime: (GameTimer) -> Unit
     ): GameTimer? {
         if (timePolicy == TimePolicy.NO_TIMER) {
             return null
@@ -29,12 +28,14 @@ class GameTimerService(
         val now = clock.instant()
         val gameTimer =
             gameTimerDao.getByMatchId(matchId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found")
-        val timerActionContext = getActionContext(turn, gameTimer)
-        val actionTime = between(timerActionContext.opponentLastAction, now)
-        if (actionTime.toMillis() > timerActionContext.playerRemainTime.toMillis()) {
-            onOutOfTime()
-            gameTimerDao.deleteByMatchId(matchId)
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Out of time")
+        val actionTime = between(gameTimer.lastAction, now)
+
+        if (turn == Color.BLACK && actionTime.toMillis() > gameTimer.remainBlackTime.toMillis()) {
+            gameTimer.remainBlackTime = Duration.ZERO
+            handleOutOfTime(matchId, gameTimer, onOutOfTime)
+        } else if (turn == Color.WHITE && actionTime.toMillis() > gameTimer.remainWhiteTime.toMillis()) {
+            gameTimer.remainWhiteTime = Duration.ZERO
+            handleOutOfTime(matchId, gameTimer, onOutOfTime)
         }
         return gameTimer
     }
@@ -42,14 +43,13 @@ class GameTimerService(
     fun update(matchId: Int, currentTurn: Color, gameTimer: GameTimer) {
         val now = clock.instant()
         if (currentTurn == Color.WHITE) {
-            val remainTime = gameTimer.remainWhiteTime.minus(between(gameTimer.lastBlackAction, now))
-            gameTimer.lastWhiteAction = now
+            val remainTime = gameTimer.remainWhiteTime.minus(between(gameTimer.lastAction, now))
             gameTimer.remainWhiteTime = remainTime.plus(gameTimer.increment)
         } else {
-            val remainTime = gameTimer.remainBlackTime.minus(between(gameTimer.lastWhiteAction, now))
-            gameTimer.lastBlackAction = now
+            val remainTime = gameTimer.remainBlackTime.minus(between(gameTimer.lastAction, now))
             gameTimer.remainBlackTime = remainTime.plus(gameTimer.increment)
         }
+        gameTimer.lastAction = now
         gameTimerDao.setByMatchId(matchId, gameTimer)
     }
 
@@ -59,17 +59,9 @@ class GameTimerService(
         }
     }
 
-    private fun getActionContext(currentTurn: Color, gameTimer: GameTimer): TimerActionContext {
-        return if (currentTurn == Color.BLACK) {
-            TimerActionContext(
-                opponentLastAction = gameTimer.lastWhiteAction,
-                playerRemainTime = gameTimer.remainBlackTime
-            )
-        } else {
-            TimerActionContext(
-                opponentLastAction = gameTimer.lastBlackAction,
-                playerRemainTime = gameTimer.remainWhiteTime
-            )
-        }
+    private fun handleOutOfTime(matchId: Int, gameTimer: GameTimer, onOutOfTime: (GameTimer) -> Unit) {
+        onOutOfTime(gameTimer)
+        gameTimerDao.deleteByMatchId(matchId)
+        throw ResponseStatusException(HttpStatus.FORBIDDEN, "Out of time")
     }
 }

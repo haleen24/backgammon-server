@@ -6,6 +6,7 @@ import hse.dao.DoubleCubeDao
 import hse.dto.AcceptDoubleEvent
 import hse.dto.DoubleEvent
 import hse.entity.DoubleCube
+import hse.entity.GameTimer
 import hse.wrapper.BackgammonWrapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -25,7 +26,7 @@ class DoubleCubeService(
 
     val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun doubleCube(matchId: Int, userId: Int, game: BackgammonWrapper) {
+    fun doubleCube(matchId: Int, userId: Int, game: BackgammonWrapper, timer: GameTimer?) {
         val doubles = getAllDoubles(matchId, game.gameId)
         logger.info("double: $doubles")
         if (!game.isTurn(userId)) {
@@ -40,7 +41,7 @@ class DoubleCubeService(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Decline by Crawford rule")
         }
         if (doubleCubePosition == DoubleCubePositionEnum.FREE) {
-            return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
+            return createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor, timer)
         }
         val last = doubles.last()
         if (last.by == userColor) {
@@ -52,11 +53,10 @@ class DoubleCubeService(
         if (doubles.size >= 6) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "maximum double already reached")
         }
-        createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor)
+        createDoubleRequest(matchId, game.gameId, game.numberOfMoves, userId, userColor, timer)
     }
 
-    fun acceptDouble(matchId: Int, userId: Int, game: BackgammonWrapper) {
-        val doubles = getAllDoubles(matchId, game.gameId)
+    fun acceptDouble(matchId: Int, userId: Int, game: BackgammonWrapper, timer: GameTimer?, doubles: List<DoubleCube>) {
         logger.info("accept double: $doubles")
         if (doubles.isEmpty()) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "there are no doubles")
@@ -69,7 +69,15 @@ class DoubleCubeService(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant accept own double")
         }
         acceptDouble(matchId, last)
-        emitterService.sendEventExceptUser(userId, matchId, AcceptDoubleEvent(game.getPlayerColor(userId)))
+        emitterService.sendEventExceptUser(
+            userId,
+            matchId,
+            AcceptDoubleEvent(
+                game.getPlayerColor(userId),
+                timer?.remainBlackTime?.toMillis(),
+                timer?.remainWhiteTime?.toMillis()
+            ),
+        )
     }
 
     fun getDoubleCubePosition(
@@ -107,31 +115,20 @@ class DoubleCubeService(
 
 
     fun getAllDoubles(matchId: Int, gameId: Int): List<DoubleCube> {
-//        val fromCache =
-//            redisAdapter.lrange(getCacheKey(matchId)) ?: return doubleCubeDao.getAllDoubles(matchId, gameId)
-//                .sortedBy { it.moveId }
-//        return fromCache.map { objectMapper.reader().readValue(it, DoubleCube::class.java) }
         return doubleCubeDao.getAllDoubles(matchId, gameId)
     }
 
     fun acceptDouble(matchId: Int, last: DoubleCube) {
-//        val cacheKey = getCacheKey(matchId)
         doubleCubeDao.acceptDouble(matchId, last.gameId, last.moveId)
-//        putToCache(cacheKey, last.copy(isAccepted = true))
     }
 
-    private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color) {
+    private fun createDoubleRequest(matchId: Int, gameId: Int, moveId: Int, userId: Int, by: Color, timer: GameTimer?) {
         val doubleCube = DoubleCube(gameId, moveId, by, false, clock.instant())
         doubleCubeDao.saveDouble(matchId, doubleCube)
-//        putToCache(matchId, doubleCube)
-        emitterService.sendEventExceptUser(userId, matchId, DoubleEvent(by))
+        emitterService.sendEventExceptUser(
+            userId,
+            matchId,
+            DoubleEvent(by, timer?.remainBlackTime?.toMillis(), timer?.remainWhiteTime?.toMillis())
+        )
     }
-
-//    private fun putToCache(matchId: Any, doubleCube: DoubleCube) {
-//        redisAdapter.rpush(getCacheKey(matchId), objectMapper.writeValueAsString(doubleCube))
-//    }
-
-//    private fun getCacheKey(matchId: Any): String {
-//        return "dc-$matchId"
-//    }
 }

@@ -154,6 +154,10 @@ class BackgammonWrapper(
         return game.turn == getPlayerMask(userId)
     }
 
+    fun invertTurn() {
+        game.turn = -game.turn
+    }
+
     fun setPossibleEndFlag(flag: Boolean) {
         game.endFlag = game.endFlag || flag
     }
