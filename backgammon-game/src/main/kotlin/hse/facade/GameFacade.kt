@@ -115,7 +115,7 @@ class GameFacade(
     fun getConfiguration(userId: Int, matchId: Int): ConfigResponse {
         val fullGame = getMatchById(matchId)
         val game = fullGame.game
-        timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
+        val timer =timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
             handleOutOfTime(matchId, game, timer)
         }
         val configData = game.getConfiguration(userId)
@@ -135,6 +135,8 @@ class GameFacade(
             doubleCubeValue = doubleCubeValue,
             doubleCubePosition = doubleCubePosition,
             winner = winner,
+            remainWhiteTime = timer?.remainWhiteTime?.toMillis(),
+            remainBlackTime = timer?.remainBlackTime?.toMillis(),
         )
     }
 
