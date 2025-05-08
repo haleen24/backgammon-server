@@ -9,5 +9,5 @@ import java.util.concurrent.LinkedBlockingQueue
 @Component
 @Scope(SCOPE_SINGLETON)
 data class ConnectQueueHolder(
-    val connectionQueues: ConcurrentHashMap<GameSearchDetails, LinkedBlockingQueue<ConnectionDto>>
+    val connectionQueues: ConcurrentHashMap<GameSearchDetails, LinkedBlockingQueue<ConnectionDto>> = ConcurrentHashMap()
 )
