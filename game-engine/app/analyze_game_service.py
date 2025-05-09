@@ -238,7 +238,7 @@ def find_in_parentheses(x):
 
 
 def delete_parentheses(x):
-    match = re.search(r'\(.*?\)', x)
+    match = re.search(r'\(.*\)', x)
     if match:
         x = x.replace(match.group(0), "")
     return x
