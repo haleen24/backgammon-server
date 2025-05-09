@@ -22,7 +22,7 @@ spring:
             url: "http://game-engine:80"
             read-timeout: 30_000
           player-service:
-            url: "http://player-sevice:84"
+            url: "http://player-service:84"
             read-timeout: 6_000
 
 
