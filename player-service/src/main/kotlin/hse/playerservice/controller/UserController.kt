@@ -80,7 +80,7 @@ class UserController(
 
     @GetMapping("/usernames")
     fun getUsernames(@RequestParam ids: String): List<String> {
-        return userService.getAllUsernames(ids.split(",").map { it.toLong() }.toList())
+        return userService.getAllUsernames(ids.split(",").map { it.toLong() }.sortedBy { it }.toList())
     }
 
     @GetMapping("/me")

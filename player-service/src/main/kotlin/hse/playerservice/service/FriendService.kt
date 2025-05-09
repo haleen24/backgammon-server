@@ -73,6 +73,18 @@ class FriendService(
         return friendIds.map { GetFriendResponse(it.username, it.id) }
     }
 
+    fun getFriendRequests(userId: Long): List<GetFriendResponse> {
+        val friendRequests = friendRequestRepository.findByTo(userId).sortedBy { it.from }
+        val usernames = userService.getAllUsernames(friendRequests.map { it.to })
+
+        return friendRequests.zip(usernames).map { pair ->
+            GetFriendResponse(
+                username = pair.second,
+                id = pair.first.id
+            )
+        }
+    }
+
 
     private fun addFriendById(userId: Long, friendRequestId: Long) {
         if (userId == friendRequestId) {

@@ -9,6 +9,7 @@ import jakarta.persistence.*
 data class UserRating(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long,
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     @OneToOne(cascade = [(CascadeType.ALL)])
     val user: User,
     var backgammonDefault: Int,

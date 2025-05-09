@@ -41,4 +41,9 @@ class FriendController(
     ): List<GetFriendResponse> {
         return friendService.getFriends(userId, offset, limit)
     }
+
+    @GetMapping("/requests")
+    fun getFriendRequests(@RequestHeader(AUTH_HEADER) userId: Long): List<GetFriendResponse> {
+        return friendService.getFriendRequests(userId)
+    }
 }

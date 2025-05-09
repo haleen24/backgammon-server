@@ -9,7 +9,7 @@ data class JwtResponse(
 
 data class GetFriendResponse(
     val username: String,
-    val friendId: Long
+    val id: Long
 )
 
 data class UserInfoResponse(
