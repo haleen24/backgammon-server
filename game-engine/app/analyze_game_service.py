@@ -111,7 +111,7 @@ def split_without_empty(line):
 def read_analysis(paths: Iterable[str], games_count):
     current_game = 0
     data_by_game = [{"items": [], "overall": []} for _ in range(games_count)]
-    overall_match = []
+    overall_match = dict()
     for path in paths:
         move_data = None
         stage = None
@@ -185,11 +185,15 @@ def read_analysis(paths: Iterable[str], games_count):
                     match = re.search("Cubeful \d{1}-ply", line)
                     if match:
                         rolled_block = line.replace(match.group(0), "").split(";")
+                        asterisk = None
                         if rolled_block[0] == "*":
                             rolled_block = rolled_block[1:]
+                            asterisk = "*"
                         rolled_block = rolled_block[1:]
                         rolled_block[1] = rolled_block[1].replace("Eq.:", "").strip().split()[0]
                         rolled_block = ";".join(rolled_block)
+                        if asterisk:
+                            rolled_block = asterisk + rolled_block
                     else:
                         if rolled_block:
                             move_data["best_moves"].append(rolled_block + ";" + line)
@@ -206,11 +210,21 @@ def read_analysis(paths: Iterable[str], games_count):
                 if line.startswith("Match statistics"):
                     stage = "MATCH_STATISTICS"
                     continue
-                if stage == "GAME_STATISTICS":
-                    data_by_game[current_game]["overall"].append(line)
-                    continue
                 if stage == "MATCH_STATISTICS":
-                    overall_match.append(line)
+                    if line.startswith("Moves marked doubtful") or line.startswith(
+                            "Error total EMG") or line.startswith("Rolls marked") or line.startswith(
+                        "Luck total EMG") or line.startswith("Missed doubles") or line.startswith(
+                        "Wrong doubles") or line.startswith("Wrong takes") or line.startswith("Wrong passes"):
+                        line = line.split(";")
+                        first = line[1]
+                        second = line[2]
+                        match_first = find_in_parentheses(first)
+                        match_second = find_in_parentheses(second)
+                        if match_first:
+                            first = first.replace(match_first.group(0), "")
+                        if match_second:
+                            second = second.replace(match_second.group(0), "")
+                        overall_match[line[0]] = [float(first), float(second)]
                     continue
         current_game += 1
     print([len(i["items"]) for i in data_by_game])
@@ -225,4 +239,4 @@ def parse_alert(x):
 
 
 def find_in_parentheses(x):
-    return re.search(r'\([-+.\d]+\)', x)
+    return re.search(r' *\(.*?\)', x)
