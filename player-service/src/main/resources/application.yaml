@@ -5,21 +5,15 @@ server:
 spring:
   application:
     name: player-service
-
   datasource:
     url: jdbc:postgresql://postgres-service:5432/backgammon
-#    url: jdbc:postgresql://${PLAYER_DB:localhost:5432/backgammon}
     driver-class-name: org.postgresql.Driver
-    #        username: ${PLAYER_DB_USER:postgres}
     username: postgres
-    #        password: ${PLAYER_DB_PASS:admin}
     password: admin
-
   jpa:
     generate-ddl: true
     hibernate:
       ddl-auto: validate
-
   sql:
     init:
       mode: always

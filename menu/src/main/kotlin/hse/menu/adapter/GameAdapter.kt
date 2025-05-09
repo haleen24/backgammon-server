@@ -3,8 +3,7 @@ package hse.menu.adapter
 import game.backgammon.enums.BackgammonType
 import game.backgammon.request.CreateBackgammonGameRequest
 import game.common.enums.GameType
-import game.common.enums.GammonGamePoints
-import game.common.enums.TimePolicy
+import hse.menu.entity.Game
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -25,26 +24,19 @@ class GameAdapter(
     private val gameAddr = "game"
 
     private val createRoomTemplate = "$gameUri/$gameAddr/%s/create-room/%d"
-    fun gameCreation(
-        gameId: Int,
-        firstUserId: Int,
-        secondUserId: Int,
-        gameType: GameType,
-        points: GammonGamePoints,
-        timePolicy: TimePolicy
-    ): Int? {
+    fun gameCreation(game: Game): Int? {
         val uri = URI(
-            when (gameType.type) {
-                GameType.GeneralGameType.BACKGAMMON -> createRoomTemplate.format("backgammon", gameId)
+            when (game.gameType.type) {
+                GameType.GeneralGameType.BACKGAMMON -> createRoomTemplate.format("backgammon", game.id)
             }
         )
-        val request = when (gameType.type) {
+        val request = when (game.gameType.type) {
             GameType.GeneralGameType.BACKGAMMON -> CreateBackgammonGameRequest(
-                type = BackgammonType.valueOf(gameType.toString()),
-                firstUserId = firstUserId,
-                secondUserId = secondUserId,
-                points = points.value,
-                timePolicy = timePolicy
+                type = BackgammonType.valueOf(game.gameType.toString()),
+                firstUserId = game.firstPlayerId.toInt(),
+                secondUserId = game.secondPlayerId.toInt(),
+                points = game.gamePoints.value,
+                timePolicy = game.timePolicy
             )
         }
 

@@ -1,7 +1,9 @@
 package hse.menu.dao
 
-import game.common.enums.GameType
+import hse.menu.entity.Game
+import org.springframework.data.repository.CrudRepository
+import org.springframework.stereotype.Repository
 
-interface GameDao {
-    fun storeGame(gameType: GameType): Int
+@Repository
+interface GameDao : CrudRepository<Game, Long> {
 }
