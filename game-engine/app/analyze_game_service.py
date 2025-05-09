@@ -134,6 +134,7 @@ def read_analysis(paths: Iterable[str], games_count):
 
                 if line.startswith("Move number"):
                     if move_data:
+                        move_data["cube"] = move_data["cube"][2:]
                         data_by_game[current_game]["items"].append(move_data)
                     move_data = {
                         "rolled": None,
@@ -216,14 +217,8 @@ def read_analysis(paths: Iterable[str], games_count):
                         "Luck total EMG") or line.startswith("Missed doubles") or line.startswith(
                         "Wrong doubles") or line.startswith("Wrong takes") or line.startswith("Wrong passes"):
                         line = line.split(";")
-                        first = line[1]
-                        second = line[2]
-                        match_first = find_in_parentheses(first)
-                        match_second = find_in_parentheses(second)
-                        if match_first:
-                            first = first.replace(match_first.group(0), "")
-                        if match_second:
-                            second = second.replace(match_second.group(0), "")
+                        first = delete_parentheses(line[1])
+                        second = delete_parentheses(line[2])
                         overall_match[line[0]] = [float(first), float(second)]
                     continue
         current_game += 1
@@ -239,4 +234,11 @@ def parse_alert(x):
 
 
 def find_in_parentheses(x):
-    return re.search(r' *\(.*?\)', x)
+    return re.search(r'\([-+.\d]+\)', x)
+
+
+def delete_parentheses(x):
+    match = re.search(r'\(.*?\)', x)
+    if match:
+        x = x.replace(match.group(0), "")
+    return x
