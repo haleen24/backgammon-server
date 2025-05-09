@@ -2,6 +2,8 @@ package player.request
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import game.common.enums.GameType
+import game.common.enums.TimePolicy
 import player.InvitePolicy
 
 data class AuthRequest(
@@ -75,4 +77,11 @@ data class UpdateUserInfoRequest(
     val login: String?,
     val username: String?,
     val invitePolicy: InvitePolicy?
+)
+
+data class ChangeRatingRequest(
+    val winnerId: Long,
+    val loserId: Long,
+    val gameType: GameType,
+    val gameTimePolicy: TimePolicy
 )

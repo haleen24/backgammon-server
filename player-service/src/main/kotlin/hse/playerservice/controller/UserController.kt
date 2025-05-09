@@ -74,8 +74,8 @@ class UserController(
     fun updateUserInfo(
         @RequestHeader(AUTH_HEADER) userId: Long,
         @RequestBody updateUserInfoRequest: UpdateUserInfoRequest
-    ): UserInfoResponse {
-        return userService.update(userId, updateUserInfoRequest)
+    ) {
+        userService.update(userId, updateUserInfoRequest)
     }
 
     @GetMapping("/usernames")

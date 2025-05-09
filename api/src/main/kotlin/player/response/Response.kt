@@ -16,5 +16,13 @@ data class UserInfoResponse(
     val id: Long,
     val username: String,
     val login: String,
-    val invitePolicy: InvitePolicy
+    val invitePolicy: InvitePolicy,
+    val rating: Rating,
+)
+
+data class Rating(
+    val backgammonBlitz: Int,
+    val backgammonDefault: Int,
+    val nardeBlitz: Int,
+    val nardeDefault: Int,
 )

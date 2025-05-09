@@ -27,6 +27,7 @@ class UserService(
     private val userImageStorage: UserImageStorage,
     private val passwordEncoder: PasswordEncoder,
     private val userMapper: UserMapper,
+    private val userRatingService: UserRatingService,
 ) {
     companion object {
         const val NO_ID = 0L
@@ -35,11 +36,9 @@ class UserService(
     }
 
     fun createUser(request: CreateUserRequest): JwtResponse {
-
         if (userRepository.existsByLogin(request.login)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "User already exists")
         }
-
         val user = User(
             id = NO_ID,
             login = request.login,
@@ -48,9 +47,8 @@ class UserService(
         )
 
         val saved = userRepository.save(user)
-
+        userRatingService.createDefaultRating(saved)
         val token = jwtService.generateToken(saved)
-
         return JwtResponse(token = token, userId = saved.id)
 
     }
@@ -120,7 +118,7 @@ class UserService(
         return ResponseEntity(HttpStatus.OK)
     }
 
-    fun update(userId: Long, updateUserInfoRequest: UpdateUserInfoRequest): UserInfoResponse {
+    fun update(userId: Long, updateUserInfoRequest: UpdateUserInfoRequest) {
         var user = findUserNotNull(userId)
         updateUserInfoRequest.login?.apply { user = user.copy(login = updateUserInfoRequest.login!!) }
         updateUserInfoRequest.username?.apply { user = user.copy(username = updateUserInfoRequest.username!!) }
@@ -128,7 +126,6 @@ class UserService(
             user = user.copy(invitePolicyCode = updateUserInfoRequest.invitePolicy!!.code)
         }
         userRepository.save(user)
-        return userMapper.toUserInfoResponse(user)
     }
 
     fun saveUserImage(userId: Long, image: MultipartFile): ResponseEntity<Void> {
@@ -152,7 +149,8 @@ class UserService(
             HttpStatus.NOT_FOUND,
             "User not found"
         )
-        return userMapper.toUserInfoResponse(user)
+        val userRating = userRatingService.findByUserId(user.id)
+        return userMapper.toUserInfoResponse(user, userRating)
     }
 
     fun getAllUsernames(ids: List<Long>): List<String> {
