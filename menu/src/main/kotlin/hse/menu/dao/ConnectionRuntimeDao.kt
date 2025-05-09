@@ -25,7 +25,7 @@ class ConnectionRuntimeDao(
 
     override fun flushAll(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): List<ConnectionDto> {
         val gameSearchDetails = GameSearchDetails(gameType, points, timePolicy)
-        val queue = connectionContext.connectionQueues[gameSearchDetails]!!
+        val queue = connectionContext.connectionQueues[gameSearchDetails] ?: return listOf()
         val drained = mutableListOf<ConnectionDto>()
         while (true) {
             val item = queue.poll() ?: break

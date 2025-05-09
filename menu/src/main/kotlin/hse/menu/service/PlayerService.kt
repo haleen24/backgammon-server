@@ -11,7 +11,6 @@ class PlayerService(
 ) {
     fun getUserRating(userId: Int, gameType: GameType, timePolicy: TimePolicy): Long {
         val rating = playerAdapter.getUserInfo(userId.toLong()).rating
-
         return (if (gameType == GameType.SHORT_BACKGAMMON) {
             if (timePolicy == TimePolicy.BLITZ) {
                 rating.nardeBlitz
