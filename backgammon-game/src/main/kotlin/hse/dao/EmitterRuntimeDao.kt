@@ -24,7 +24,7 @@ class EmitterRuntimeDao(
         if (!emitters.containsKey(gameId)) {
             emitters[gameId] = HashSet()
         }
-        val emitter = SseEmitter(sseTimeOut)
+        val emitter = SseEmitter(0)
         emitter.onCompletion { remove(gameId, userId) }
         emitter.onError { remove(gameId, userId) }
         emitter.onTimeout { remove(gameId, userId) }
