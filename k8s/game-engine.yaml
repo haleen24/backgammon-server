@@ -17,8 +17,7 @@ spec:
     spec:
       containers:
         - name: engine
-          image: game-engine:latest
-          imagePullPolicy: Never
+          image:  176.108.249.50:5000/game-engine:latest
           ports:
             - containerPort: 80
 

@@ -17,8 +17,7 @@ spec:
     spec:
       containers:
         - name: menu
-          image: narde-menu:latest
-          imagePullPolicy: Never
+          image: 176.108.249.50:5000/narde-menu:latest
           ports:
             - containerPort: 81
           envFrom:

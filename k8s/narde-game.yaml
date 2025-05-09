@@ -16,8 +16,7 @@ spec:
     spec:
       containers:
         - name: game
-          image: narde-game:latest
-          imagePullPolicy: Never
+          image: 176.108.249.50:5000/narde-game:latest
           ports:
             - containerPort: 82
           envFrom:
