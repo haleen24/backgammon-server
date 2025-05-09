@@ -42,6 +42,7 @@ class MenuService(
     fun connect(userId: Int, request: CreateGameRequest): Int {
         val points = GammonGamePoints.of(request.points) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
         val userRating = playerService.getUserRating(userId, request.type, request.timePolicy)
+        logger.info("connect: $userId, userRating: $userRating")
         val connectionDto = ConnectionDto(userId, CountDownLatch(1), request.type, userRating.toInt())
         connectionService.connect(connectionDto, points, request.timePolicy)
         connectionDto.latch.await()
