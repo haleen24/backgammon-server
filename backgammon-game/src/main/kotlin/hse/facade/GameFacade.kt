@@ -14,10 +14,7 @@ import hse.dto.*
 import hse.entity.DoubleCube
 import hse.entity.GameTimer
 import hse.factory.GameTimerFactory
-import hse.service.DoubleCubeService
-import hse.service.EmitterService
-import hse.service.GameTimerService
-import hse.service.GammonStoreService
+import hse.service.*
 import hse.wrapper.BackgammonWrapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -31,7 +28,8 @@ class GameFacade(
     private val gammonStoreService: GammonStoreService,
     private val doubleCubeService: DoubleCubeService,
     private val timerService: GameTimerService,
-    private val gameTimerFactory: GameTimerFactory
+    private val gameTimerFactory: GameTimerFactory,
+    private val playerService: PlayerService,
 ) {
 
     fun createAndConnect(matchId: Int, request: CreateBackgammonGameRequest): Int {
@@ -115,7 +113,7 @@ class GameFacade(
     fun getConfiguration(userId: Int, matchId: Int): ConfigResponse {
         val fullGame = getMatchById(matchId)
         val game = fullGame.game
-        val timer =timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
+        val timer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
             handleOutOfTime(matchId, game, timer)
         }
         val configData = game.getConfiguration(userId)
@@ -202,6 +200,8 @@ class GameFacade(
         if (!endMatch) {
             wrapper.restore()
             gammonStoreService.saveGameOnCreation(roomId, wrapper.gameId, wrapper)
+        } else {
+            sendRatingChange(wrapper, winner)
         }
         emitterService.sendForAll(
             roomId, EndGameEvent(
@@ -235,6 +235,8 @@ class GameFacade(
         if (!endMatch) {
             game.restore()
             gammonStoreService.saveGameOnCreation(matchId, game.gameId, game)
+        } else {
+            sendRatingChange(game, winnerColor)
         }
         emitterService.sendForAll(
             matchId, EndGameEvent(
@@ -305,6 +307,7 @@ class GameFacade(
                 remainWhiteTime = timer.remainWhiteTime.toMillis()
             )
         )
+        sendRatingChange(wrapper, winner)
     }
 
     fun doubleCube(matchId: Int, userId: Int) {
@@ -344,5 +347,15 @@ class GameFacade(
             game.invertTurn()
         }
         return GameWithDoubleCubes(game, doubleCubes)
+    }
+
+    private fun sendRatingChange(wrapper: BackgammonWrapper, winner: Color) {
+        val players = wrapper.getPlayers()
+        playerService.changeRating(
+            players[winner]!!.toLong(),
+            players[winner.getOpponent()]!!.toLong(),
+            wrapper.type,
+            wrapper.timePolicy
+        )
     }
 }

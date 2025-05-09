@@ -21,7 +21,9 @@ spring:
           engine:
             url: "http://game-engine:80"
             read-timeout: 30_000
-
+          player-service:
+            url: "http://player-sevice:84"
+            read-timeout: 6_000
 
 
   # spring.cache.redis.time-to-live=600000

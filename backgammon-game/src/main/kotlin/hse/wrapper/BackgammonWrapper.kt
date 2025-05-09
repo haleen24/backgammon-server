@@ -15,7 +15,7 @@ import kotlin.math.sign
 
 class BackgammonWrapper(
     private var game: Gammon,
-    private val type: BackgammonType,
+    val type: BackgammonType,
     var gameId: Int,
     var blackPoints: Int,
     var whitePoints: Int,
