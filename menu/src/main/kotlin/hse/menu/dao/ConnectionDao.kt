@@ -8,5 +8,6 @@ import hse.menu.dto.ConnectionDto
 interface ConnectionDao {
     fun enqueue(connection: ConnectionDto, points: GammonGamePoints, timePolicy: TimePolicy)
 
-    fun dequeue(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): ConnectionDto
+
+    fun flushAll(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): List<ConnectionDto>
 }

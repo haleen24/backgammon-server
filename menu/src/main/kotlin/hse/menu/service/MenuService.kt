@@ -18,7 +18,7 @@ import java.util.concurrent.Executors
 class MenuService(
     private val connectionService: ConnectionService,
     private val gameService: GameService,
-
+    private val playerService: PlayerService,
     @Value("\${disable-job}") isTest: Boolean = false
 ) {
 
@@ -40,8 +40,9 @@ class MenuService(
     }
 
     fun connect(userId: Int, request: CreateGameRequest): Int {
-        val connectionDto = ConnectionDto(userId, CountDownLatch(1), request.type)
         val points = GammonGamePoints.of(request.points) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        val userRating = playerService.getUserRating(userId, request.type, request.timePolicy)
+        val connectionDto = ConnectionDto(userId, CountDownLatch(1), request.type, userRating.toInt())
         connectionService.connect(connectionDto, points, request.timePolicy)
         connectionDto.latch.await()
         return connectionDto.gameId ?: throw ResponseStatusException(
@@ -55,40 +56,55 @@ class MenuService(
     }
 
     private fun connectionJob(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy) {
-        var firstPlayerConnection: ConnectionDto
-        var secondPlayerConnection: ConnectionDto
         while (true) {
-            firstPlayerConnection = connectionService.take(gameType, points, timePolicy)
-            secondPlayerConnection = connectionService.take(gameType, points, timePolicy)
-            if (connectionService.checkInBan(firstPlayerConnection.userId)) {
-                firstPlayerConnection.latch.countDown()
-                connectionService.connect(secondPlayerConnection, points, timePolicy)
-                continue
+            val connections = connectionService.take(gameType, points, timePolicy)
+                .sortedBy { it.userRating }
+            for (i in 0..<connections.size - connections.size % 2) {
+                val first = connections[i]
+                val second = connections[i + 1]
+                connect(first, second, gameType, points, timePolicy)
             }
+            if (connections.size % 2 != 0) {
+                connectionService.connect(connections.last(), points, timePolicy)
+            }
+        }
+    }
 
-            if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
-                firstPlayerConnection.latch.countDown()
-                connectionService.connect(secondPlayerConnection, points, timePolicy)
-                continue
-            }
+    private fun connect(
+        firstPlayerConnection: ConnectionDto,
+        secondPlayerConnection: ConnectionDto,
+        gameType: GameType,
+        points: GammonGamePoints,
+        timePolicy: TimePolicy
+    ) {
+        if (connectionService.checkInBan(firstPlayerConnection.userId)) {
+            firstPlayerConnection.latch.countDown()
+            connectionService.connect(secondPlayerConnection, points, timePolicy)
+            return
+        }
 
-            val game = gameService.storeGame(
-                gameType,
-                points,
-                timePolicy,
-                firstPlayerConnection.userId.toLong(),
-                secondPlayerConnection.userId.toLong()
-            )
-            if (game == null) {
-                logger.warn("Не удалось сгенерить игру")
-                firstPlayerConnection.latch.countDown()
-                secondPlayerConnection.latch.countDown()
-                continue
-            }
-            firstPlayerConnection.gameId = game.id.toInt()
-            secondPlayerConnection.gameId = game.id.toInt()
+        if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
+            firstPlayerConnection.latch.countDown()
+            connectionService.connect(firstPlayerConnection, points, timePolicy)
+            return
+        }
+
+        val game = gameService.storeGame(
+            gameType,
+            points,
+            timePolicy,
+            firstPlayerConnection.userId.toLong(),
+            secondPlayerConnection.userId.toLong()
+        )
+        if (game == null) {
+            logger.warn("Не удалось сгенерить игру")
             firstPlayerConnection.latch.countDown()
             secondPlayerConnection.latch.countDown()
+            return
         }
+        firstPlayerConnection.gameId = game.id.toInt()
+        secondPlayerConnection.gameId = game.id.toInt()
+        firstPlayerConnection.latch.countDown()
+        secondPlayerConnection.latch.countDown()
     }
 }

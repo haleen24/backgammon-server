@@ -5,7 +5,7 @@ ssh "$SERVER_HOST" "
   cd ~/backend_server/backgammon-server/player-service
   echo '---- build jar'
   sudo chmod +x gradlew
-  ./gradlew clean build -x test
+  ./gradlew clean build -x test --no-daemon
   echo '---- jar built'
   echo '---- deploy'
   bash ./../deploy-scripts/deploy.sh $label

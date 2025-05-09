@@ -33,6 +33,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation("commons-io:commons-io:2.18.0")
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
@@ -58,4 +59,10 @@ allOpen {
     annotation 'jakarta.persistence.Entity'
     annotation 'jakarta.persistence.MappedSuperclass'
     annotation 'jakarta.persistence.Embeddable'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.1"
+    }
 }

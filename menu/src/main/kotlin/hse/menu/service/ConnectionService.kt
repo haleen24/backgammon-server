@@ -25,24 +25,13 @@ class ConnectionService(
             return
         }
         inQueueFilter.add(userId)
-        connectionDao.enqueue(connectionDto, points, timePolicy )
+        connectionDao.enqueue(connectionDto, points, timePolicy)
     }
 
-    fun take(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): ConnectionDto {
-        var res: ConnectionDto? = null
-
-        while (res == null) {
-            res = connectionDao.dequeue(gameType, points, timePolicy)
-            val userId = res.userId
-
-            inQueueFilter.remove(userId)
-
-            if (userId in cancelledFilter) {
-                res = null
-            }
-        }
-
-        return res
+    fun take(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): List<ConnectionDto> {
+        val res = connectionDao.flushAll(gameType, points, timePolicy)
+        res.forEach { inQueueFilter.remove(it.userId) }
+        return res.filter { !cancelledFilter.contains(it.userId) }
     }
 
     fun checkInBan(userId: Int): Boolean {

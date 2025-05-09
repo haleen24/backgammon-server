@@ -7,5 +7,6 @@ data class ConnectionDto(
     val userId: Int,
     val latch: CountDownLatch,
     val gameType: GameType,
-    var gameId: Int? = null
+    val userRating: Int,
+    var gameId: Int? = null,
 )

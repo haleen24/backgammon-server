@@ -9,7 +9,8 @@ import hse.menu.dto.GameSearchDetails
 import org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Repository
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ConcurrentLinkedQueue
+
 
 @Repository
 @Scope(SCOPE_SINGLETON)
@@ -18,13 +19,19 @@ class ConnectionRuntimeDao(
 ) : ConnectionDao {
     override fun enqueue(connection: ConnectionDto, points: GammonGamePoints, timePolicy: TimePolicy) {
         val gameSearchDetails = GameSearchDetails(connection.gameType, points, timePolicy)
-        connectionContext.connectionQueues.putIfAbsent(gameSearchDetails, LinkedBlockingQueue())
-        connectionContext.connectionQueues[gameSearchDetails]!!.put(connection)
+        connectionContext.connectionQueues.putIfAbsent(gameSearchDetails, ConcurrentLinkedQueue())
+        connectionContext.connectionQueues[gameSearchDetails]!!.add(connection)
     }
 
-    override fun dequeue(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): ConnectionDto {
+    override fun flushAll(gameType: GameType, points: GammonGamePoints, timePolicy: TimePolicy): List<ConnectionDto> {
         val gameSearchDetails = GameSearchDetails(gameType, points, timePolicy)
-        connectionContext.connectionQueues.putIfAbsent(gameSearchDetails, LinkedBlockingQueue())
-        return connectionContext.connectionQueues[gameSearchDetails]!!.take()
+        val queue = connectionContext.connectionQueues[gameSearchDetails]!!
+        val drained = mutableListOf<ConnectionDto>()
+        while (true) {
+            val item = queue.poll() ?: break
+            drained.add(item)
+        }
+        return drained
+
     }
 }
