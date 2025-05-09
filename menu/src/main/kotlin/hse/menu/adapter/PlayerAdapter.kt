@@ -7,6 +7,6 @@ import player.response.UserInfoResponse
 
 @FeignClient("player-service")
 interface PlayerAdapter {
-    @GetMapping("/userinfo")
+    @GetMapping("/player/userinfo")
     fun getUserInfo(@RequestParam("userId") userId: Long): UserInfoResponse
 }

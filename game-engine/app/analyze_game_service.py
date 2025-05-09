@@ -16,8 +16,20 @@ def analyze(request):
         os.remove(path)
 
     with open(path, 'w', encoding="utf-8") as file:
-        for game in request["games"]:
-            convert_game_and_write(game, file)
+        for i, game in enumerate(request["games"]):
+            threshold = game["thresholdPoints"]
+            if threshold == 1:
+                allow_cube = False
+            elif i == 0:
+                allow_cube = True
+            else:
+                last_game = request["games"][i - 1]
+                last_game_end_event = last_game["items"][-1]
+                allow_cube = not (
+                        (last_game_end_event["white"] == threshold - 1 and last_game_end_event["winner"] == "WHITE") or
+                        (last_game_end_event["black"] == threshold - 1 and last_game_end_event["winner"] == "BLACK")
+                )
+            convert_game_and_write(game, file, allow_cube)
 
     engine_analyze(path, analyze_path)
     return read_analysis(get_paths(path), len(request["games"]))
@@ -28,7 +40,7 @@ def get_paths(path):
     return [res[-1]] + res[:-1]
 
 
-def convert_game_and_write(request, file):
+def convert_game_and_write(request, file, allow_cube):
     items = request["items"]
     turn = "B" if request["firstToMove"] == "BLACK" else "W"
     end_game_event = items[-1]
@@ -43,7 +55,7 @@ def convert_game_and_write(request, file):
         length = 3
     game_id = request["gameId"]
     file.write(
-        f"(;FF[4]GM[6]AP[GNU Backgammon]MI[length:{length}][game:{game_id}][ws:{ws}][bs:{bs}]PW[WHITE]PB[BLACK]DT[2025-04-30]\n")
+        f"(;FF[4]GM[6]AP[GNU Backgammon]MI[length:{length}][game:{game_id}][ws:{ws}][bs:{bs}]PW[WHITE]PB[BLACK]DT[2025-04-30]CO[{'c' if allow_cube else 'n'}]\n")
     for item in items:
         file.write(";")
         item_type = item["type"]
@@ -203,6 +215,7 @@ def read_analysis(paths: Iterable[str], games_count):
                         rolled_block = None
                     continue
                 if line.startswith("Game statistics"):
+                    move_data["cube"] = move_data["cube"][2:]
                     data_by_game[current_game]["items"].append(move_data)
                     move_data = None
                     stage = "GAME_STATISTICS"

@@ -8,6 +8,6 @@ import player.request.ChangeRatingRequest
 
 @FeignClient("player-service")
 interface PlayerServiceAdapter {
-    @PostMapping("rating")
+    @PostMapping("/player/rating")
     fun changeRating(@RequestBody changeRatingRequest: ChangeRatingRequest): ResponseEntity<Unit>
 }
