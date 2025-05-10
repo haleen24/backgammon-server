@@ -59,6 +59,10 @@ class GameTimerService(
         }
     }
 
+    fun getAllTimers(): List<GameTimer> {
+        return gameTimerDao.getAll()
+    }
+
     private fun handleOutOfTime(matchId: Int, gameTimer: GameTimer, onOutOfTime: (GameTimer) -> Unit) {
         onOutOfTime(gameTimer)
         gameTimerDao.deleteByMatchId(matchId)

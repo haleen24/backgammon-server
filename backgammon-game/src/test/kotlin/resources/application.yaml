@@ -1,19 +1,6 @@
 spring:
   application:
     name: backgammon-game
-  data:
-    mongodb:
-      host: mongo-service
-#      host: localhost
-      port: 27017
-      database: gammon-move
-    redis:
-      host: ${config.jedis.host}
-      port: ${config.jedis.port}
-  cache:
-    type: redis
-    redis:
-      time-to-live: 2m
   cloud:
     openfeign:
       client:
@@ -39,6 +26,9 @@ config:
     time-out:
       fixed-delay: 300s
       initial-delay: 120s
+
+  game:
+    after-close-delay: 120
 
   jedis:
     host: redis-service

@@ -28,4 +28,8 @@ class GameTimerDao(
         val query = Query().addCriteria(Criteria.where(MATCH_ID).`is`(matchId))
         mongoTemplate.remove(query, GameTimer::class.java, COLLECTION)
     }
+
+    fun getAll(): List<GameTimer> {
+        return mongoTemplate.findAll(GameTimer::class.java, COLLECTION)
+    }
 }

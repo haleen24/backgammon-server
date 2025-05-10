@@ -16,6 +16,8 @@ import hse.entity.GameTimer
 import hse.factory.GameTimerFactory
 import hse.service.*
 import hse.wrapper.BackgammonWrapper
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -31,6 +33,7 @@ class GameFacade(
     private val gameTimerFactory: GameTimerFactory,
     private val playerService: PlayerService,
 ) {
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     fun createAndConnect(matchId: Int, request: CreateBackgammonGameRequest): Int {
         val game = createMatch(matchId, request)
@@ -146,7 +149,7 @@ class GameFacade(
         return game.getPlayerColor(userId)
     }
 
-    fun checkTimeOut(matchId: Int) {
+    fun safeCheckTimeOut(matchId: Int): Boolean {
         val game = getMatchById(matchId).game
         try {
             timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
@@ -154,10 +157,16 @@ class GameFacade(
             }
         } catch (e: ResponseStatusException) {
             if (e.statusCode == HttpStatus.FORBIDDEN) {
-                return
+                return true
             }
         }
-        throw ResponseStatusException(HttpStatus.TOO_EARLY, "Game not ended")
+        return false
+    }
+
+    fun checkTimeOut(matchId: Int) {
+        if (!safeCheckTimeOut(matchId)) {
+            throw ResponseStatusException(HttpStatus.TOO_EARLY, "Game not ended")
+        }
     }
 
     private fun createMatch(roomId: Int, request: CreateBackgammonGameRequest): BackgammonWrapper {
@@ -184,11 +193,6 @@ class GameFacade(
         return gammonStoreService.getAllGamesId(matchId).size
     }
 
-    private fun getColorMap(firstPlayer: Int, secondPlayer: Int, roomId: Int): Map<Color, Int> {
-        val firstColor = getColor(firstPlayer, roomId)
-        return mapOf(firstColor to firstPlayer, firstColor.getOpponent() to secondPlayer)
-    }
-
     fun handleGameEnd(roomId: Int, wrapper: BackgammonWrapper, timer: GameTimer?) {
         val endState = wrapper.gameEndStatus()
         val doubles = doubleCubeService.getAllDoubles(roomId, wrapper.gameId).count { it.isAccepted }
@@ -196,23 +200,7 @@ class GameFacade(
         val winnerPoints = wrapper.getPointsForGame() * 2.0.pow(doubles).toInt()
         addPointsToWinner(wrapper, winnerPoints, winner)
         val endMatch = wrapper.blackPoints >= wrapper.thresholdPoints || wrapper.whitePoints >= wrapper.thresholdPoints
-        gammonStoreService.storeWinner(roomId, wrapper.gameId, winner, winnerPoints, endMatch)
-        if (!endMatch) {
-            wrapper.restore()
-            gammonStoreService.saveGameOnCreation(roomId, wrapper.gameId, wrapper)
-        } else {
-            sendRatingChange(wrapper, winner)
-        }
-        emitterService.sendForAll(
-            roomId, EndGameEvent(
-                win = winner,
-                blackPoints = wrapper.blackPoints,
-                whitePoints = wrapper.whitePoints,
-                isMatchEnd = endMatch,
-                remainBlackTime = timer?.remainBlackTime?.toMillis(),
-                remainWhiteTime = timer?.remainWhiteTime?.toMillis()
-            )
-        )
+        afterGameEnd(endMatch, wrapper, roomId, winner, timer, winnerPoints, false)
     }
 
     fun surrender(userId: Int, matchId: Int, surrenderMatch: Boolean) {
@@ -224,30 +212,25 @@ class GameFacade(
         }
         val surrenderedColor = game.getPlayerColor(userId)
         val winnerColor = surrenderedColor.getOpponent()
+        if (surrenderMatch) {
+            logger.info("surrender match $matchId")
+            return afterGameEnd(
+                endMatch = true,
+                game = game,
+                matchId = matchId,
+                winner = winnerColor,
+                timer = timer,
+                winnerPoints = 0,
+                isSurrender = true
+            )
+        }
         val doubles = fullGame.doubleCubes
         val winnerPoints = 2.0.pow(doubles.count { it.isAccepted }).toInt()
         addPointsToWinner(game, winnerPoints, winnerColor)
-        val endMatch = surrenderMatch
-                || game.blackPoints >= game.thresholdPoints
+        val endMatch = game.blackPoints >= game.thresholdPoints
                 || game.whitePoints >= game.thresholdPoints
         validateSurrender(matchId, userId, surrenderedColor, game, doubles, endMatch)
-        gammonStoreService.endMatch(winnerColor, matchId, game, winnerPoints, endMatch, true)
-        if (!endMatch) {
-            game.restore()
-            gammonStoreService.saveGameOnCreation(matchId, game.gameId, game)
-        } else {
-            sendRatingChange(game, winnerColor)
-        }
-        emitterService.sendForAll(
-            matchId, EndGameEvent(
-                win = winnerColor,
-                blackPoints = game.blackPoints,
-                whitePoints = game.whitePoints,
-                isMatchEnd = endMatch,
-                remainBlackTime = timer?.remainBlackTime?.toMillis(),
-                remainWhiteTime = timer?.remainWhiteTime?.toMillis()
-            )
-        )
+        afterGameEnd(endMatch, game, matchId, winnerColor, timer, winnerPoints, true)
     }
 
     private fun checkGameState(game: BackgammonWrapper) {
@@ -295,19 +278,15 @@ class GameFacade(
 
     private fun handleOutOfTime(matchId: Int, wrapper: BackgammonWrapper, timer: GameTimer) {
         val winner = if (timer.remainBlackTime == Duration.ZERO) Color.WHITE else Color.BLACK
-        val winnerPoints = if (winner == Color.BLACK) wrapper.blackPoints else wrapper.whitePoints
-        gammonStoreService.endMatch(winner, matchId, wrapper, winnerPoints, endMatch = true, isSurrender = false)
-        emitterService.sendForAll(
-            matchId, EndGameEvent(
-                win = winner,
-                blackPoints = wrapper.blackPoints,
-                whitePoints = wrapper.whitePoints,
-                isMatchEnd = true,
-                remainBlackTime = timer.remainBlackTime.toMillis(),
-                remainWhiteTime = timer.remainWhiteTime.toMillis()
-            )
+        afterGameEnd(
+            endMatch = true,
+            game = wrapper,
+            matchId = matchId,
+            winner = winner,
+            timer = timer,
+            winnerPoints = 0,
+            isSurrender = false
         )
-        sendRatingChange(wrapper, winner)
     }
 
     fun doubleCube(matchId: Int, userId: Int) {
@@ -356,6 +335,34 @@ class GameFacade(
             players[winner.getOpponent()]!!.toLong(),
             wrapper.type,
             wrapper.timePolicy
+        )
+    }
+
+    private fun afterGameEnd(
+        endMatch: Boolean,
+        game: BackgammonWrapper,
+        matchId: Int,
+        winner: Color,
+        timer: GameTimer?,
+        winnerPoints: Int,
+        isSurrender: Boolean
+    ) {
+        gammonStoreService.endGame(winner, matchId, game, winnerPoints, endMatch, isSurrender)
+        if (!endMatch) {
+            game.restore()
+            gammonStoreService.saveGameOnCreation(matchId, game.gameId, game)
+        } else {
+            sendRatingChange(game, winner)
+        }
+        emitterService.sendForAll(
+            matchId, EndGameEvent(
+                win = winner,
+                blackPoints = game.blackPoints,
+                whitePoints = game.whitePoints,
+                isMatchEnd = endMatch,
+                remainBlackTime = timer?.remainBlackTime?.toMillis(),
+                remainWhiteTime = timer?.remainWhiteTime?.toMillis()
+            )
         )
     }
 }

@@ -124,7 +124,7 @@ class GameHistoryService(
     ): HistoryResponseItem {
         return GameEndHistoryResponseItem(
             white = initialWhitePoints + if (gameWinner.color == Color.WHITE) gameWinner.points else 0,
-            black = initialWhitePoints + if (gameWinner.color == Color.BLACK) gameWinner.points else 0,
+            black = initialBlackPoints + if (gameWinner.color == Color.BLACK) gameWinner.points else 0,
             winner = gameWinner.color,
             isSurrendered = gameWinner.surrender
         )

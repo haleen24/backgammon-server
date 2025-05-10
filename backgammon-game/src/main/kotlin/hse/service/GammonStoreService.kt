@@ -69,20 +69,6 @@ class GammonStoreService(
         return gammonMoveDao.getStartGameContext(matchId, gameId)
     }
 
-    fun storeWinner(matchId: Int, gameId: Int, winner: Color, points: Int, endMatch: Boolean) {
-        gammonMoveDao.storeWinner(
-            GameWinner.of(
-                matchId,
-                gameId,
-                winner,
-                points,
-                false,
-                endMatch,
-                clock.instant()
-            )
-        )
-    }
-
     fun storeZar(matchId: Int, game: BackgammonWrapper, zar: List<Int>) {
         putGameToCache(matchId, game.getRestoreContext())
         gammonMoveDao.saveZar(matchId, game.gameId, game.numberOfMoves, zar)
@@ -92,7 +78,7 @@ class GammonStoreService(
         return gammonMoveDao.getWinners(matchId).sortedBy { it.gameId }.map { it.color }
     }
 
-    fun endMatch(winner: Color, matchId: Int, wrapper: BackgammonWrapper, points: Int, endMatch: Boolean, isSurrender: Boolean) {
+    fun endGame(winner: Color, matchId: Int, wrapper: BackgammonWrapper, points: Int, endMatch: Boolean, isSurrender: Boolean) {
         wrapper.setPossibleEndFlag(true)
         gammonMoveDao.storeWinner(
             GameWinner.of(
