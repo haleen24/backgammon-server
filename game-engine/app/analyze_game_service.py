@@ -220,8 +220,9 @@ def read_analysis(paths: Iterable[str], games_count):
                         rolled_block = None
                     continue
                 if line.startswith("Game statistics"):
-                    move_data["cube"] = move_data["cube"][2:]
-                    data_by_game[current_game]["items"].append(move_data)
+                    if move_data:
+                        move_data["cube"] = move_data["cube"][2:]
+                        data_by_game[current_game]["items"].append(move_data)
                     move_data = None
                     stage = "GAME_STATISTICS"
                     rolled_block = None
