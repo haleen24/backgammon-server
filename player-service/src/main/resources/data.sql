@@ -25,7 +25,7 @@ create table if not exists sch1.friend_request
     created_at timestamp not null
 );
 
-CREATE TABLE sch1."user_rating"
+CREATE TABLE if not exists sch1."user_rating"
 (
     id                 BIGSERIAL PRIMARY KEY,
     user_id            BIGINT  NOT NULL UNIQUE,

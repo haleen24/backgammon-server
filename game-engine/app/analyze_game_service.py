@@ -230,7 +230,7 @@ def read_analysis(paths: Iterable[str], games_count):
                     stage = "MATCH_STATISTICS"
                     continue
                 if stage == "MATCH_STATISTICS":
-                    if line.startswith("Moves marked doubtful") or line.startswith(
+                    if line.startswith("Moves marked") or line.startswith(
                             "Error total EMG") or line.startswith("Rolls marked") or line.startswith(
                         "Luck total EMG") or line.startswith("Missed doubles") or line.startswith(
                         "Wrong doubles") or line.startswith("Wrong takes") or line.startswith("Wrong passes"):
