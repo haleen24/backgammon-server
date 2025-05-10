@@ -57,17 +57,17 @@ class GameHistoryService(
                     break
                 }
                 if (history[i + 1] is MoveWithId) {
-                    responseHistoryItems.add(addDoubleCubeActionsToHistory(entity, history[i + 1] as MoveWithId))
+                    responseHistoryItems.add(addGameWinnerToHistory(entity, history[i + 1] as MoveWithId))
                     i += 2
                     continue
                 }
                 logger.warn("После броска зара не ход! игра $matchId-$gameId; ход ${entity.moveId}")
             } else if (entity is DoubleCube) {
                 ++doubleCubeCounter
-                addDoubleCubeActionsToHistory(entity, doubleCubeCounter, responseHistoryItems)
+                addGameWinnerToHistory(entity, doubleCubeCounter, responseHistoryItems)
             } else if (entity is GameWinner) {
                 responseHistoryItems.add(
-                    addDoubleCubeActionsToHistory(
+                    addGameWinnerToHistory(
                         entity, startState.restoreContextDto.whitePoints,
                         startState.restoreContextDto.blackPoints
                     )
@@ -94,14 +94,14 @@ class GameHistoryService(
         return gameEngineAdapter.getAnalysis(request)
     }
 
-    private fun addDoubleCubeActionsToHistory(zar: Zar, moveWithId: MoveWithId): HistoryResponseItem {
+    private fun addGameWinnerToHistory(zar: Zar, moveWithId: MoveWithId): HistoryResponseItem {
         return MoveHistoryResponseItem(
             dice = zar.z,
             moves = moveWithId.moveSet.moves.changes.map { MoveHistoryResponseItem.MoveItem(it.first, it.second) }
         )
     }
 
-    private fun addDoubleCubeActionsToHistory(
+    private fun addGameWinnerToHistory(
         doubleCube: DoubleCube,
         n: Int,
         responseHistoryItems: MutableList<HistoryResponseItem>
@@ -117,14 +117,14 @@ class GameHistoryService(
         }
     }
 
-    private fun addDoubleCubeActionsToHistory(
+    private fun addGameWinnerToHistory(
         gameWinner: GameWinner,
         initialWhitePoints: Int,
         initialBlackPoints: Int
     ): HistoryResponseItem {
         return GameEndHistoryResponseItem(
-            white = if (gameWinner.color == Color.WHITE) gameWinner.points else initialWhitePoints,
-            black = if (gameWinner.color == Color.BLACK) gameWinner.points else initialBlackPoints,
+            white = initialWhitePoints + if (gameWinner.color == Color.WHITE) gameWinner.points else 0,
+            black = initialWhitePoints + if (gameWinner.color == Color.BLACK) gameWinner.points else 0,
             winner = gameWinner.color,
             isSurrendered = gameWinner.surrender
         )
