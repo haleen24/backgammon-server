@@ -3,6 +3,7 @@ package hse.menu.entity
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
 import game.common.enums.TimePolicy
+import hse.menu.enums.GameStatus
 import jakarta.persistence.*
 
 @Entity
@@ -16,5 +17,6 @@ data class Game(
     val gamePoints: GammonGamePoints,
     val timePolicy: TimePolicy,
     val firstPlayerId: Long,
-    val secondPlayerId: Long
+    val secondPlayerId: Long,
+    var status: GameStatus
 )
