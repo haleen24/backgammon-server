@@ -40,8 +40,7 @@ def analyze(request):
 
 
 def get_paths(path):
-    res = [i for i in glob.glob(f"{path}*") if i != path]
-    return [res[-1]] + res[:-1]
+    return sorted(i for i in glob.glob(f"{path}*") if i != path)
 
 
 def convert_game_and_write(request, file, allow_cube, end_game_event):
