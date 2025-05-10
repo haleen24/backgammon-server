@@ -63,7 +63,7 @@ class MenuService(
             if (connections.isNotEmpty()) {
                 logger.info("Нашел $connections")
             }
-            for (i in 0..<connections.size - connections.size % 2) {
+            for (i in 0..<connections.size - connections.size % 2 step 2) {
                 val first = connections[i]
                 val second = connections[i + 1]
                 connect(first, second, gameType, points, timePolicy)
