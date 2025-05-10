@@ -154,6 +154,7 @@ class UserService(
     }
 
     fun getAllUsernames(ids: List<Long>): List<String> {
-        return userRepository.findAllById(ids).sortedBy { it.id } .map { it.username }
+        val users = userRepository.findAllById(ids).associateBy { it.id }
+        return ids.map { users[it]!!.username }
     }
 }
