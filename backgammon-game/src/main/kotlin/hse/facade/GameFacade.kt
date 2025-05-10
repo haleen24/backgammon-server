@@ -14,6 +14,7 @@ import hse.dto.*
 import hse.entity.DoubleCube
 import hse.entity.GameTimer
 import hse.factory.GameTimerFactory
+import hse.producer.GameEndMessageProducer
 import hse.service.*
 import hse.wrapper.BackgammonWrapper
 import org.slf4j.Logger
@@ -33,6 +34,7 @@ class GameFacade(
     private val gameTimerFactory: GameTimerFactory,
     private val playerService: PlayerService,
     private val menuService: MenuService,
+    private val gameEndMessageProducer: GameEndMessageProducer
 ) {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -338,6 +340,16 @@ class GameFacade(
             wrapper.type,
             wrapper.timePolicy
         )
+        gameEndMessageProducer.sendMessage(
+            GameEndMessage(
+                matchId = matchId.toLong(),
+                winnerId = players[winner]!!.toLong(),
+                loserId = players[winner.getOpponent()]!!.toLong(),
+                gameType = wrapper.type,
+                gameTimePolicy = wrapper.timePolicy,
+            )
+        )
+
     }
 
     private fun afterGameEnd(

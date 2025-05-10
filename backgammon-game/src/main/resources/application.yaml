@@ -4,7 +4,7 @@ spring:
   data:
     mongodb:
       host: mongo-service
-#      host: localhost
+      #      host: localhost
       port: 27017
       database: gammon-move
     redis:
@@ -27,7 +27,21 @@ spring:
           menu-service:
             url: "http://menu-service:81"
             read-timeout: 6_000
+  kafka:
+    bootstrap-servers: 176.108.249.50:9092
+    producer:
+      acks: all
 
+logging:
+  level:
+    org.apache.kafka: DEBUG
+    org.springframework.kafka: DEBUG
+
+kafka:
+  topic:
+    narde:
+      event:
+        game-end: narde.game-event.end
 server:
   error:
     include-message: always
