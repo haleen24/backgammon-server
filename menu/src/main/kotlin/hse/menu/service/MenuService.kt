@@ -60,6 +60,9 @@ class MenuService(
         while (true) {
             val connections = connectionService.take(gameType, points, timePolicy)
                 .sortedBy { it.userRating }
+            if (connections.isNotEmpty()) {
+                logger.info("Нашел $connections")
+            }
             for (i in 0..<connections.size - connections.size % 2) {
                 val first = connections[i]
                 val second = connections[i + 1]
@@ -67,6 +70,9 @@ class MenuService(
             }
             if (connections.size % 2 != 0) {
                 connectionService.connect(connections.last(), points, timePolicy)
+            }
+            if (connections.isEmpty()) {
+                Thread.sleep(100)
             }
         }
     }
@@ -78,18 +84,22 @@ class MenuService(
         points: GammonGamePoints,
         timePolicy: TimePolicy
     ) {
+        logger.info("Коннект $firstPlayerConnection, $secondPlayerConnection")
         if (connectionService.checkInBan(firstPlayerConnection.userId)) {
             firstPlayerConnection.latch.countDown()
             connectionService.connect(secondPlayerConnection, points, timePolicy)
             return
         }
-
+        if (connectionService.checkInBan(secondPlayerConnection.userId)) {
+            firstPlayerConnection.latch.countDown()
+            connectionService.connect(firstPlayerConnection, points, timePolicy)
+            return
+        }
         if (firstPlayerConnection.userId == secondPlayerConnection.userId) {
             firstPlayerConnection.latch.countDown()
             connectionService.connect(firstPlayerConnection, points, timePolicy)
             return
         }
-
         val game = gameService.storeGame(
             gameType,
             points,
