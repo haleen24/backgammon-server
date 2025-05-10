@@ -19,6 +19,6 @@ class PlayerService(
             gameType = realGameType,
             gameTimePolicy = gameTimePolicy
         )
-        playerServiceAdapter.changeRating(changeRatingRequest)
+        kotlin.runCatching { playerServiceAdapter.changeRating(changeRatingRequest) }
     }
 }

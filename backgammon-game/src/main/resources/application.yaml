@@ -24,6 +24,9 @@ spring:
           player-service:
             url: "http://player-service:84"
             read-timeout: 6_000
+          menu-service:
+            url: "http://menu-service:81"
+            read-timeout: 6_000
 
 server:
   error:

@@ -32,6 +32,7 @@ class GameFacade(
     private val timerService: GameTimerService,
     private val gameTimerFactory: GameTimerFactory,
     private val playerService: PlayerService,
+    private val menuService: MenuService,
 ) {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -328,8 +329,9 @@ class GameFacade(
         return GameWithDoubleCubes(game, doubleCubes)
     }
 
-    private fun sendRatingChange(wrapper: BackgammonWrapper, winner: Color) {
+    private fun updateGameStatusAndRating(matchId: Int, wrapper: BackgammonWrapper, winner: Color) {
         val players = wrapper.getPlayers()
+        menuService.setEndStatus(matchId)
         playerService.changeRating(
             players[winner]!!.toLong(),
             players[winner.getOpponent()]!!.toLong(),
@@ -352,7 +354,7 @@ class GameFacade(
             game.restore()
             gammonStoreService.saveGameOnCreation(matchId, game.gameId, game)
         } else {
-            sendRatingChange(game, winner)
+            updateGameStatusAndRating(matchId, game, winner)
         }
         emitterService.sendForAll(
             matchId, EndGameEvent(
