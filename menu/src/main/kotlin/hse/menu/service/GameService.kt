@@ -5,8 +5,11 @@ import game.common.enums.GammonGamePoints
 import game.common.enums.TimePolicy
 import hse.menu.adapter.GameAdapter
 import hse.menu.dao.GameDao
+import hse.menu.dto.PlayerGames
 import hse.menu.entity.Game
 import hse.menu.enums.GameStatus
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 
 @Service
@@ -39,5 +42,11 @@ class GameService(
         val game = gameDao.findById(matchId.toLong()).orElse(null) ?: return
         game.status = GameStatus.END
         gameDao.save(game)
+    }
+
+    fun getGamesByPlayer(playerId: Int, pageNumber: Int, pageSize: Int): List<PlayerGames> {
+        val pageable = PageRequest.of(pageNumber, pageSize, Sort.Direction.DESC, "id")
+        val games = gameDao.findAll(pageable)
+        return games.toList().map { PlayerGames(it.id, it.status, it.timePolicy, it.gamePoints) }
     }
 }

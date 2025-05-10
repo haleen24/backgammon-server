@@ -1,6 +1,7 @@
 package hse.menu.controller
 
 import game.backgammon.request.CreateGameRequest
+import hse.menu.dto.PlayerGames
 import hse.menu.service.GameService
 import hse.menu.service.MenuService
 import org.springframework.web.bind.annotation.*
@@ -32,5 +33,14 @@ class MenuController(
     @PostMapping("game-status/{matchId}")
     fun updateGameStatus(@PathVariable("matchId") matchId: Int) {
         gameService.setGameEnd(matchId)
+    }
+
+    @GetMapping("played-games")
+    fun getPlayerGames(
+        @RequestParam userId: Int,
+        @RequestParam pageNumber: Int,
+        @RequestParam pageSize: Int
+    ): List<PlayerGames> {
+        return gameService.getGamesByPlayer(userId, pageNumber, pageSize)
     }
 }
