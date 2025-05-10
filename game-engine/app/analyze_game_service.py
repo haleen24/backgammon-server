@@ -29,7 +29,11 @@ def analyze(request):
                         (last_game_end_event["white"] == threshold - 1 and last_game_end_event["winner"] == "WHITE") or
                         (last_game_end_event["black"] == threshold - 1 and last_game_end_event["winner"] == "BLACK")
                 )
-            convert_game_and_write(game, file, allow_cube)
+            if i == 0:
+                end_game_event = {"type": "GAME_END", "white": 0, "black": 0}
+            else:
+                end_game_event = game["items"][-1]
+            convert_game_and_write(game, file, allow_cube, end_game_event)
 
     engine_analyze(path, analyze_path)
     return read_analysis(get_paths(path), len(request["games"]))
@@ -40,10 +44,9 @@ def get_paths(path):
     return [res[-1]] + res[:-1]
 
 
-def convert_game_and_write(request, file, allow_cube):
+def convert_game_and_write(request, file, allow_cube, end_game_event):
     items = request["items"]
     turn = "B" if request["firstToMove"] == "BLACK" else "W"
-    end_game_event = items[-1]
     if end_game_event["type"] == "GAME_END":
         ws = end_game_event["white"]
         bs = end_game_event["black"]
@@ -110,6 +113,8 @@ def convert_moves_to_sgf_notation(moves):
         if move_from == 0 or move_from == 25:
             move_from = ord('y') + 1 - ord('a')
         move_to = move["to"]
+        if move_to == -1 or move_to == 26:
+            continue
         if move_to == 0 or move_to == 25:
             move_to = ord('z') + 1 - ord('a')
         chars.append(f"{convert(move_from)}{convert(move_to)}")
