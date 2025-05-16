@@ -33,6 +33,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation("commons-io:commons-io:2.18.0")
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.kafka:spring-kafka'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'

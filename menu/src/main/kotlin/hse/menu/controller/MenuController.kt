@@ -30,11 +30,6 @@ class MenuController(
         menuService.disconnect(user)
     }
 
-    @PostMapping("game-status/{matchId}")
-    fun updateGameStatus(@PathVariable("matchId") matchId: Int) {
-        gameService.setGameEnd(matchId)
-    }
-
     @GetMapping("played-games")
     fun getPlayerGames(
         @RequestParam userId: Int,

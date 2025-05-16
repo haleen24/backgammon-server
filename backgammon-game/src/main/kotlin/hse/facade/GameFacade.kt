@@ -17,6 +17,7 @@ import hse.factory.GameTimerFactory
 import hse.producer.GameEndMessageProducer
 import hse.service.*
 import hse.wrapper.BackgammonWrapper
+import kafka.GameEndMessage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus

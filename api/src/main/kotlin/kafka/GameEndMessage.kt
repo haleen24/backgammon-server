@@ -1,4 +1,4 @@
-package hse.dto
+package kafka
 
 import game.backgammon.enums.BackgammonType
 import game.common.enums.TimePolicy

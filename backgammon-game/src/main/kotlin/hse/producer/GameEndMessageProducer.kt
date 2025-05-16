@@ -1,8 +1,8 @@
 package hse.producer
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import hse.dto.GameEndMessage
 import jakarta.annotation.PostConstruct
+import kafka.GameEndMessage
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component

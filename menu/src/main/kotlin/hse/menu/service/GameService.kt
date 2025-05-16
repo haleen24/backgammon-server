@@ -38,8 +38,8 @@ class GameService(
         return gameDao.save(game)
     }
 
-    fun setGameEnd(matchId: Int) {
-        val game = gameDao.findById(matchId.toLong()).orElse(null) ?: return
+    fun setGameEnd(matchId: Long) {
+        val game = gameDao.findById(matchId).orElse(null) ?: return
         game.status = GameStatus.END
         gameDao.save(game)
     }
