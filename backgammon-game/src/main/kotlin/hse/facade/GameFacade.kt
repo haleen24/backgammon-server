@@ -141,6 +141,9 @@ class GameFacade(
         val doubleCubeValue =
             if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) null else 2.0.pow(doubleCubes.size.toDouble())
                 .toInt()
+        if (timer != null) {
+            timerService.actualize(matchId, game.getCurrentTurn(), timer)
+        }
         return ConfigResponse(
             gameData = configData,
             blackPoints = game.blackPoints,
