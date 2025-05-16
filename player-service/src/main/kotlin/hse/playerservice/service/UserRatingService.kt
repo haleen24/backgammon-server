@@ -1,15 +1,16 @@
 package hse.playerservice.service
 
-import game.common.enums.GameType
+import game.backgammon.enums.BackgammonType.REGULAR_GAMMON
+import game.backgammon.enums.BackgammonType.SHORT_BACKGAMMON
 import game.common.enums.TimePolicy
 import hse.playerservice.entity.User
 import hse.playerservice.entity.UserRating
 import hse.playerservice.repository.UserRatingRepository
 import hse.playerservice.service.UserService.Companion.NO_ID
+import kafka.GameEndMessage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import player.request.ChangeRatingRequest
 import kotlin.math.pow
 
 @Service
@@ -37,21 +38,21 @@ class UserRatingService(
         return userRatingRepository.findByUserId(id)
     }
 
-    fun changeRating(changeRatingRequest: ChangeRatingRequest) {
-        val winnerRating = userRatingRepository.findByUserId(changeRatingRequest.winnerId)
-        val loserRating = userRatingRepository.findByUserId(changeRatingRequest.loserId)
+    fun changeRating(gameEndMessage: GameEndMessage) {
+        val winnerRating = userRatingRepository.findByUserId(gameEndMessage.winnerId)
+        val loserRating = userRatingRepository.findByUserId(gameEndMessage.loserId)
         val winnerCurrentRating: Int
         val loserCurrentRating: Int
-        if (changeRatingRequest.gameType == GameType.REGULAR_GAMMON && changeRatingRequest.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
+        if (gameEndMessage.gameType == REGULAR_GAMMON && gameEndMessage.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
             winnerCurrentRating = winnerRating.nardeDefault
             loserCurrentRating = loserRating.nardeDefault
-        } else if (changeRatingRequest.gameType == GameType.REGULAR_GAMMON && changeRatingRequest.gameTimePolicy == TimePolicy.BLITZ) {
+        } else if (gameEndMessage.gameType == REGULAR_GAMMON && gameEndMessage.gameTimePolicy == TimePolicy.BLITZ) {
             winnerCurrentRating = winnerRating.nardeBlitz
             loserCurrentRating = loserRating.nardeBlitz
-        } else if (changeRatingRequest.gameType == GameType.SHORT_BACKGAMMON && changeRatingRequest.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
+        } else if (gameEndMessage.gameType == SHORT_BACKGAMMON && gameEndMessage.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
             winnerCurrentRating = winnerRating.backgammonDefault
             loserCurrentRating = loserRating.backgammonDefault
-        } else if (changeRatingRequest.gameType == GameType.SHORT_BACKGAMMON && changeRatingRequest.gameTimePolicy == TimePolicy.BLITZ) {
+        } else if (gameEndMessage.gameType == SHORT_BACKGAMMON && gameEndMessage.gameTimePolicy == TimePolicy.BLITZ) {
             winnerCurrentRating = winnerRating.backgammonBlitz
             loserCurrentRating = loserRating.backgammonBlitz
         } else {
@@ -63,13 +64,13 @@ class UserRatingService(
         val loserCoefficient = getRatingCoefficient(loserCurrentRating, loserRating.numberOfGames)
         val winnerNewRating = winnerCurrentRating + winnerCoefficient * (1 - winnerExcepted)
         val loserNewRating = loserCurrentRating + loserCoefficient * (0 - loserExcepted)
-        if (changeRatingRequest.gameType == GameType.REGULAR_GAMMON && changeRatingRequest.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
+        if (gameEndMessage.gameType == REGULAR_GAMMON && gameEndMessage.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
             winnerRating.nardeDefault = winnerNewRating.toInt()
             loserRating.nardeDefault = loserNewRating.toInt()
-        } else if (changeRatingRequest.gameType == GameType.REGULAR_GAMMON) {
+        } else if (gameEndMessage.gameType == REGULAR_GAMMON) {
             winnerRating.nardeBlitz = winnerNewRating.toInt()
             loserRating.nardeBlitz = loserNewRating.toInt()
-        } else if (changeRatingRequest.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
+        } else if (gameEndMessage.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
             winnerRating.backgammonDefault = winnerNewRating.toInt()
             loserRating.backgammonDefault = loserNewRating.toInt()
         } else {
