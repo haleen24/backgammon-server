@@ -130,7 +130,9 @@ class GameFacade(
             if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) null else 2.0.pow(doubleCubes.size.toDouble())
                 .toInt()
         val winner = if (game.checkEnd()) gammonStoreService.getWinnersInMatch(matchId).last() else null
-
+        if (timer != null) {
+            timerService.update(matchId, game.getCurrentTurn(), timer)
+        }
         return ConfigResponse(
             gameData = configData,
             blackPoints = game.blackPoints,
@@ -142,15 +144,8 @@ class GameFacade(
             winner = winner,
             remainWhiteTime = timer?.remainWhiteTime?.toMillis(),
             remainBlackTime = timer?.remainBlackTime?.toMillis(),
+            increment = timer?.increment?.toMillis()
         )
-    }
-
-    fun getColor(userId: Int, matchId: Int): Color {
-        val game = gammonStoreService.getMatchById(matchId)
-        timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
-            handleOutOfTime(matchId, game, timer)
-        }
-        return game.getPlayerColor(userId)
     }
 
     fun safeCheckTimeOut(matchId: Int): Boolean {

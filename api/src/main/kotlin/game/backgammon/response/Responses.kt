@@ -22,4 +22,5 @@ data class ConfigResponse(
     val winner: Color?,
     val remainBlackTime: Long?,
     val remainWhiteTime: Long?,
+    val increment: Long?,
 )

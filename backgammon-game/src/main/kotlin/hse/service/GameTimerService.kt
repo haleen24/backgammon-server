@@ -27,7 +27,7 @@ class GameTimerService(
         }
         val now = clock.instant()
         val gameTimer =
-            gameTimerDao.getByMatchId(matchId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found")
+            gameTimerDao.getByMatchId(matchId) ?: throw ResponseStatusException(HttpStatus.FORBIDDEN, "Out of time")
         val actionTime = between(gameTimer.lastAction, now)
 
         if (turn == Color.BLACK && actionTime.toMillis() > gameTimer.remainBlackTime.toMillis()) {

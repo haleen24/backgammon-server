@@ -66,11 +66,6 @@ class GameController(
         gameFacade.acceptDouble(roomId, userId)
     }
 
-    @GetMapping("colors/{roomId}")
-    fun getColor(@RequestHeader(USER_ID_HEADER) userId: Int, @PathVariable roomId: Int): Color {
-        return gameFacade.getColor(userId, roomId)
-    }
-
     @GetMapping("view/{roomId}")
     fun connectView(
         @RequestHeader(USER_ID_HEADER) userId: Int,
