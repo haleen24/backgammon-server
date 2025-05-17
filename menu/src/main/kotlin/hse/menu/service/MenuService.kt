@@ -4,7 +4,10 @@ import game.backgammon.request.CreateGameRequest
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
 import game.common.enums.TimePolicy
+import hse.menu.dto.AcceptInviteEventDto
 import hse.menu.dto.ConnectionDto
+import hse.menu.dto.InviteEventDto
+import hse.menu.dto.RejectInviteDto
 import hse.menu.enums.GameStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -23,6 +26,7 @@ class MenuService(
     private val playerService: PlayerService,
     @Value("\${disable-job}") isTest: Boolean = false,
     @Value("\${app.search-job.timeout}") val searchJobTimeout: Long,
+    private val sseEmitterService: SseEmitterService,
 ) {
 
     private final val logger = LoggerFactory.getLogger(MenuService::class.java)
@@ -107,8 +111,8 @@ class MenuService(
             gameType,
             points,
             timePolicy,
-            firstPlayerConnection.userId.toLong(),
-            secondPlayerConnection.userId.toLong()
+            firstPlayerConnection.userId,
+            secondPlayerConnection.userId
         )
         if (game == null) {
             logger.warn("Не удалось сгенерить игру")
@@ -140,17 +144,28 @@ class MenuService(
             fromUser,
             toUser
         )
+        sseEmitterService.send(
+            InviteEventDto(fromUser, createGameRequest.type, createGameRequest.points, createGameRequest.timePolicy),
+            listOf(toUser)
+        )
     }
 
-    fun answerOnInvite(userId: Long, invitedBy: Long, accept: Boolean) {
+    fun answerOnInvite(userId: Long, invitedBy: Long, accept: Boolean): Long {
         val game = gameService.findByPlayersAndStatus(userId, invitedBy, GameStatus.NOT_STARTED)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
-        if (!accept || userId == invitedBy) {
+        if (!accept) {
+            sseEmitterService.send(RejectInviteDto(userId), listOf(invitedBy))
             gameService.declineGameFromInvitation(game)
-            return
+            return -1
+        }
+        if (userId == invitedBy) {
+            gameService.declineGameFromInvitation(game)
+            return -1
         }
         checkHasCurrentGames(userId)
         gameService.startGame(game)
+        sseEmitterService.send(AcceptInviteEventDto(userId, game.id), listOf(invitedBy))
+        return game.id
     }
 
     private fun checkHasCurrentGames(userId: Long) {

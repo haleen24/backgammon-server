@@ -1,6 +1,7 @@
 package hse.menu.controller
 
 import game.backgammon.request.CreateGameRequest
+import game.backgammon.response.AnswerInviteResponse
 import hse.menu.dto.PlayerGames
 import hse.menu.service.GameService
 import hse.menu.service.MenuService
@@ -53,7 +54,7 @@ class MenuController(
         @RequestHeader(AUTH_USER) user: Long,
         @PathVariable invitedByPlayer: Long,
         @RequestParam(defaultValue = "false") accept: Boolean
-    ) {
-        menuService.answerOnInvite(user, invitedByPlayer, accept)
+    ): AnswerInviteResponse {
+        return AnswerInviteResponse(menuService.answerOnInvite(user, invitedByPlayer, accept))
     }
 }
