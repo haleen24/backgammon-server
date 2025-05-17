@@ -58,9 +58,7 @@ class GameFacade(
     fun moveInGame(matchId: Int, playerId: Int, moves: List<MoveDto>): MoveResponse {
         val game = gammonStoreService.getMatchById(matchId)
         checkGameState(game)
-        val timer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
-            handleOutOfTime(matchId, game, timer)
-        }
+        val timer = getTimer(matchId, game)
         val res = game.move(playerId, moves)
         val playerColor = game.getPlayerColor(playerId)
         val response = MoveResponse(
@@ -91,9 +89,7 @@ class GameFacade(
         val fullGame = getMatchById(matchId)
         val game = fullGame.game
         checkGameState(game)
-        val timer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
-            handleOutOfTime(matchId, game, timer)
-        }
+        val timer = getTimer(matchId, game)
         val doubles = fullGame.doubleCubes
         if (doubles.isNotEmpty()) {
             if (!doubles.last().isAccepted) {
@@ -122,18 +118,12 @@ class GameFacade(
 
     fun getConfiguration(userId: Int, matchId: Int): ConfigResponse {
         val fullGame = getMatchById(matchId)
-        val game = fullGame.game
-        var winner = if (game.checkEnd()) gammonStoreService.getWinnersInMatch(matchId).last() else null
-        var timer: GameTimer? = null
-        if (winner == null) {
-            timer = timerService.saveGet(matchId, game.timePolicy, game.getCurrentTurn()) {
-                handleOutOfTime(matchId, game, it)
-            }
-            if (timer?.remainBlackTime == Duration.ZERO) {
-                winner = WHITE
-            } else if (timer?.remainWhiteTime == Duration.ZERO) {
-                winner = BLACK
-            }
+        var game = fullGame.game
+        val timer: GameTimer? = try {
+            getTimer(matchId, game)
+        } catch (_: ResponseStatusException) {
+            game = getMatchById(matchId).game
+            null
         }
         val configData = game.getConfiguration(userId)
         val doubleCubes = fullGame.doubleCubes
@@ -141,6 +131,7 @@ class GameFacade(
         val doubleCubeValue =
             if (doubleCubePosition == DoubleCubePositionEnum.UNAVAILABLE) null else 2.0.pow(doubleCubes.size.toDouble())
                 .toInt()
+        val winner = if (game.checkEnd()) gammonStoreService.getWinnersInMatch(matchId).last() else null
         if (timer != null) {
             timerService.actualize(matchId, game.getCurrentTurn(), timer)
         }
@@ -217,9 +208,7 @@ class GameFacade(
         val fullGame = getMatchById(matchId)
         val game = fullGame.game
         checkGameState(game)
-        val timer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
-            handleOutOfTime(matchId, game, timer)
-        }
+        val timer = getTimer(matchId, game)
         val surrenderedColor = game.getPlayerColor(userId)
         val winnerColor = surrenderedColor.getOpponent()
         if (surrenderMatch) {
@@ -286,6 +275,16 @@ class GameFacade(
         }
     }
 
+    private fun getTimer(matchId: Int, game: BackgammonWrapper): GameTimer? {
+        val timer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
+            handleOutOfTime(matchId, game, timer)
+        } ?: return null
+        if (timer.remainBlackTime == Duration.ZERO || timer.remainWhiteTime == Duration.ZERO) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Out of time")
+        }
+        return timer
+    }
+
     private fun handleOutOfTime(matchId: Int, wrapper: BackgammonWrapper, timer: GameTimer) {
         val winner = if (timer.remainBlackTime == Duration.ZERO) WHITE else BLACK
         afterGameEnd(
@@ -301,13 +300,7 @@ class GameFacade(
 
     fun doubleCube(matchId: Int, userId: Int) {
         val game = gammonStoreService.getMatchById(matchId)
-        val gameTimer = timerService.validateAndGet(matchId, game.timePolicy, game.getCurrentTurn()) { timer ->
-            handleOutOfTime(
-                matchId,
-                game,
-                timer,
-            )
-        }
+        val gameTimer = getTimer(matchId, game)
         doubleCubeService.doubleCube(matchId, userId, game, gameTimer)
         if (gameTimer != null) {
             timerService.update(matchId, game.getCurrentTurn(), gameTimer)
@@ -318,11 +311,7 @@ class GameFacade(
         val fullGame = getMatchById(matchId)
         val game = fullGame.game
         val turn = game.getCurrentTurn().getOpponent()
-        val gameTimer = timerService.validateAndGet(
-            matchId,
-            game.timePolicy,
-            turn
-        ) { timer -> handleOutOfTime(matchId, game, timer) }
+        val gameTimer = getTimer(matchId, game)
         doubleCubeService.acceptDouble(matchId, userId, game, gameTimer, fullGame.doubleCubes)
         if (gameTimer != null) {
             timerService.update(matchId, turn, gameTimer)
