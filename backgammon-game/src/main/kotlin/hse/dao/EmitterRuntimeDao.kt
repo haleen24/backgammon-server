@@ -9,11 +9,12 @@ import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 class EmitterRuntimeDao(
-    private val emitters: ConcurrentHashMap<Int, HashSet<EmitterDto>> = ConcurrentHashMap(),
+    private val emitters: ConcurrentHashMap<Int, MutableSet<EmitterDto>> = ConcurrentHashMap(),
     @Value("\${config.sse.time-out}") private val sseTimeOut: Long
 ) {
 
@@ -22,7 +23,7 @@ class EmitterRuntimeDao(
     @Synchronized
     fun add(gameId: Int, userId: Int): SseEmitter {
         if (!emitters.containsKey(gameId)) {
-            emitters[gameId] = HashSet()
+            emitters[gameId] = CopyOnWriteArraySet()
         }
         val emitter = SseEmitter(0)
         emitter.onCompletion { remove(gameId, userId) }

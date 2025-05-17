@@ -2,13 +2,17 @@ package hse.service
 
 import hse.dao.EmitterRuntimeDao
 import hse.dto.GameEvent
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.io.IOException
 
 @Service
 class EmitterService(
     val emitterRuntimeDao: EmitterRuntimeDao
 ) {
+    private final val logger = LoggerFactory.getLogger(this.javaClass)
+
     fun create(gameId: Int, userId: Int): SseEmitter {
         return emitterRuntimeDao.add(gameId, userId)
     }
@@ -22,8 +26,12 @@ class EmitterService(
     fun sendForAll(gameId: Int, event: GameEvent) {
         emitterRuntimeDao.getAllInRoom(gameId)
             .forEach { emitterDto ->
-                kotlin.runCatching { emitterDto.emitter.send(event) }
-                    .onFailure { emitterRuntimeDao.remove(gameId, emitterDto.userId) }
+                try {
+                    emitterDto.emitter.send(event)
+                } catch (e: IOException) {
+                    emitterRuntimeDao.remove(gameId, emitterDto.userId)
+                    logger.warn(e.message)
+                }
             }
     }
 }

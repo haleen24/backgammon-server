@@ -50,6 +50,7 @@ class GameHistoryService(
         val responseHistoryItems = mutableListOf<HistoryResponseItem>()
         var doubleCubeCounter = 0
         var i = 0
+        val winnerEventIds = mutableSetOf<Int>()
         while (i in 0 until history.size) {
             val entity = history[i]
             if (entity is Zar) {
@@ -57,15 +58,20 @@ class GameHistoryService(
                     break
                 }
                 if (history[i + 1] is MoveWithId) {
-                    responseHistoryItems.add(addGameWinnerToHistory(entity, history[i + 1] as MoveWithId))
+                    responseHistoryItems.add(addMoveToHistory(entity, history[i + 1] as MoveWithId))
                     i += 2
                     continue
                 }
                 logger.warn("После броска зара не ход! игра $matchId-$gameId; ход ${entity.moveId}")
             } else if (entity is DoubleCube) {
                 ++doubleCubeCounter
-                addGameWinnerToHistory(entity, doubleCubeCounter, responseHistoryItems)
+                addDoubleCubeToHistory(entity, doubleCubeCounter, responseHistoryItems)
             } else if (entity is GameWinner) {
+                if (winnerEventIds.contains(entity.gameId)) {
+                    ++i
+                    continue
+                }
+                winnerEventIds.add(entity.gameId)
                 responseHistoryItems.add(
                     addGameWinnerToHistory(
                         entity, startState.restoreContextDto.whitePoints,
@@ -94,14 +100,14 @@ class GameHistoryService(
         return gameEngineAdapter.getAnalysis(request)
     }
 
-    private fun addGameWinnerToHistory(zar: Zar, moveWithId: MoveWithId): HistoryResponseItem {
+    private fun addMoveToHistory(zar: Zar, moveWithId: MoveWithId): HistoryResponseItem {
         return MoveHistoryResponseItem(
             dice = zar.z,
             moves = moveWithId.moveSet.moves.changes.map { MoveHistoryResponseItem.MoveItem(it.first, it.second) }
         )
     }
 
-    private fun addGameWinnerToHistory(
+    private fun addDoubleCubeToHistory(
         doubleCube: DoubleCube,
         n: Int,
         responseHistoryItems: MutableList<HistoryResponseItem>
