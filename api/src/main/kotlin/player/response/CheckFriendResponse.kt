@@ -1,5 +1,5 @@
 package player.response
 
-data class CheckFriend(
+data class CheckFriendResponse(
     val isFriends: Boolean
 )

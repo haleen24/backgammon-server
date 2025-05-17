@@ -14,8 +14,8 @@ import java.util.concurrent.ConcurrentHashMap
 @Scope(SCOPE_SINGLETON)
 class ConnectionService(
     val connectionDao: ConnectionDao,
-    val inQueueFilter: MutableSet<Int> = ConcurrentHashMap.newKeySet(),
-    val cancelledFilter: MutableSet<Int> = ConcurrentHashMap.newKeySet(),
+    val inQueueFilter: MutableSet<Long> = ConcurrentHashMap.newKeySet(),
+    val cancelledFilter: MutableSet<Long> = ConcurrentHashMap.newKeySet(),
 ) {
 
     fun connect(connectionDto: ConnectionDto, points: GammonGamePoints, timePolicy: TimePolicy) {
@@ -34,11 +34,11 @@ class ConnectionService(
         return res.filter { !cancelledFilter.contains(it.userId) }
     }
 
-    fun checkInBan(userId: Int): Boolean {
+    fun checkInBan(userId: Long): Boolean {
         return cancelledFilter.contains(userId)
     }
 
-    fun disconnect(userId: Int) {
+    fun disconnect(userId: Long) {
         inQueueFilter.remove(userId)
         cancelledFilter.add(userId)
     }

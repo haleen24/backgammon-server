@@ -5,11 +5,13 @@ import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
 import game.common.enums.TimePolicy
 import hse.menu.dto.ConnectionDto
+import hse.menu.enums.GameStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import player.InvitePolicy
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -19,7 +21,8 @@ class MenuService(
     private val connectionService: ConnectionService,
     private val gameService: GameService,
     private val playerService: PlayerService,
-    @Value("\${disable-job}") isTest: Boolean = false
+    @Value("\${disable-job}") isTest: Boolean = false,
+    @Value("\${app.search-job.timeout}") val searchJobTimeout: Long,
 ) {
 
     private final val logger = LoggerFactory.getLogger(MenuService::class.java)
@@ -39,7 +42,7 @@ class MenuService(
         }
     }
 
-    fun connect(userId: Int, request: CreateGameRequest): Int {
+    fun connect(userId: Long, request: CreateGameRequest): Int {
         val points = GammonGamePoints.of(request.points) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
         val userRating = playerService.getUserRating(userId, request.type, request.timePolicy)
         logger.info("connect: $userId, userRating: $userRating")
@@ -52,7 +55,7 @@ class MenuService(
         )
     }
 
-    fun disconnect(userId: Int) {
+    fun disconnect(userId: Long) {
         connectionService.disconnect(userId)
     }
 
@@ -71,8 +74,8 @@ class MenuService(
             if (connections.size % 2 != 0) {
                 connectionService.connect(connections.last(), points, timePolicy)
             }
-            if (connections.isEmpty()) {
-                Thread.sleep(100)
+            if (connections.isEmpty() || connections.size == 1) {
+                Thread.sleep(searchJobTimeout)
             }
         }
     }
@@ -117,5 +120,29 @@ class MenuService(
         secondPlayerConnection.gameId = game.id.toInt()
         firstPlayerConnection.latch.countDown()
         secondPlayerConnection.latch.countDown()
+    }
+
+    fun invite(fromUser: Long, toUser: Long, createGameRequest: CreateGameRequest) {
+        if (checkHasCurrentGames(fromUser)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You have not finished games")
+        }
+        val toUserInvitePolicy = playerService.getInvitePolicy(toUser)
+        if (toUserInvitePolicy == InvitePolicy.FRIENDS_ONLY && !playerService.checkIsFriends(fromUser, toUser)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cant invite user due to invite policy")
+        }
+        val points =
+            GammonGamePoints.of(createGameRequest.points) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        gameService.storeGameByInvitation(
+            createGameRequest.type,
+            points,
+            createGameRequest.timePolicy,
+            fromUser,
+            toUser
+        )
+    }
+
+    private fun checkHasCurrentGames(userId: Long): Boolean {
+        val userGames = gameService.getGamesByPlayer(userId, 0, 1)
+        return userGames.isNotEmpty() && userGames.first().gameStatus != GameStatus.END
     }
 }

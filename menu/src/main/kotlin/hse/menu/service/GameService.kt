@@ -38,13 +38,31 @@ class GameService(
         return gameDao.save(game)
     }
 
+    fun storeGameByInvitation(
+        gameType: GameType,
+        gamePoints: GammonGamePoints,
+        timePolicy: TimePolicy,
+        firstPlayerId: Long,
+        secondPlayerId: Long
+    ): Game {
+        val game = Game(
+            gameType = gameType,
+            gamePoints = gamePoints,
+            timePolicy = timePolicy,
+            firstPlayerId = firstPlayerId,
+            secondPlayerId = secondPlayerId,
+            status = GameStatus.NOT_STARTED
+        )
+        return gameDao.save(game)
+    }
+
     fun setGameEnd(matchId: Long) {
         val game = gameDao.findById(matchId).orElse(null) ?: return
         game.status = GameStatus.END
         gameDao.save(game)
     }
 
-    fun getGamesByPlayer(playerId: Int, pageNumber: Int, pageSize: Int): List<PlayerGames> {
+    fun getGamesByPlayer(playerId: Long, pageNumber: Int, pageSize: Int): List<PlayerGames> {
         val pageable = PageRequest.of(pageNumber, pageSize, Sort.Direction.DESC, "id")
         val games = gameDao.findAll(pageable)
         return games.toList().map { PlayerGames(it.id, it.status, it.timePolicy, it.gamePoints) }

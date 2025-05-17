@@ -4,13 +4,14 @@ import game.common.enums.GameType
 import game.common.enums.TimePolicy
 import hse.menu.adapter.PlayerAdapter
 import org.springframework.stereotype.Service
+import player.InvitePolicy
 
 @Service
 class PlayerService(
     private val playerAdapter: PlayerAdapter,
 ) {
-    fun getUserRating(userId: Int, gameType: GameType, timePolicy: TimePolicy): Long {
-        val rating = playerAdapter.getUserInfo(userId.toLong()).rating
+    fun getUserRating(userId: Long, gameType: GameType, timePolicy: TimePolicy): Long {
+        val rating = playerAdapter.getUserInfo(userId).rating
         return (if (gameType == GameType.SHORT_BACKGAMMON) {
             if (timePolicy == TimePolicy.BLITZ) {
                 rating.nardeBlitz
@@ -24,5 +25,13 @@ class PlayerService(
                 rating.nardeDefault
             }
         }).toLong()
+    }
+
+    fun getInvitePolicy(userId: Long): InvitePolicy {
+        return playerAdapter.getUserInfo(userId).invitePolicy
+    }
+
+    fun checkIsFriends(firstUserId: Long, secondUserId: Long): Boolean {
+        return playerAdapter.checkIsFriends(firstUserId, secondUserId).isFriends
     }
 }

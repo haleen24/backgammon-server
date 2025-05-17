@@ -19,23 +19,32 @@ class MenuController(
 
     @PostMapping("connect")
     fun connect(
-        @RequestHeader(AUTH_USER) user: Int,
+        @RequestHeader(AUTH_USER) user: Long,
         @RequestBody request: CreateGameRequest,
     ): Int {
         return menuService.connect(user, request)
     }
 
     @PostMapping("disconnect")
-    fun disconnect(@RequestHeader(AUTH_USER) user: Int) {
+    fun disconnect(@RequestHeader(AUTH_USER) user: Long) {
         menuService.disconnect(user)
     }
 
     @GetMapping("played-games")
     fun getPlayerGames(
-        @RequestParam userId: Int,
+        @RequestParam userId: Long,
         @RequestParam pageNumber: Int,
         @RequestParam pageSize: Int
     ): List<PlayerGames> {
         return gameService.getGamesByPlayer(userId, pageNumber, pageSize)
+    }
+
+    @PostMapping("invite/{invitedPlayer}")
+    fun invite(
+        @RequestHeader(AUTH_USER) user: Long,
+        @PathVariable invitedPlayer: Long,
+        @RequestBody createGameRequest: CreateGameRequest
+    ) {
+        menuService.invite(user, invitedPlayer, createGameRequest)
     }
 }

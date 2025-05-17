@@ -40,3 +40,7 @@ route:
       uri: 'http://game-service:82'
 
 disable-job: false
+
+app:
+  search-job:
+    timeout: 3000

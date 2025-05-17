@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import player.request.AddFriendRequest
 import player.request.RemoveFriendRequest
-import player.response.CheckFriend
+import player.response.CheckFriendResponse
 import player.response.GetFriendResponse
 
 @RestController
@@ -48,8 +48,8 @@ class FriendController(
         return friendService.getFriendRequests(userId)
     }
 
-    @GetMapping("/invite-check")
-    fun isFriend(@RequestParam firsUser: Long, @RequestParam secondUser: Long): CheckFriend {
-        return CheckFriend(friendService.isFriends(firsUser, secondUser))
+    @GetMapping("/check")
+    fun isFriend(@RequestParam firsUser: Long, @RequestParam secondUser: Long): CheckFriendResponse {
+        return CheckFriendResponse(friendService.isFriends(firsUser, secondUser))
     }
 }
