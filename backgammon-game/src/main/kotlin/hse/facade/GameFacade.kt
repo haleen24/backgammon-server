@@ -123,6 +123,7 @@ class GameFacade(
             getTimer(matchId, game)
         } catch (_: ResponseStatusException) {
             game = getMatchById(matchId).game
+            game.setPossibleEndFlag(true)
             null
         }
         val configData = game.getConfiguration(userId)
