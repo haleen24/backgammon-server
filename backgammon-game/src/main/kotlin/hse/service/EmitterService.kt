@@ -21,6 +21,6 @@ class EmitterService(
 
     fun sendForAll(gameId: Int, event: GameEvent) {
         emitterRuntimeDao.getAllInRoom(gameId)
-            .forEach { it.emitter.send(event) }
+            .forEach { kotlin.runCatching { it.emitter.send(event) } }
     }
 }
