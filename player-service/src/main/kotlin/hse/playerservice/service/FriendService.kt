@@ -85,6 +85,11 @@ class FriendService(
         }
     }
 
+    fun isFriends(firstUserId: Long, secondUserId: Long): Boolean {
+        val first = min(firstUserId, secondUserId)
+        val second = max(firstUserId, secondUserId)
+        return friendRecordRepository.existsFriendRecordByFirstUserAndSecondUser(first, second)
+    }
 
     private fun addFriendById(userId: Long, friendRequestId: Long) {
         if (userId == friendRequestId) {
@@ -110,7 +115,7 @@ class FriendService(
     }
 
     private fun checkFriendsAlready(firstUserId: Long, secondUserId: Long) {
-        if (friendRecordRepository.existsFriendRecordByFirstUserAndSecondUser(firstUserId, secondUserId)) {
+        if (isFriends(firstUserId, secondUserId)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "Already friends")
         }
     }
