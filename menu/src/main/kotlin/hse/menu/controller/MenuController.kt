@@ -47,4 +47,13 @@ class MenuController(
     ) {
         menuService.invite(user, invitedPlayer, createGameRequest)
     }
+
+    @PostMapping("invite/answer/{invitedByPlayer}")
+    fun answerOnInvite(
+        @RequestHeader(AUTH_USER) user: Long,
+        @PathVariable invitedByPlayer: Long,
+        @RequestParam(defaultValue = "false") accept: Boolean
+    ) {
+        menuService.answerOnInvite(user, invitedByPlayer, accept)
+    }
 }

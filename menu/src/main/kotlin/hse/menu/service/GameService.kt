@@ -56,6 +56,16 @@ class GameService(
         return gameDao.save(game)
     }
 
+    fun startGame(game: Game) {
+        gameAdapter.gameCreation(game) ?: return
+        game.status = GameStatus.IN_PROCESS
+        gameDao.save(game)
+    }
+
+    fun declineGameFromInvitation(game: Game) {
+        gameDao.deleteAllById(listOf(game.id))
+    }
+
     fun setGameEnd(matchId: Long) {
         val game = gameDao.findById(matchId).orElse(null) ?: return
         game.status = GameStatus.END
@@ -66,5 +76,9 @@ class GameService(
         val pageable = PageRequest.of(pageNumber, pageSize, Sort.Direction.DESC, "id")
         val games = gameDao.findAll(pageable)
         return games.toList().map { PlayerGames(it.id, it.status, it.timePolicy, it.gamePoints) }
+    }
+
+    fun findByPlayersAndStatus(invitedUser: Long, invitedBy: Long, status: GameStatus): Game? {
+        return gameDao.findByFirstPlayerIdAndSecondPlayerIdAndStatus(invitedBy, invitedUser, status).firstOrNull()
     }
 }

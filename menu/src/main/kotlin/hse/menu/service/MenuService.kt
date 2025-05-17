@@ -123,9 +123,10 @@ class MenuService(
     }
 
     fun invite(fromUser: Long, toUser: Long, createGameRequest: CreateGameRequest) {
-        if (checkHasCurrentGames(fromUser)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You have not finished games")
+        if (fromUser == toUser) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cant invite yourself")
         }
+        checkHasCurrentGames(fromUser)
         val toUserInvitePolicy = playerService.getInvitePolicy(toUser)
         if (toUserInvitePolicy == InvitePolicy.FRIENDS_ONLY && !playerService.checkIsFriends(fromUser, toUser)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cant invite user due to invite policy")
@@ -141,8 +142,21 @@ class MenuService(
         )
     }
 
-    private fun checkHasCurrentGames(userId: Long): Boolean {
+    fun answerOnInvite(userId: Long, invitedBy: Long, accept: Boolean) {
+        val game = gameService.findByPlayersAndStatus(userId, invitedBy, GameStatus.NOT_STARTED)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
+        if (!accept || userId == invitedBy) {
+            gameService.declineGameFromInvitation(game)
+            return
+        }
+        checkHasCurrentGames(userId)
+        gameService.startGame(game)
+    }
+
+    private fun checkHasCurrentGames(userId: Long) {
         val userGames = gameService.getGamesByPlayer(userId, 0, 1)
-        return userGames.isNotEmpty() && userGames.first().gameStatus != GameStatus.END
+        if (userGames.isNotEmpty() && userGames.first().gameStatus != GameStatus.END) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Already has game")
+        }
     }
 }
