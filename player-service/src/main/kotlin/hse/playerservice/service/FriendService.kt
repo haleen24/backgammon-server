@@ -19,10 +19,10 @@ import kotlin.math.min
 
 @Service
 class FriendService(
-    val friendRequestRepository: FriendRequestRepository,
-    val friendRecordRepository: FriendRecordRepository,
-    val userService: UserService,
-    val clock: Clock
+    private val friendRequestRepository: FriendRequestRepository,
+    private val friendRecordRepository: FriendRecordRepository,
+    private val userService: UserService,
+    private val clock: Clock
 ) {
     companion object {
         const val NO_ID = 0L
@@ -91,6 +91,12 @@ class FriendService(
         return friendRecordRepository.existsFriendRecordByFirstUserAndSecondUser(first, second)
     }
 
+    fun canAddFriend(userId: Long, anotherUserId: Long): Boolean {
+        return !(isFriends(userId, anotherUserId)
+                || friendRequestRepository.findFirstByFromAndTo(userId, anotherUserId) != null
+                || friendRequestRepository.findFirstByFromAndTo(anotherUserId, userId) != null)
+    }
+
     private fun addFriendById(userId: Long, friendRequestId: Long) {
         if (userId == friendRequestId) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "cant be friend for yourself")
@@ -99,7 +105,6 @@ class FriendService(
         val second = max(userId, friendRequestId)
         checkFriendsAlready(first, second)
         val request = friendRequestRepository.findFirstByFromAndTo(friendRequestId, userId)
-
         if (request == null) {
             friendRequestRepository.save(FriendRequest(NO_ID, userId, friendRequestId, clock.instant()))
         } else {
@@ -121,10 +126,14 @@ class FriendService(
     }
 
     private fun removeFriendById(userId: Long, friendRequestId: Long) {
-        val first = min(userId, friendRequestId)
-        val second = max(userId, friendRequestId)
-
-        friendRecordRepository.deleteFriendRecordByFirstUserAndSecondUser(first, second)
+        val record = friendRequestRepository.findFirstByFromAndTo(userId, friendRequestId)
+        if (record != null) {
+            friendRequestRepository.deleteById(record.id)
+        } else {
+            val first = min(userId, friendRequestId)
+            val second = max(userId, friendRequestId)
+            friendRecordRepository.deleteFriendRecordByFirstUserAndSecondUser(first, second)
+        }
     }
 
     private fun removeFriendByLogin(userId: Long, friendLogin: String) {
