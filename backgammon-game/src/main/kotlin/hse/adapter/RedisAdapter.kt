@@ -5,7 +5,6 @@ import redis.clients.jedis.Jedis
 
 @Component
 class RedisAdapter(
-
     private val jedis: Jedis?
 ) {
 

@@ -7,7 +7,6 @@ import org.springframework.cache.interceptor.LoggingCacheErrorHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import redis.clients.jedis.Jedis
-import redis.clients.jedis.JedisPool
 
 @Configuration
 class CacheConfig: CachingConfigurer {
@@ -17,11 +16,12 @@ class CacheConfig: CachingConfigurer {
         @Value("\${config.jedis.host}") host: String,
         @Value("\${config.jedis.port}") port: Int
     ): Jedis? {
-        return try {
-            JedisPool(host, port).resource
-        } catch (_: RuntimeException) {
-            null
-        }
+        return  null
+//        return try {
+//            JedisPool(host, port).resource
+//        } catch (_: RuntimeException) {
+//            null
+//        }
     }
 
     override fun errorHandler(): CacheErrorHandler? = LoggingCacheErrorHandler(true)
