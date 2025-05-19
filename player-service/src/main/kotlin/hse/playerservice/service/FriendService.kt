@@ -126,14 +126,19 @@ class FriendService(
     }
 
     private fun removeFriendById(userId: Long, friendRequestId: Long) {
-        val record = friendRequestRepository.findFirstByFromAndTo(userId, friendRequestId)
+        var record = friendRequestRepository.findFirstByFromAndTo(userId, friendRequestId)
         if (record != null) {
             friendRequestRepository.deleteById(record.id)
-        } else {
-            val first = min(userId, friendRequestId)
-            val second = max(userId, friendRequestId)
-            friendRecordRepository.deleteFriendRecordByFirstUserAndSecondUser(first, second)
+            return
         }
+        record = friendRequestRepository.findFirstByFromAndTo(friendRequestId, userId)
+        if (record != null) {
+            friendRequestRepository.deleteById(record.id)
+            return
+        }
+        val first = min(userId, friendRequestId)
+        val second = max(userId, friendRequestId)
+        friendRecordRepository.deleteFriendRecordByFirstUserAndSecondUser(first, second)
     }
 
     private fun removeFriendByLogin(userId: Long, friendLogin: String) {
