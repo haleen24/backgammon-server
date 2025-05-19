@@ -90,7 +90,7 @@ class UserRatingService(
     }
 
     private fun getExpected(playerRating: Int, opponentRating: Int): Double {
-        return 1.0 / (1 + 10.0.pow((opponentRating - playerRating / 400)))
+        return 1.0 / (1 + 10.0.pow(((opponentRating - playerRating) / 400.0)))
     }
 
     private fun getRatingCoefficient(currentRating: Int, numberOfGame: Int): Long {
