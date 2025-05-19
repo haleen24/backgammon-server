@@ -20,6 +20,14 @@ spring:
           player-service:
             url: "http://player-service:84"
             read-timeout: 6_000
+  cache:
+    type: redis
+    redis:
+      time-to-live: 2m
+  data:
+    redis:
+      host: redis-service
+      port: 6379
   kafka:
     bootstrap-servers: 176.108.249.50:9092
     consumer:

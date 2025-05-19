@@ -14,6 +14,6 @@ class GameEndMessageConsumer(
     @KafkaListener(topics = ["\${kafka.topic.narde.event.game-end}"], groupId = "\${spring.kafka.consumer.group-id}")
     fun consume(data: String) {
         val gameEndMessage = objectMapper.readValue(data, GameEndMessage::class.java)
-        gameService.setGameEnd(gameEndMessage.matchId)
+        gameService.setGameEnd(gameEndMessage)
     }
 }

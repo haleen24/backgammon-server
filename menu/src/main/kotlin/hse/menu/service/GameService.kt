@@ -8,6 +8,7 @@ import hse.menu.dao.GameDao
 import hse.menu.dto.PlayerGames
 import hse.menu.entity.Game
 import hse.menu.enums.GameStatus
+import kafka.GameEndMessage
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service
 class GameService(
     private val gameDao: GameDao,
     private val gameAdapter: GameAdapter,
+    private val playerService: PlayerService,
 ) {
     fun storeGame(
         gameType: GameType,
@@ -66,8 +68,9 @@ class GameService(
         gameDao.deleteAllById(listOf(game.id))
     }
 
-    fun setGameEnd(matchId: Long) {
-        val game = gameDao.findById(matchId).orElse(null) ?: return
+    fun setGameEnd(gameEndMessage: GameEndMessage) {
+        val game = gameDao.findById(gameEndMessage.matchId).orElse(null) ?: return
+        game.winnerId = gameEndMessage.winnerId
         game.status = GameStatus.END
         gameDao.save(game)
     }
@@ -75,7 +78,15 @@ class GameService(
     fun getGamesByPlayer(playerId: Long, pageNumber: Int, pageSize: Int): List<PlayerGames> {
         val pageable = PageRequest.of(pageNumber, pageSize, Sort.Direction.DESC, "id")
         val games = gameDao.findAll(pageable)
-        return games.toList().map { PlayerGames(it.id, it.status, it.timePolicy, it.gamePoints) }
+        return games.toList().map {
+            PlayerGames(
+                it.id,
+                it.status,
+                it.timePolicy,
+                it.gameType,
+                playerService.getUserInfo(it.firstPlayerId + it.secondPlayerId - playerId)
+            )
+        }
     }
 
     fun findByPlayersAndStatus(invitedUser: Long, invitedBy: Long, status: GameStatus): Game? {

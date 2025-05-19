@@ -18,5 +18,6 @@ data class Game(
     val timePolicy: TimePolicy,
     val firstPlayerId: Long,
     val secondPlayerId: Long,
-    var status: GameStatus
+    var status: GameStatus,
+    var winnerId: Long? = null,
 )

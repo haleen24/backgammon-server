@@ -3,8 +3,10 @@ package hse.menu.service
 import game.common.enums.GameType
 import game.common.enums.TimePolicy
 import hse.menu.adapter.PlayerAdapter
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import player.InvitePolicy
+import player.response.UserInfoResponse
 
 @Service
 class PlayerService(
@@ -33,5 +35,11 @@ class PlayerService(
 
     fun checkIsFriends(firstUserId: Long, secondUserId: Long): Boolean {
         return playerAdapter.checkIsFriends(firstUserId, secondUserId).isFriends
+    }
+
+
+    @Cacheable("menu-user-info")
+    fun getUserInfo(userId: Long): UserInfoResponse {
+        return playerAdapter.getUserInfo(userId)
     }
 }
