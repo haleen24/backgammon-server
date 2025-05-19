@@ -74,7 +74,7 @@ class UserRatingService(
             winnerRating.backgammonDefault = winnerNewRating.toInt()
             loserRating.backgammonDefault = loserNewRating.toInt()
         } else {
-            winnerRating.backgammonDefault = winnerNewRating.toInt()
+            winnerRating.backgammonBlitz = winnerNewRating.toInt()
             loserRating.backgammonBlitz = loserNewRating.toInt()
         }
         winnerRating.numberOfGames += 1
