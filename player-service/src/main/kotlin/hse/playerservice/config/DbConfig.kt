@@ -1,8 +1,10 @@
 package hse.playerservice.config
 
+import jakarta.persistence.EntityManagerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
@@ -12,7 +14,7 @@ import javax.sql.DataSource
 class DbConfig {
 
     @Bean
-    fun transactionManager(dataSource: DataSource): PlatformTransactionManager {
-        return DataSourceTransactionManager(dataSource)
+    fun transactionManager(emf: EntityManagerFactory): PlatformTransactionManager {
+        return JpaTransactionManager(emf)
     }
 }

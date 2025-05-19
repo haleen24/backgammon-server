@@ -12,14 +12,9 @@ data class UserRating(
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @OneToOne(cascade = [(CascadeType.ALL)])
     val user: User,
-    @Column
     var backgammonDefault: Int,
-    @Column
     var backgammonBlitz: Int,
-    @Column
     var nardeBlitz: Int,
-    @Column
     var nardeDefault: Int,
-    @Column
     var numberOfGames: Int
 )
