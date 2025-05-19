@@ -65,12 +65,12 @@ class UserRatingService(
         } else {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
-        val winnerExcepted = getExpected(winnerCurrentRating, loserCurrentRating)
-        val loserExcepted = getExpected(loserCurrentRating, winnerCurrentRating)
+        val winnerExpected = getExpected(winnerCurrentRating, loserCurrentRating)
+        val loserExpected = getExpected(loserCurrentRating, winnerCurrentRating)
         val winnerCoefficient = getRatingCoefficient(winnerCurrentRating, winnerRating.numberOfGames)
         val loserCoefficient = getRatingCoefficient(loserCurrentRating, loserRating.numberOfGames)
-        val winnerNewRating = winnerCurrentRating + winnerCoefficient * (1 - winnerExcepted)
-        val loserNewRating = loserCurrentRating - loserCoefficient * loserExcepted
+        val winnerNewRating = winnerCurrentRating + winnerCoefficient * (1 - winnerExpected)
+        val loserNewRating = loserCurrentRating - loserCoefficient * loserExpected
         if (gameEndMessage.gameType == REGULAR_GAMMON && gameEndMessage.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
             winnerRating.nardeDefault = winnerNewRating.toInt()
             loserRating.nardeDefault = loserNewRating.toInt()
@@ -86,14 +86,11 @@ class UserRatingService(
         }
         winnerRating.numberOfGames += 1
         loserRating.numberOfGames += 1
-        logger.info("after game ${gameEndMessage.matchId} winner rating: $winnerNewRating, loser rating: $loserNewRating")
-        userRatingRepository.save(winnerRating)
-        userRatingRepository.save(loserRating)
         userRatingRepository.saveAllAndFlush(mutableListOf(winnerRating, loserRating))
     }
 
     private fun getExpected(playerRating: Int, opponentRating: Int): Double {
-        return 1.0 / (1.0 + 10).pow((opponentRating - playerRating / 400))
+        return 1.0 / (1 + 10.0.pow((opponentRating - playerRating / 400)))
     }
 
     private fun getRatingCoefficient(currentRating: Int, numberOfGame: Int): Long {
