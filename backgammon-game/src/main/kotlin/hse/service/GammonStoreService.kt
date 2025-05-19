@@ -78,7 +78,14 @@ class GammonStoreService(
         return gammonMoveDao.getWinners(matchId).sortedBy { it.gameId }.map { it.color }
     }
 
-    fun endGame(winner: Color, matchId: Int, wrapper: BackgammonWrapper, points: Int, endMatch: Boolean, isSurrender: Boolean) {
+    fun endGame(
+        winner: Color,
+        matchId: Int,
+        wrapper: BackgammonWrapper,
+        points: Int,
+        endMatch: Boolean,
+        isSurrender: Boolean
+    ) {
         wrapper.setPossibleEndFlag(true)
         gammonMoveDao.storeWinner(
             GameWinner.of(
@@ -111,8 +118,11 @@ class GammonStoreService(
 
     private fun getGameFromCache(gameId: Int): BackgammonWrapper? {
         val json = redisAdapter.get(gameId.toString()) ?: return null
-        val restoreContext = objectMapper.readValue(json, GammonRestoreContextDto::class.java)
-
+        val restoreContext = try {
+            objectMapper.readValue(json, GammonRestoreContextDto::class.java)
+        } catch (_: Exception) {
+            null
+        } ?: return null
         return BackgammonWrapper.buildFromContext(restoreContext)
     }
 
