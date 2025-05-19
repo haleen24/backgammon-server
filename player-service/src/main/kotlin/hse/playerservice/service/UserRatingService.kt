@@ -8,6 +8,8 @@ import hse.playerservice.entity.UserRating
 import hse.playerservice.repository.UserRatingRepository
 import hse.playerservice.service.UserService.Companion.NO_ID
 import kafka.GameEndMessage
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -17,6 +19,8 @@ import kotlin.math.pow
 class UserRatingService(
     val userRatingRepository: UserRatingRepository
 ) {
+    val logger: Logger = LoggerFactory.getLogger(UserRatingService::class.java)
+
     companion object {
         const val DEFAULT_RATING = 100
     }
@@ -63,7 +67,7 @@ class UserRatingService(
         val winnerCoefficient = getRatingCoefficient(winnerCurrentRating, winnerRating.numberOfGames)
         val loserCoefficient = getRatingCoefficient(loserCurrentRating, loserRating.numberOfGames)
         val winnerNewRating = winnerCurrentRating + winnerCoefficient * (1 - winnerExcepted)
-        val loserNewRating = loserCurrentRating + loserCoefficient * (0 - loserExcepted)
+        val loserNewRating = loserCurrentRating - loserCoefficient * loserExcepted
         if (gameEndMessage.gameType == REGULAR_GAMMON && gameEndMessage.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
             winnerRating.nardeDefault = winnerNewRating.toInt()
             loserRating.nardeDefault = loserNewRating.toInt()
@@ -79,6 +83,7 @@ class UserRatingService(
         }
         winnerRating.numberOfGames += 1
         loserRating.numberOfGames += 1
+        logger.info("after game ${gameEndMessage.matchId} winner rating: $winnerNewRating, loser rating: $loserRating")
         userRatingRepository.save(winnerRating)
         userRatingRepository.save(loserRating)
     }
