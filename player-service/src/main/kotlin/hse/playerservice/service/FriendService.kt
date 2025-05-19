@@ -75,12 +75,12 @@ class FriendService(
 
     fun getFriendRequests(userId: Long): List<GetFriendResponse> {
         val friendRequests = friendRequestRepository.findByTo(userId).sortedBy { it.from }
-        val usernames = userService.getAllUsernames(friendRequests.map { it.to })
+        val usernames = userService.getAllUsernames(friendRequests.map { it.from })
 
         return friendRequests.zip(usernames).map { pair ->
             GetFriendResponse(
                 username = pair.second,
-                id = pair.first.id
+                id = pair.first.from
             )
         }
     }

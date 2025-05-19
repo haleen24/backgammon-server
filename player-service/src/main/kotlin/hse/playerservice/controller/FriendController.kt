@@ -1,8 +1,10 @@
 package hse.playerservice.controller
 
 import hse.playerservice.service.FriendService
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import player.request.AddFriendRequest
 import player.request.RemoveFriendRequest
 import player.response.CanAddFriendResponse
@@ -37,7 +39,7 @@ class FriendController(
 
     @GetMapping
     fun getFriends(
-        @RequestParam userId: Long,
+        @RequestHeader(AUTH_HEADER) userId: Long,
         @RequestParam offset: Int,
         @RequestParam limit: Int
     ): List<GetFriendResponse> {
@@ -50,8 +52,19 @@ class FriendController(
     }
 
     @GetMapping("/check")
-    fun isFriend(@RequestParam firsUser: Long, @RequestParam secondUser: Long): CheckFriendResponse {
-        return CheckFriendResponse(friendService.isFriends(firsUser, secondUser))
+    fun isFriend(
+        @RequestHeader(AUTH_HEADER, required = false) userId: Long? = null,
+        @RequestParam(required = false) firsUser: Long? = null,
+        @RequestParam secondUser: Long
+    ): CheckFriendResponse {
+        val result = if (userId != null) {
+            friendService.isFriends(userId, secondUser)
+        } else if (firsUser != null) {
+            friendService.isFriends(firsUser, secondUser)
+        } else {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        }
+        return CheckFriendResponse(result)
     }
 
     @GetMapping("/can-add-friend/{anotherUserId}")
