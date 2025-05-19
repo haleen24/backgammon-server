@@ -83,9 +83,8 @@ class UserRatingService(
         }
         winnerRating.numberOfGames += 1
         loserRating.numberOfGames += 1
-        logger.info("after game ${gameEndMessage.matchId} winner rating: $winnerNewRating, loser rating: $loserRating")
-        userRatingRepository.save(winnerRating)
-        userRatingRepository.save(loserRating)
+        logger.info("after game ${gameEndMessage.matchId} winner rating: $winnerNewRating, loser rating: $loserNewRating")
+        userRatingRepository.saveAllAndFlush(listOf(winnerRating, loserRating))
     }
 
     private fun getExpected(playerRating: Int, opponentRating: Int): Double {
