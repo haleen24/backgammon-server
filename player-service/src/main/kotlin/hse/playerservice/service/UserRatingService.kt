@@ -12,7 +12,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import kotlin.math.pow
 
@@ -43,7 +42,6 @@ class UserRatingService(
         return userRatingRepository.findByUserId(id)
     }
 
-    @Transactional
     fun changeRating(gameEndMessage: GameEndMessage) {
         val winnerRating = userRatingRepository.findByUserId(gameEndMessage.winnerId)
         val loserRating = userRatingRepository.findByUserId(gameEndMessage.loserId)
