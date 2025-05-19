@@ -6,7 +6,7 @@ import jakarta.persistence.*
 @Table(
     schema = "sch1", name = "\"user_rating\"",
 )
-class UserRating(
+data class UserRating(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long,
     @JoinColumn(name = "user_id", referencedColumnName = "id")
