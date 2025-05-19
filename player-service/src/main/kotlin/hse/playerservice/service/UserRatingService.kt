@@ -12,6 +12,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import kotlin.math.pow
 
@@ -42,6 +44,7 @@ class UserRatingService(
         return userRatingRepository.findByUserId(id)
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     fun changeRating(gameEndMessage: GameEndMessage) {
         val winnerRating = userRatingRepository.findByUserId(gameEndMessage.winnerId)
         val loserRating = userRatingRepository.findByUserId(gameEndMessage.loserId)
@@ -84,7 +87,7 @@ class UserRatingService(
         winnerRating.numberOfGames += 1
         loserRating.numberOfGames += 1
         logger.info("after game ${gameEndMessage.matchId} winner rating: $winnerNewRating, loser rating: $loserNewRating")
-        userRatingRepository.saveAllAndFlush(listOf(winnerRating, loserRating))
+        userRatingRepository.saveAll(listOf(winnerRating, loserRating))
     }
 
     private fun getExpected(playerRating: Int, opponentRating: Int): Double {
