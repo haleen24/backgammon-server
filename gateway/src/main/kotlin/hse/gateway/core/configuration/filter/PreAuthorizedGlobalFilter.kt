@@ -23,8 +23,9 @@ class PreAuthorizedGlobalFilter(
 
     override fun filter(exchange: ServerWebExchange?, chain: GatewayFilterChain?): Mono<Void> {
         val path = exchange!!.request.path.value()
+        val secureCheck = unsecuredUrls[path]
 
-        if (path in unsecuredUrls) {
+        if (secureCheck != null && secureCheck.methods.contains(exchange.request.method)) {
             return chain!!.filter(exchange)
         }
 

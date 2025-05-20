@@ -1,5 +1,7 @@
 package hse.gateway.core.constant
 
+import hse.gateway.core.dto.AllowedMethods
+
 const val PLAYER_SERVICE = "/player"
 
 const val LOGIN = "$PLAYER_SERVICE/login"
@@ -12,10 +14,10 @@ const val IS_AUTHORIZED = "$PLAYER_SERVICE/is-authorized"
 
 const val USERINFO = "$PLAYER_SERVICE/userinfo"
 
-val unsecuredUrls = setOf(
-    LOGIN,
-    REGISTER,
-    USERINFO,
+val unsecuredUrls = mapOf(
+    LOGIN to AllowedMethods.allowAll(),
+    REGISTER to AllowedMethods.allowAll(),
+    USERINFO to AllowedMethods.getOnly(),
 )
 
 val toAuth = setOf(
