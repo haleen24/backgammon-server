@@ -49,6 +49,14 @@ class MenuController(
         menuService.invite(user, invitedPlayer, createGameRequest)
     }
 
+    @PostMapping("invite/cancel/{invitedPlayer}")
+    fun cancelInvite(
+        @RequestHeader(AUTH_USER) userId: Long,
+        @PathVariable invitedPlayer: Long,
+    ) {
+        menuService.cancelInvite(userId, invitedPlayer)
+    }
+
     @PostMapping("invite/answer/{invitedByPlayer}")
     fun answerOnInvite(
         @RequestHeader(AUTH_USER) user: Long,

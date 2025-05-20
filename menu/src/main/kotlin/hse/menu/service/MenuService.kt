@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import player.InvitePolicy
 import java.util.concurrent.CountDownLatch
@@ -126,6 +127,7 @@ class MenuService(
         secondPlayerConnection.latch.countDown()
     }
 
+    @Transactional
     fun invite(fromUser: Long, toUser: Long, createGameRequest: CreateGameRequest) {
         if (fromUser == toUser) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cant invite yourself")
@@ -150,6 +152,7 @@ class MenuService(
         )
     }
 
+    @Transactional
     fun answerOnInvite(userId: Long, invitedBy: Long, accept: Boolean): Long {
         val game = gameService.findByPlayersAndStatus(userId, invitedBy, GameStatus.NOT_STARTED)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
@@ -158,14 +161,17 @@ class MenuService(
             gameService.declineGameFromInvitation(game)
             return -1
         }
-        if (userId == invitedBy) {
-            gameService.declineGameFromInvitation(game)
-            return -1
-        }
         checkHasCurrentGames(userId)
         gameService.startGame(game)
         sseEmitterService.send(AcceptInviteEventDto(userId, game.id), listOf(invitedBy))
         return game.id
+    }
+
+    @Transactional
+    fun cancelInvite(userId: Long, invitedPlayer: Long) {
+        val game = gameService.findByPlayersAndStatus(userId, invitedPlayer, GameStatus.NOT_STARTED)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
+        gameService.declineGameFromInvitation(game)
     }
 
     private fun checkHasCurrentGames(userId: Long) {
