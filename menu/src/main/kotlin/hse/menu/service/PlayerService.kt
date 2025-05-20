@@ -41,8 +41,12 @@ class PlayerService(
 
 
     @Cacheable("menu-user-info")
-    fun getUserInfo(userId: Long): UserInfoResponse {
-        return playerAdapter.getUserInfo(userId)
+    fun getUserInfo(userId: Long): UserInfoResponse? {
+        return try {
+            playerAdapter.getUserInfo(userId)
+        } catch (_: Exception) {
+            null
+        }
     }
 
     fun updateRating(gameEndMessage: GameEndMessage) {

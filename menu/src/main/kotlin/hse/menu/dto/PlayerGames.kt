@@ -10,5 +10,5 @@ data class PlayerGames(
     val gameStatus: GameStatus,
     val timePolicy: TimePolicy,
     val gameType: GameType,
-    val opponentUserInfo: UserInfoResponse
+    val opponentUserInfo: UserInfoResponse?
 )
