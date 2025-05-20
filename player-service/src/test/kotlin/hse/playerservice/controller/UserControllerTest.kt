@@ -2,7 +2,6 @@ package hse.playerservice.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import hse.playerservice.annotations.PlayerIntegrationTest
-import hse.playerservice.entity.User
 import hse.playerservice.repository.UserRepository
 import hse.playerservice.service.JwtService
 import hse.playerservice.service.UserService
@@ -138,7 +137,7 @@ class UserControllerTest {
             ).content(body)
         ).andExpect {
             assertEquals(it.response.status, HttpStatus.OK.value())
-            assertEquals("timur", userService.findUserNotNull(userId).username)
+            assertEquals("timur", userService.findUserForAuth(userId).username)
         }
     }
 }

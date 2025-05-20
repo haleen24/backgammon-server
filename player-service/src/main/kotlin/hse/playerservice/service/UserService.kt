@@ -65,16 +65,16 @@ class UserService(
         return userRepository.findAllById(ids)
     }
 
-    fun findUserNotNull(login: String): User {
+    fun findUserForAuth(login: String): User {
         return findUser(login) ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found")
     }
 
-    fun findUserNotNull(id: Long): User {
+    fun findUserForAuth(id: Long): User {
         return findUser(id) ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found")
     }
 
     fun authenticate(login: String, password: String): JwtResponse {
-        val user = findUserNotNull(login)
+        val user = findUserForAuth(login)
         return if (passwordEncoder.matches(password, user.password)) {
             JwtResponse(token = jwtService.generateToken(user), user.id)
         } else
@@ -95,7 +95,7 @@ class UserService(
     }
 
     fun changePassword(userId: Long, chanePasswordRequest: ChangePasswordRequest): JwtResponse {
-        val user = findUserNotNull(userId)
+        val user = findUserForAuth(userId)
         if (!passwordEncoder.matches(chanePasswordRequest.oldPassword, user.password)) {
             throw ResponseStatusException(
                 HttpStatus.UNPROCESSABLE_ENTITY,
@@ -107,7 +107,7 @@ class UserService(
     }
 
     fun deleteUser(userId: Long, request: DeleteUserRequest): ResponseEntity<Void> {
-        val user = findUserNotNull(userId)
+        val user = findUserForAuth(userId)
         if (!passwordEncoder.matches(request.password, user.password)) {
             throw ResponseStatusException(
                 HttpStatus.UNPROCESSABLE_ENTITY,
@@ -119,7 +119,7 @@ class UserService(
     }
 
     fun update(userId: Long, updateUserInfoRequest: UpdateUserInfoRequest) {
-        var user = findUserNotNull(userId)
+        var user = findUserForAuth(userId)
         updateUserInfoRequest.login?.apply { user = user.copy(login = updateUserInfoRequest.login!!) }
         updateUserInfoRequest.username?.apply { user = user.copy(username = updateUserInfoRequest.username!!) }
         updateUserInfoRequest.invitePolicy?.apply {

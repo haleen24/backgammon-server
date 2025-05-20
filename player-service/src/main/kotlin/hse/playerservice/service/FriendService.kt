@@ -104,6 +104,9 @@ class FriendService(
         val first = min(userId, friendRequestId)
         val second = max(userId, friendRequestId)
         checkFriendsAlready(first, second)
+        if (friendRequestRepository.findFirstByFromAndTo(userId, friendRequestId) != null) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "request already exists")
+        }
         val request = friendRequestRepository.findFirstByFromAndTo(friendRequestId, userId)
         if (request == null) {
             friendRequestRepository.save(FriendRequest(NO_ID, userId, friendRequestId, clock.instant()))
@@ -115,7 +118,10 @@ class FriendService(
     }
 
     private fun addFriendByLogin(userId: Long, friendRequestLogin: String) {
-        val friend = userService.findUserNotNull(friendRequestLogin)
+        val friend = userService.findUser(friendRequestLogin) ?: throw ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "user not found"
+        )
         addFriendById(userId, friend.id)
     }
 
@@ -142,6 +148,6 @@ class FriendService(
     }
 
     private fun removeFriendByLogin(userId: Long, friendLogin: String) {
-        removeFriendById(userId, userService.findUserNotNull(friendLogin).id)
+        removeFriendById(userId, userService.findUserForAuth(friendLogin).id)
     }
 }
