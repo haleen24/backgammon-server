@@ -12,6 +12,7 @@ import kafka.GameEndMessage
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class GameService(
@@ -68,11 +69,13 @@ class GameService(
         gameDao.deleteAllById(listOf(game.id))
     }
 
-    fun setGameEnd(gameEndMessage: GameEndMessage) {
+    @Transactional
+    fun handleGameEnd(gameEndMessage: GameEndMessage) {
         val game = gameDao.findById(gameEndMessage.matchId).orElse(null) ?: return
         game.winnerId = gameEndMessage.winnerId
         game.status = GameStatus.END
         gameDao.save(game)
+        playerService.updateRating(gameEndMessage)
     }
 
     fun getGamesByPlayer(playerId: Long, pageNumber: Int, pageSize: Int): List<PlayerGames> {

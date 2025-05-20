@@ -3,9 +3,11 @@ package hse.menu.service
 import game.common.enums.GameType
 import game.common.enums.TimePolicy
 import hse.menu.adapter.PlayerAdapter
+import kafka.GameEndMessage
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import player.InvitePolicy
+import player.request.ChangeRatingRequest
 import player.response.UserInfoResponse
 
 @Service
@@ -41,5 +43,16 @@ class PlayerService(
     @Cacheable("menu-user-info")
     fun getUserInfo(userId: Long): UserInfoResponse {
         return playerAdapter.getUserInfo(userId)
+    }
+
+    fun updateRating(gameEndMessage: GameEndMessage) {
+        playerAdapter.updateRating(
+            ChangeRatingRequest(
+                winnerId = gameEndMessage.winnerId,
+                loserId = gameEndMessage.loserId,
+                gameType = gameEndMessage.gameType,
+                gameTimePolicy = gameEndMessage.gameTimePolicy,
+            )
+        )
     }
 }
