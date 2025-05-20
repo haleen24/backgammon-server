@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import player.request.ChangeRatingRequest
+import kotlin.math.max
 import kotlin.math.pow
 
 @Service
@@ -70,7 +71,7 @@ class UserRatingService(
         val winnerCoefficient = getRatingCoefficient(winnerCurrentRating, winnerRating.numberOfGames)
         val loserCoefficient = getRatingCoefficient(loserCurrentRating, loserRating.numberOfGames)
         val winnerNewRating = winnerCurrentRating + winnerCoefficient * (1 - winnerExpected)
-        val loserNewRating = loserCurrentRating - loserCoefficient * loserExpected
+        val loserNewRating = max(loserCurrentRating - loserCoefficient * loserExpected, DEFAULT_RATING.toDouble())
         if (changeRatingRequest.gameType == REGULAR_GAMMON && changeRatingRequest.gameTimePolicy == TimePolicy.DEFAULT_TIMER) {
             winnerRating.nardeDefault = winnerNewRating.toInt()
             loserRating.nardeDefault = loserNewRating.toInt()
