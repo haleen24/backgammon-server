@@ -2,6 +2,7 @@ package player.request
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import game.backgammon.enums.BackgammonType
 import game.common.enums.GameType
 import game.common.enums.TimePolicy
 import player.InvitePolicy
@@ -82,6 +83,6 @@ data class UpdateUserInfoRequest(
 data class ChangeRatingRequest(
     val winnerId: Long,
     val loserId: Long,
-    val gameType: GameType,
+    val gameType: BackgammonType,
     val gameTimePolicy: TimePolicy
 )
