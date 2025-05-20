@@ -5,7 +5,7 @@ import game.common.enums.GammonGamePoints
 import game.common.enums.TimePolicy
 import hse.menu.adapter.GameAdapter
 import hse.menu.dao.GameDao
-import hse.menu.dto.PlayerGames
+import hse.menu.dto.PlayerGame
 import hse.menu.entity.Game
 import hse.menu.enums.GameStatus
 import kafka.GameEndMessage
@@ -13,13 +13,20 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
+import java.time.OffsetDateTime
 
 @Service
 class GameService(
     private val gameDao: GameDao,
     private val gameAdapter: GameAdapter,
     private val playerService: PlayerService,
+    private val clock: Clock,
 ) {
+    companion object {
+        const val EXPIRATION_MINUTES: Long = 10
+    }
+
     fun storeGame(
         gameType: GameType,
         gamePoints: GammonGamePoints,
@@ -33,7 +40,7 @@ class GameService(
             timePolicy = timePolicy,
             firstPlayerId = firstPlayerId,
             secondPlayerId = secondPlayerId,
-            status = GameStatus.NOT_STARTED
+            status = GameStatus.NOT_STARTED,
         )
         game = gameDao.save(game)
         gameAdapter.gameCreation(game) ?: return null
@@ -54,7 +61,26 @@ class GameService(
             timePolicy = timePolicy,
             firstPlayerId = firstPlayerId,
             secondPlayerId = secondPlayerId,
-            status = GameStatus.NOT_STARTED
+            status = GameStatus.NOT_STARTED,
+            expirationTime = OffsetDateTime.now(clock).plusMinutes(EXPIRATION_MINUTES)
+        )
+        return gameDao.save(game)
+    }
+
+    fun updateGameTime(
+        playerGame: PlayerGame,
+        firstPlayerId: Long,
+        secondPlayerId: Long,
+    ): Game {
+        val game = Game(
+            id = playerGame.gameId,
+            gameType = playerGame.gameType,
+            gamePoints = playerGame.gamePoints,
+            timePolicy = playerGame.timePolicy,
+            firstPlayerId = firstPlayerId,
+            secondPlayerId = secondPlayerId,
+            status = playerGame.gameStatus,
+            expirationTime = OffsetDateTime.now(clock).plusMinutes(EXPIRATION_MINUTES)
         )
         return gameDao.save(game)
     }
@@ -78,15 +104,16 @@ class GameService(
         playerService.updateRating(gameEndMessage)
     }
 
-    fun getGamesByPlayer(playerId: Long, pageNumber: Int, pageSize: Int): List<PlayerGames> {
+    fun getGamesByPlayer(playerId: Long, pageNumber: Int, pageSize: Int): List<PlayerGame> {
         val pageable = PageRequest.of(pageNumber, pageSize, Sort.Direction.DESC, "id")
         val games = gameDao.findAll(pageable)
         return games.toList().map {
-            PlayerGames(
+            PlayerGame(
                 it.id,
                 it.status,
                 it.timePolicy,
                 it.gameType,
+                it.gamePoints,
                 playerService.getUserInfo(it.firstPlayerId + it.secondPlayerId - playerId)
             )
         }

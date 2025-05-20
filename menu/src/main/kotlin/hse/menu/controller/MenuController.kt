@@ -2,7 +2,7 @@ package hse.menu.controller
 
 import game.backgammon.request.CreateGameRequest
 import game.backgammon.response.AnswerInviteResponse
-import hse.menu.dto.PlayerGames
+import hse.menu.dto.PlayerGame
 import hse.menu.service.GameService
 import hse.menu.service.MenuService
 import org.springframework.web.bind.annotation.*
@@ -36,7 +36,7 @@ class MenuController(
         @RequestParam userId: Long,
         @RequestParam pageNumber: Int,
         @RequestParam pageSize: Int
-    ): List<PlayerGames> {
+    ): List<PlayerGame> {
         return gameService.getGamesByPlayer(userId, pageNumber, pageSize)
     }
 

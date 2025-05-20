@@ -5,6 +5,7 @@ import game.common.enums.GammonGamePoints
 import game.common.enums.TimePolicy
 import hse.menu.enums.GameStatus
 import jakarta.persistence.*
+import java.time.OffsetDateTime
 
 @Entity
 @Table(
@@ -20,4 +21,5 @@ data class Game(
     val secondPlayerId: Long,
     var status: GameStatus,
     var winnerId: Long? = null,
+    val expirationTime: OffsetDateTime? = null,
 )

@@ -4,10 +4,7 @@ import game.backgammon.request.CreateGameRequest
 import game.common.enums.GameType
 import game.common.enums.GammonGamePoints
 import game.common.enums.TimePolicy
-import hse.menu.dto.AcceptInviteEventDto
-import hse.menu.dto.ConnectionDto
-import hse.menu.dto.InviteEventDto
-import hse.menu.dto.RejectInviteDto
+import hse.menu.dto.*
 import hse.menu.enums.GameStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -132,7 +129,17 @@ class MenuService(
         if (fromUser == toUser) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cant invite yourself")
         }
-        checkHasCurrentGames(fromUser)
+        val game = getLastInviteGame(fromUser)
+        if (game != null && game.opponentUserInfo?.id != toUser) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cant refresh invite")
+        }
+        if (game != null) {
+            gameService.updateGameTime(game, fromUser, toUser)
+            return sseEmitterService.send(
+                InviteEventDto(fromUser, game.gameType, game.gamePoints.value, game.timePolicy),
+                listOf(toUser)
+            )
+        }
         val toUserInvitePolicy = playerService.getInvitePolicy(toUser)
         if (toUserInvitePolicy == InvitePolicy.FRIENDS_ONLY && !playerService.checkIsFriends(fromUser, toUser)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cant invite user due to invite policy")
@@ -172,6 +179,18 @@ class MenuService(
         val game = gameService.findByPlayersAndStatus(userId, invitedPlayer, GameStatus.NOT_STARTED)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
         gameService.declineGameFromInvitation(game)
+    }
+
+    private fun getLastInviteGame(userId: Long): PlayerGame? {
+        val userGames = gameService.getGamesByPlayer(userId, 0, 1)
+        if (userGames.isNotEmpty()) {
+            return if (userGames.first().gameStatus == GameStatus.END) {
+                null
+            } else {
+                userGames.first()
+            }
+        }
+        return null
     }
 
     private fun checkHasCurrentGames(userId: Long) {
