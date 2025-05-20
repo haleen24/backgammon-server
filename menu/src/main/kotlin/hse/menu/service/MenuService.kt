@@ -154,7 +154,7 @@ class MenuService(
 
     @Transactional
     fun answerOnInvite(userId: Long, invitedBy: Long, accept: Boolean): Long {
-        val game = gameService.findByPlayersAndStatus(userId, invitedBy, GameStatus.NOT_STARTED)
+        val game = gameService.findByPlayersAndStatus(invitedBy, userId, GameStatus.NOT_STARTED)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
         if (!accept) {
             sseEmitterService.send(RejectInviteDto(userId), listOf(invitedBy))
