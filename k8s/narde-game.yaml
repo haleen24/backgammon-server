@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: game
-          image: 176.108.249.50:5000/narde-game:latest
+          image: 176.108.249.125:5000/narde-game:latest
           ports:
             - containerPort: 82
           envFrom:

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: menu
-          image: 176.108.249.50:5000/narde-menu:latest
+          image: 176.108.249.125:5000/narde-menu:latest
           ports:
             - containerPort: 81
           envFrom:

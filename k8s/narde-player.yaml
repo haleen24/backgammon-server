@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: player-service
-          image: 176.108.249.50:5000/narde-player:latest
+          image: 176.108.249.125:5000/narde-player:latest
           ports:
             - containerPort: 84
           envFrom:

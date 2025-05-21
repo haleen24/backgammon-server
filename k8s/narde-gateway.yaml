@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: 176.108.249.50:5000/narde-gateway:latest
+          image: 176.108.249.125:5000/narde-gateway:latest
           ports:
             - containerPort: 80
           envFrom:

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: engine
-          image:  176.108.249.50:5000/game-engine:latest
+          image:  176.108.249.125:5000/game-engine:latest
           ports:
             - containerPort: 80
 
