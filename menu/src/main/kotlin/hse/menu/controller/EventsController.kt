@@ -1,6 +1,7 @@
 package hse.menu.controller
 
 import hse.menu.service.SseEmitterService
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
@@ -16,7 +17,7 @@ class EventsController(
         const val AUTH_USER = "auth-user"
     }
 
-    @PostMapping
+    @GetMapping
     fun subscribe(@RequestHeader(AUTH_USER) userId: Long): SseEmitter {
         return sseEmitterService.subscribe(userId)
     }
