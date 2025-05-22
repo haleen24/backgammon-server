@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import player.InvitePolicy
+import java.time.Clock
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -25,6 +26,7 @@ class MenuService(
     @Value("\${disable-job}") isTest: Boolean = false,
     @Value("\${app.search-job.timeout}") val searchJobTimeout: Long,
     private val sseEmitterService: SseEmitterService,
+    private val clock: Clock
 ) {
 
     private final val logger = LoggerFactory.getLogger(MenuService::class.java)
@@ -195,8 +197,8 @@ class MenuService(
     }
 
     private fun checkHasCurrentGames(userId: Long) {
-        val userGames = gameService.getGamesByPlayer(userId, 0, 1)
-        if (userGames.isNotEmpty() && userGames.first().gameStatus != GameStatus.END) {
+        val userGames = gameService.getGamesByPlayer(userId, 0, 10)
+        if (userGames.isNotEmpty() && userGames.find { it.gameStatus == GameStatus.IN_PROCESS } != null) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "Already has game")
         }
     }
