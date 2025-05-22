@@ -1,7 +1,5 @@
 package hse.gateway.core.constant
 
-import hse.gateway.core.dto.AllowedMethods
-
 const val PLAYER_SERVICE = "/player"
 
 const val LOGIN = "$PLAYER_SERVICE/login"

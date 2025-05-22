@@ -31,7 +31,7 @@ spring:
   kafka:
     bootstrap-servers: 176.108.249.125:9092
     consumer:
-      group-id: menu
+      group-id: 1
 
 kafka:
   topic:
