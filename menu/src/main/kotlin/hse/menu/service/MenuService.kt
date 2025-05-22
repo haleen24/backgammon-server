@@ -176,7 +176,7 @@ class MenuService(
 
     @Transactional
     fun cancelInvite(userId: Long, invitedPlayer: Long) {
-        val game = gameService.findByPlayersAndStatus(userId, invitedPlayer, GameStatus.NOT_STARTED)
+        val game = gameService.findByPlayersAndStatus(invitedPlayer, userId, GameStatus.NOT_STARTED)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
         gameService.declineGameFromInvitation(game)
     }

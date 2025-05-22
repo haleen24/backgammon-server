@@ -1,6 +1,7 @@
 package hse.menu.service
 
 import hse.menu.dto.SseEventDto
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_SINGLETON
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Service
@@ -12,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap
 class SseEmitterService(
     private val sseEmitters: MutableMap<Long, SseEmitter> = ConcurrentHashMap()
 ) {
+    private val logger = LoggerFactory.getLogger(SseEmitterService::class.java)
+
     fun subscribe(userId: Long): SseEmitter {
         if (sseEmitters.containsKey(userId)) {
             return sseEmitters[userId]!!
@@ -26,6 +29,7 @@ class SseEmitterService(
 
     fun send(sseEventDto: SseEventDto, users: List<Long>) {
         users.forEach {
+            logger.info("Sending event $sseEventDto to $it")
             sseEmitters[it]?.send(sseEventDto)
         }
     }
