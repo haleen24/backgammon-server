@@ -29,7 +29,7 @@ spring:
       host: redis-service
       port: 6379
   kafka:
-    bootstrap-servers: 176.108.249.50:9092
+    bootstrap-servers: 176.108.249.125:9092
     consumer:
       group-id: menu
 
