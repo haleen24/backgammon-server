@@ -1,7 +1,7 @@
 package hse.gateway.core.configuration.filter
 
 import hse.gateway.core.adapter.PlayerAdapter
-import hse.gateway.core.constant.unsecuredUrls
+import hse.gateway.core.service.SecurePathService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.gateway.filter.GatewayFilterChain
 import org.springframework.cloud.gateway.filter.GlobalFilter
@@ -18,14 +18,14 @@ class PreAuthorizedGlobalFilter(
     @Value("\${route.token.name}") private val tokenName: String,
     @Value("\${route.header.auth-user.name}") private val authUserHeaderName: String,
     private val playerAdapter: PlayerAdapter,
+    private val securePathService: SecurePathService,
 ) : GlobalFilter, Ordered {
 
 
     override fun filter(exchange: ServerWebExchange?, chain: GatewayFilterChain?): Mono<Void> {
         val path = exchange!!.request.path.value()
-        val secureCheck = unsecuredUrls[path]
 
-        if (secureCheck != null && secureCheck.methods.contains(exchange.request.method)) {
+        if (!securePathService.isSecure(path, exchange.request.method)) {
             return chain!!.filter(exchange)
         }
 

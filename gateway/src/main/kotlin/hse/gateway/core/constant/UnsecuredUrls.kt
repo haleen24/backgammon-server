@@ -14,12 +14,6 @@ const val IS_AUTHORIZED = "$PLAYER_SERVICE/is-authorized"
 
 const val USERINFO = "$PLAYER_SERVICE/userinfo"
 
-val unsecuredUrls = mapOf(
-    LOGIN to AllowedMethods.allowAll(),
-    REGISTER to AllowedMethods.allowAll(),
-    USERINFO to AllowedMethods.getOnly(),
-)
-
 val toAuth = setOf(
     LOGIN,
     REGISTER,
