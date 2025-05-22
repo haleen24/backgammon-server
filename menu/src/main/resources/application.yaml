@@ -39,6 +39,11 @@ kafka:
       event:
         game-end: narde.game-event.end
 
+logging:
+  level:
+    org.apache.kafka: DEBUG
+    org.springframework.kafka: DEBUG
+
 server:
   port: 81
 
