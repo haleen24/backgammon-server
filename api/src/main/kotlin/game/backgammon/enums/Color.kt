@@ -1,6 +1,8 @@
 package game.backgammon.enums
 
-enum class Color {
+import java.io.Serializable
+
+enum class Color : Serializable {
     BLACK,
     WHITE;
 

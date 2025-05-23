@@ -1,4 +1,4 @@
-name: deploy backgammon game
+name: Deploy Service1
 
 on:
   workflow_dispatch:

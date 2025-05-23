@@ -1,11 +1,11 @@
 package game.backgammon
 
 import game.backgammon.dto.MoveDto
-import game.backgammon.sht.ShortBackgammonGame
+import game.backgammon.lng.RegularGammonGame
 import java.util.*
 
 
-private fun printDeck(game: ShortBackgammonGame) {
+private fun printDeck(game: RegularGammonGame) {
     println(game.toString())
     for (i in 13..24) {
         print(i.toString() + "\t")
@@ -42,7 +42,7 @@ private fun printDeck(game: ShortBackgammonGame) {
 
 
 fun main() {
-    val game = ShortBackgammonGame()
+    val game = RegularGammonGame()
     var turn = game.turn
 
     val scanner = Scanner(System.`in`)
@@ -51,7 +51,10 @@ fun main() {
 //            game.tossBothZar(turn)
 //        }
         printDeck(game)
-        val moves = listOf(MoveDto(scanner.nextInt(), scanner.nextInt()), MoveDto(scanner.nextInt(), scanner.nextInt()))
+
+        val ids = scanner.nextLine().split(" ").map { it.toInt() }
+        val moves = (0..<ids.size - 1 step 2).map { MoveDto(ids[it], ids[it + 1]) }
+
         val changes = try {
             game.move(turn, moves)
         } catch (e: Exception) {
