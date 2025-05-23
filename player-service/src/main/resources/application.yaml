@@ -38,9 +38,3 @@ storage:
     path: /var/image-data
 
 debug: false
-
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG

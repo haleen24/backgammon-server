@@ -54,13 +54,13 @@ class FriendController(
     @GetMapping("/check")
     fun isFriend(
         @RequestHeader(AUTH_HEADER, required = false) userId: Long? = null,
-        @RequestParam(required = false) firsUser: Long? = null,
+        @RequestParam(required = false) firstUser: Long? = null,
         @RequestParam secondUser: Long
     ): CheckFriendResponse {
         val result = if (userId != null) {
             friendService.isFriends(userId, secondUser)
-        } else if (firsUser != null) {
-            friendService.isFriends(firsUser, secondUser)
+        } else if (firstUser != null) {
+            friendService.isFriends(firstUser, secondUser)
         } else {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST)
         }
