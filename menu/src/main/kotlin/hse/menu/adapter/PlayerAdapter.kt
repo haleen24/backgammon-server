@@ -17,7 +17,7 @@ interface PlayerAdapter {
     @GetMapping("/player/friends/check")
     fun checkIsFriends(
         @RequestParam("firstUser") firstUser: Long,
-        @RequestParam("second") secondUser: Long
+        @RequestParam("secondUser") secondUser: Long
     ): CheckFriendResponse
 
     @PostMapping("/player/rating")
